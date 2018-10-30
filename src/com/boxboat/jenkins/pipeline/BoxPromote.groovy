@@ -64,14 +64,14 @@ class BoxPromote extends BoxBase {
 
         Registry registry = ServerConfig.registryMap.get("dtr")
         steps.docker.withRegistry(
-            "${registry.scheme}://${registry.uri}",
-                registry.credentials) {
+            registry.getRegistryUrl(),
+            registry.credentials) {
 
             List<Image> images = images.collect { String v -> Image.fromImageString(v) }
 
             images.each { Image image ->
                 def pullImage = image.copy()
-                pullImage.host = registry.uri
+                pullImage.host = registry.host
                 pullImage.tag = existingTag
                 pullImage.pull(steps)
             }
@@ -123,7 +123,7 @@ class BoxPromote extends BoxBase {
 
             images.each { Image image ->
                 def pushImage = image.copy()
-                pushImage.host = registry.uri
+                pushImage.host = registry.host
                 pushImage.tag = newTag
                 image.reTag(steps, pushImage)
                 pushImage.push(steps)

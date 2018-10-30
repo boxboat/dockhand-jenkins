@@ -31,21 +31,21 @@ class BoxRepo extends BoxBase {
         // pull images
         pullImages.each { image ->
             steps.sh """
-                export REGISTRY="${ServerConfig.registryMap.get("dtr").uri}"
+                export REGISTRY="${ServerConfig.registryMap.get("dtr").host}"
                 docker pull "${image}"
             """
         }
     }
 
     def composeBuild(String profile) {
-        steps.sh Compose.build(composeProfiles.get(profile), profile, ServerConfig.registryMap.get("dtr").uri)
+        steps.sh Compose.build(composeProfiles.get(profile), profile, ServerConfig.registryMap.get("dtr").host)
     }
 
     def composeUp(String profile) {
         // clean up all profiles
         cleanup()
         // start the specified profile
-        steps.sh Compose.up(composeProfiles.get(profile), profile, ServerConfig.registryMap.get("dtr").uri)
+        steps.sh Compose.up(composeProfiles.get(profile), profile, ServerConfig.registryMap.get("dtr").host)
     }
 
     def composeDown(String profile) {
@@ -67,12 +67,12 @@ class BoxRepo extends BoxBase {
             Registry registry = ServerConfig.registryMap.get("dtr")
             List<Image> images = pushImages.collect { String v -> Image.fromImageString(v) }
             steps.docker.withRegistry(
-                    "${registry.scheme}://${registry.uri}",
+                    registry.getRegistryUrl(),
                     registry.credentials) {
                 images.each { Image image ->
                     tags.each { String tag ->
                         def newImage = image.copy()
-                        newImage.host = registry.uri
+                        newImage.host = registry.host
                         newImage.tag = tag
                         image.reTag(steps, newImage)
                         newImage.push(steps)
