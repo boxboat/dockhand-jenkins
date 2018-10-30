@@ -1,0 +1,47 @@
+@Library('jenkins-shared-library@master')
+import com.boxboat.jenkins.pipeline.*
+
+
+def execute() {
+    node() {
+
+        def repo = new BoxRepo(
+            steps: this,
+            composeProfiles: [
+                "dev" : "./build/docker/dev/",
+                "prod": "./build/docker/prod/",
+            ],
+            pullImages: [
+                "test1",
+                "test2",
+            ],
+            pushImages: [
+                "test3",
+            ],
+        )
+
+        try {
+          stage('Setup') {
+            repo.init()
+            repo.composeUp("dev")
+          }
+          stage('Test'){
+            sh './build/ci/test.sh'
+            sh './build/ci/test-api.sh'
+          }
+          stage('Build'){
+            repo.composeUp("prod")
+          }
+          stage ('Push'){
+            repo.push()
+          }
+        } finally {
+          stage('Cleanup'){
+            repo.cleanup()
+          }
+        }
+
+    }
+}
+
+return this

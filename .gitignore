@@ -1,0 +1,8 @@
+/.gradle
+/.idea/*
+!/.idea/gradle.xml
+!/.idea/modules.xml
+!/.idea/modules
+!/.idea/modules/jenkins-shared.iml
+/build
+/dist
