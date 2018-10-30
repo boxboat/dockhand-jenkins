@@ -19,9 +19,6 @@ class BoxRepo extends BoxBase {
 
     static def createBoxRepo(Map config) {
         def repo = new BoxRepo(config)
-        repo.steps.properties([
-            [$class: 'BuildDiscarderProperty', strategy: [$class: 'LogRotator', numToKeepStr: '100']],
-        ])
         return repo
     }
 

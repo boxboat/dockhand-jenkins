@@ -22,9 +22,6 @@ class BoxDeploy extends BoxBase {
 
     static def createBoxDeploy(Map config){
         def deploy = new BoxDeploy(config)
-        deploy.steps.properties([
-            [$class: 'BuildDiscarderProperty', strategy: [$class: 'LogRotator', numToKeepStr: '100']],
-        ])
         return deploy
     }
 

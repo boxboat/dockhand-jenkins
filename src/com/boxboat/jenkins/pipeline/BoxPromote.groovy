@@ -20,10 +20,7 @@ class BoxPromote extends BoxBase {
     }
 
     static def createBoxPromote(Map config) {
-        def promote = new BoxDeploy(config)
-        promote.steps.properties([
-            [$class: 'BuildDiscarderProperty', strategy: [$class: 'LogRotator', numToKeepStr: '100']]
-        ])
+        def promote = new BoxPromote(config)
         return promote
     }
 
