@@ -1,13 +1,12 @@
 package com.boxboat.jenkins.library
+import com.boxboat.jenkins.library.docker.Registry
 
 class ServerConfig {
 
     static final gitEmail = 'jenkins@ORG.com'
     static final String gitCredentials = 'jenkins-svc-key'
-    static final String registryScheme = "https"
-    static final String registryCredentials = "dtr"
     static final Map<String, String> registryMap = [
-            "dtr": "dtr.boxboat.com",
+            "dtr":  new Registry("dtr.boxboat.com","https", "dtr"),
     ]
 
     static final buildVersionsGitRemoteUrl = "ssh://git@github.com/ORG/build-versions.git"
