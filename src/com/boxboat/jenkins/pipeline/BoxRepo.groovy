@@ -4,6 +4,7 @@ import com.boxboat.jenkins.library.ServerConfig
 import com.boxboat.jenkins.library.Utils
 import com.boxboat.jenkins.library.docker.Compose
 import com.boxboat.jenkins.library.docker.Image
+import com.boxboat.jenkins.library.docker.Registry
 
 class BoxRepo extends BoxBase {
 
@@ -30,21 +31,21 @@ class BoxRepo extends BoxBase {
         // pull images
         pullImages.each { image ->
             steps.sh """
-                export REGISTRY="${ServerConfig.registryMap["nonprod"]}"
+                export REGISTRY="${ServerConfig.registryMap.get("dtr").uri}"
                 docker pull "${image}"
             """
         }
     }
 
     def composeBuild(String profile) {
-        steps.sh Compose.build(composeProfiles.get(profile), profile, ServerConfig.registryMap["nonprod"])
+        steps.sh Compose.build(composeProfiles.get(profile), profile, ServerConfig.registryMap.get("dtr").uri)
     }
 
     def composeUp(String profile) {
         // clean up all profiles
         cleanup()
         // start the specified profile
-        steps.sh Compose.up(composeProfiles.get(profile), profile, ServerConfig.registryMap["nonprod"])
+        steps.sh Compose.up(composeProfiles.get(profile), profile, ServerConfig.registryMap.get("dtr").uri)
     }
 
     def composeDown(String profile) {
@@ -63,15 +64,15 @@ class BoxRepo extends BoxBase {
             if (isBranchTip) {
                 tags.add(event)
             }
-
+            Registry registry = ServerConfig.registryMap.get("dtr")
             List<Image> images = pushImages.collect { String v -> Image.fromImageString(v) }
             steps.docker.withRegistry(
-                    "${ServerConfig.registryScheme}://${ServerConfig.registryMap.get("nonprod")}",
-                    ServerConfig.registryCredentials) {
+                    "${registry.scheme}://${registry.uri}",
+                    registry.credentials) {
                 images.each { Image image ->
                     tags.each { String tag ->
                         def newImage = image.copy()
-                        newImage.host = ServerConfig.registryMap.get("nonprod")
+                        newImage.host = registry.uri
                         newImage.tag = tag
                         image.reTag(steps, newImage)
                         newImage.push(steps)

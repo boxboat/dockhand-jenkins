@@ -4,10 +4,8 @@ class ServerConfig {
 
     static final gitEmail = 'jenkins@ORG.com'
     static final String gitCredentials = 'jenkins-svc-key'
-    static final String registryScheme = "https"
-    static final String registryCredentials = "dtr"
     static final Map<String, String> registryMap = [
-            "dtr": "dtr.boxboat.com",
+            "dtr":  new Registry(uri: "dtr.boxboat.com", scheme: "https", credentials: "dtr"),
     ]
 
     static final buildVersionsGitRemoteUrl = "ssh://git@github.com/ORG/build-versions.git"

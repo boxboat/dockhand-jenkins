@@ -5,6 +5,7 @@ import com.boxboat.jenkins.library.SemVer
 import com.boxboat.jenkins.library.ServerConfig
 import com.boxboat.jenkins.library.Utils
 import com.boxboat.jenkins.library.docker.Image
+import com.boxboat.jenkins.library.docker.Registry
 
 class BoxPromote extends BoxBase {
 
@@ -61,15 +62,16 @@ class BoxPromote extends BoxBase {
         def buildVersions = gitAccount.checkoutRepository(ServerConfig.buildVersionsGitRemoteUrl, "build-versions", 1)
         def updateBuildVersions = false
 
+        Registry registry = ServerConfig.registryMap.get("dtr")
         steps.docker.withRegistry(
-            "${ServerConfig.registryScheme}://${ServerConfig.registryMap.get("nonprod")}",
-            ServerConfig.registryCredentials) {
+            "${registry.scheme}://${registry.uri}",
+                registry.credentials) {
 
             List<Image> images = images.collect { String v -> Image.fromImageString(v) }
 
             images.each { Image image ->
                 def pullImage = image.copy()
-                pullImage.host = ServerConfig.registryMap.get("nonprod")
+                pullImage.host = registry.uri
                 pullImage.tag = existingTag
                 pullImage.pull(steps)
             }
@@ -121,7 +123,7 @@ class BoxPromote extends BoxBase {
 
             images.each { Image image ->
                 def pushImage = image.copy()
-                pushImage.host = ServerConfig.registryMap.get("nonprod")
+                pushImage.host = registry.uri
                 pushImage.tag = newTag
                 image.reTag(steps, pushImage)
                 pushImage.push(steps)
