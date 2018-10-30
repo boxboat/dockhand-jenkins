@@ -15,7 +15,7 @@ class Registry implements Serializable {
     }
 
     def getRegistryUrl() {
-        return "{$scheme}://{$host}"
+        return "${scheme}://${host}"
     }
 
 }
