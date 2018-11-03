@@ -1,5 +1,6 @@
 package com.boxboat.jenkins.pipeline
 
+import com.boxboat.jenkins.library.Secret
 import com.boxboat.jenkins.library.ServerConfig
 import com.boxboat.jenkins.library.Utils
 import com.boxboat.jenkins.library.docker.Compose
@@ -106,6 +107,10 @@ class BoxRepo extends BoxBase {
                     URLEncoder.encode(hash, "UTF-8")
         }
 
+    }
+
+    def secretReplace(List<String> globs) {
+        Secret.replace(steps, globs)
     }
 
     def cleanup() {
