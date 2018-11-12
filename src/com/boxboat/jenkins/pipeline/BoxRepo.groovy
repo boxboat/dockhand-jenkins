@@ -117,6 +117,7 @@ class BoxRepo extends BoxBase {
         composeProfiles.each { profile, dir ->
             composeDown(profile)
         }
+        super.cleanup()
     }
 
 }

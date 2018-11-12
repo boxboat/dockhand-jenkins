@@ -29,4 +29,8 @@ abstract class BoxBase {
         """
     }
 
+    def cleanup() {
+        gitRepo?.resetAndClean()
+    }
+
 }

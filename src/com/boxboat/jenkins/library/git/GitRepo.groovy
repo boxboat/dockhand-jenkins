@@ -92,6 +92,14 @@ class GitRepo implements Serializable {
         """
     }
 
+    def resetAndClean() {
+        steps.sh """
+            cd "${this.dir}"
+            git reset --hard
+            git clean -fd
+        """
+    }
+
     def shallowCheckoutBranch(branch) {
         steps.sh """
             cd "${this.dir}"
