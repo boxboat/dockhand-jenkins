@@ -1,5 +1,6 @@
 package com.boxboat.jenkins.pipeline
 
+import com.boxboat.jenkins.library.SecretScript
 import com.boxboat.jenkins.library.ServerConfig
 import com.boxboat.jenkins.library.Utils
 import com.boxboat.jenkins.library.docker.Compose
@@ -108,10 +109,15 @@ class BoxRepo extends BoxBase {
 
     }
 
+    def secretReplaceScript(List<String> globs) {
+        SecretScript.replace(steps, globs)
+    }
+
     def cleanup() {
         composeProfiles.each { profile, dir ->
             composeDown(profile)
         }
+        super.cleanup()
     }
 
 }

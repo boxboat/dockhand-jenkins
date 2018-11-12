@@ -1,5 +1,6 @@
 package com.boxboat.jenkins.pipeline
 
+import com.boxboat.jenkins.library.SecretScript
 import com.boxboat.jenkins.library.ServerConfig
 import com.boxboat.jenkins.library.Utils
 import com.boxboat.jenkins.library.docker.Image
@@ -20,7 +21,7 @@ class BoxDeploy extends BoxBase {
         config?.each { k, v -> this[k] = v }
     }
 
-    static def createBoxDeploy(Map config){
+    static def createBoxDeploy(Map config) {
         def deploy = new BoxDeploy(config)
         return deploy
     }
@@ -81,6 +82,10 @@ class BoxDeploy extends BoxBase {
                 .
             """
         }
+    }
+
+    def secretReplaceScript(List<String> globs) {
+        SecretScript.replace(steps, globs)
     }
 
 }
