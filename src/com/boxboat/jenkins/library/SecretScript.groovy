@@ -1,6 +1,6 @@
 package com.boxboat.jenkins.library
 
-class Secret {
+class SecretScript {
 
     static replace(steps, List<String> globs) {
         steps.withCredentials([steps.string(

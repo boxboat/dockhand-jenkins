@@ -1,6 +1,6 @@
 package com.boxboat.jenkins.pipeline
 
-import com.boxboat.jenkins.library.Secret
+import com.boxboat.jenkins.library.SecretScript
 import com.boxboat.jenkins.library.ServerConfig
 import com.boxboat.jenkins.library.Utils
 import com.boxboat.jenkins.library.docker.Compose
@@ -109,8 +109,8 @@ class BoxRepo extends BoxBase {
 
     }
 
-    def secretReplace(List<String> globs) {
-        Secret.replace(steps, globs)
+    def secretReplaceScript(List<String> globs) {
+        SecretScript.replace(steps, globs)
     }
 
     def cleanup() {
