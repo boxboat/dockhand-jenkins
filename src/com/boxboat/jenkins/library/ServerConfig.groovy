@@ -5,7 +5,7 @@ class ServerConfig {
 
     static final gitEmail = 'jenkins@boxboat.com'
     static final String gitCredentials = 'gitlab-boxboatweb'
-    static final Map<String, String> registryMap = [
+    static final Map<String, Registry> registryMap = [
             "dtr":  new Registry("dtr.boxboat.com","https", "dtr"),
     ]
 
