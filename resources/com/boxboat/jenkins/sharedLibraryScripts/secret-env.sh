@@ -47,7 +47,7 @@ if [ "$output" = "" ]; then
     exit 1
 fi
 
-if [ "$format" = "yml"]; then
+if [ "$format" = "yml" ]; then
     format="yaml"
 fi
 if [ "$format" != "env" -a "$format" != "yaml" ]; then
