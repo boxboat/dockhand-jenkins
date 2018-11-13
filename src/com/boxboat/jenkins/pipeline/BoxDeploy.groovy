@@ -88,4 +88,8 @@ class BoxDeploy extends BoxBase {
         SecretScript.replace(steps, globs)
     }
 
+    def secretFileScript(List<String> vaultKeys, String outFile, String format = "", boolean append = false) {
+        SecretScript.file(steps, vaultKeys, outFile, format, append)
+    }
+
 }
