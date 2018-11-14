@@ -92,7 +92,7 @@ class BoxRepo extends BoxBase {
                     """
                 }
 
-                def buildVersions = gitAccount.checkoutRepository(Config.buildVersionsGitRemoteUrl, "build-versions", 1)
+                def buildVersions = gitAccount.checkoutRepository(Config.git.buildVersionsUrl, "build-versions", 1)
                 steps.sh script
                 buildVersions.commitAndPush("update build-versions")
             }
