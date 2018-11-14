@@ -37,17 +37,9 @@ task copyDist(type: Copy) {
     }
 }
 
-task zipSharedLibraryScripts(type: Zip) {
-    from 'resources/com/boxboat/jenkins/sharedLibraryScripts/'
-    include '**/*'
-    archiveName 'sharedLibraryScripts.zip'
-    destinationDir(file('resources/com/boxboat/jenkins/'))
-}
-
 test {
     dependsOn cleanDist
     dependsOn copyDist
-    dependsOn zipSharedLibraryScripts
     systemProperty 'groovy.grape.enable', 'false'
     testLogging.showStandardStreams = true
     beforeTest { descriptor ->

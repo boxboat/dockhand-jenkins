@@ -26,8 +26,6 @@ class Config implements Serializable {
 
     GitConfig git
 
-
-
     Map<String, Registry> registryMap = [:]
 
     Map<String, Vault> vaultMap = [:]
