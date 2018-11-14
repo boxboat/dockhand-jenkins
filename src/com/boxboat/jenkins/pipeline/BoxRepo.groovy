@@ -38,18 +38,18 @@ class BoxRepo extends BoxBase {
     }
 
     def composeBuild(String profile) {
-        steps.sh Compose.build(composeProfiles.get(profile), profile, Config.getRegistry(registryConfig).host)
+        Compose.build(steps, composeProfiles.get(profile), profile, Config.getRegistry(registryConfig).host)
     }
 
     def composeUp(String profile) {
         // clean up all profiles
         cleanup()
         // start the specified profile
-        steps.sh Compose.up(composeProfiles.get(profile), profile, Config.getRegistry(registryConfig).host)
+        Compose.up(steps, composeProfiles.get(profile), profile, Config.getRegistry(registryConfig).host)
     }
 
     def composeDown(String profile) {
-        steps.sh Compose.down(composeProfiles.get(profile), profile)
+        Compose.down(steps, composeProfiles.get(profile), profile)
     }
 
     def push() {
@@ -110,7 +110,7 @@ class BoxRepo extends BoxBase {
 
     }
 
-    def secretReplaceScript(List<String> globs, Map<String,String> env = [:]) {
+    def secretReplaceScript(List<String> globs, Map<String, String> env = [:]) {
         SecretScript.replace(steps, Config.getVault(vaultConfig), globs, env)
     }
 

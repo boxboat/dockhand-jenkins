@@ -13,7 +13,7 @@ class SecretScript {
 
             steps.sh """
                 export VAULT_ADDR="${vault.url}"
-                ./sharedLibraryScripts/secret-replace.sh ${envStr} "${globs.join('" "')}"
+                ${LibraryScript.run(steps, "secret-replace.sh")} ${envStr} "${globs.join('" "')}"
             """
         }
     }
@@ -32,7 +32,7 @@ class SecretScript {
         )]) {
             steps.sh """
                 export VAULT_ADDR="${vault.url}"
-                ./sharedLibraryScripts/secret-env.sh ${append ? "--append" : ""} --format "${format}" --output "${outFile}" "${vaultKeys.join('" "')}"
+                ${LibraryScript.run(steps, "secret-env.sh")} ${append ? "--append" : ""} --format "${format}" --output "${outFile}" "${vaultKeys.join('" "')}"
             """
         }
     }
