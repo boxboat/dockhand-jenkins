@@ -85,8 +85,8 @@ class BoxDeploy extends BoxBase {
         }
     }
 
-    def secretReplaceScript(List<String> globs) {
-        SecretScript.replace(steps, Config.getVault(vaultConfig), globs)
+    def secretReplaceScript(List<String> globs, Map<String,String> env = [:]) {
+        SecretScript.replace(steps, Config.getVault(vaultConfig), globs, env)
     }
 
     def secretFileScript(List<String> vaultKeys, String outFile, String format = "", boolean append = false) {

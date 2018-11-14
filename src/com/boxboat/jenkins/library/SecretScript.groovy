@@ -2,14 +2,18 @@ package com.boxboat.jenkins.library
 
 class SecretScript {
 
-    static replace(steps, Vault vault, List<String> globs) {
+    static replace(steps, Vault vault, List<String> globs, Map<String,String> env) {
         steps.withCredentials([steps.string(
                 credentialsId: vault.credentials,
                 variable: 'VAULT_TOKEN',
         )]) {
+            def envStr = env.collect { k, v ->
+                return "--env \"${k}=${v}\""
+            }.join(" ")
+
             steps.sh """
                 export VAULT_ADDR="${vault.url}"
-                ./sharedLibraryScripts/secret-replace.sh "${globs.join('" "')}"
+                ./sharedLibraryScripts/secret-replace.sh ${envStr} "${globs.join('" "')}"
             """
         }
     }
