@@ -4,7 +4,7 @@ import com.boxboat.jenkins.library.SecretScript
 import com.boxboat.jenkins.library.Utils
 import com.boxboat.jenkins.library.docker.Compose
 import com.boxboat.jenkins.library.docker.Image
-import com.boxboat.jenkins.library.docker.Registry
+
 import static com.boxboat.jenkins.library.Config.Config
 
 class BoxRepo extends BoxBase {
@@ -67,7 +67,7 @@ class BoxRepo extends BoxBase {
             List<Image> images = pushImages.collect { String v -> Image.fromImageString(v) }
             steps.docker.withRegistry(
                     Config.getRegistry(registryConfig).getRegistryUrl(),
-                    Config.getRegistry(registryConfig).credentials) {
+                    Config.getRegistry(registryConfig).credential) {
                 images.each { Image image ->
                     tags.each { String tag ->
                         def newImage = image.copy()

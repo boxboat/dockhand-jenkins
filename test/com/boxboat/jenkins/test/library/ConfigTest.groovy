@@ -9,7 +9,6 @@ import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 import org.junit.runners.Parameterized.Parameter
 import org.junit.runners.Parameterized.Parameters
-import org.yaml.snakeyaml.Yaml
 
 import static org.junit.Assert.assertEquals
 
@@ -57,13 +56,16 @@ class ConfigTest {
                                         "default": new Registry(
                                                 scheme: "https",
                                                 host: "dtr.boxboat.com",
-                                                credentials: "registry",
+                                                credential: "registry",
                                         )
                                 ],
                                 vaultMap: [
                                         "default": new Vault(
+                                                kvVersion: 1,
+                                                roleIdCredential: "vault-role-id",
+                                                secretIdCredential: "vault-secret-id",
+                                                tokenCredential: "vault-token",
                                                 url: "http://localhost:8200",
-                                                "credentials": "vault",
                                         )
                                 ],
                         )
