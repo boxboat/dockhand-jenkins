@@ -1,6 +1,6 @@
 package com.boxboat.jenkins.library.git
 
-import com.boxboat.jenkins.library.ServerConfig
+import static com.boxboat.jenkins.library.Config.Config
 
 import java.nio.file.Paths
 
@@ -54,7 +54,7 @@ class GitRepo implements Serializable {
     }
 
     String getRemotePath() {
-        return ServerConfig.gitRemotePath(getRemoteUrl())
+        return Config.gitRemotePath(getRemoteUrl())
     }
 
     boolean isBranchTip() {

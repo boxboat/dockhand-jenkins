@@ -2,16 +2,17 @@ package com.boxboat.jenkins.pipeline
 
 
 import com.boxboat.jenkins.library.SemVer
-import com.boxboat.jenkins.library.ServerConfig
 import com.boxboat.jenkins.library.Utils
 import com.boxboat.jenkins.library.docker.Image
 import com.boxboat.jenkins.library.docker.Registry
+import static com.boxboat.jenkins.library.Config.Config
 
 class BoxPromote extends BoxBase {
 
     public List<String> images
     public String existingTag
     public String newTag
+    public String registryConfig = "default"
     private SemVer _newSemVer
 
     BoxPromote(Map config) {
@@ -56,13 +57,13 @@ class BoxPromote extends BoxBase {
             """
         }
 
-        def buildVersions = gitAccount.checkoutRepository(ServerConfig.buildVersionsGitRemoteUrl, "build-versions", 1)
+        def buildVersions = gitAccount.checkoutRepository(Config.buildVersionsGitRemoteUrl, "build-versions", 1)
         def updateBuildVersions = false
 
-        Registry registry = ServerConfig.registryMap.get("dtr")
+        Registry registry = Config.getRegistry(registryConfig)
         steps.docker.withRegistry(
-            registry.getRegistryUrl(),
-            registry.credentials) {
+                registry.getRegistryUrl(),
+                registry.credentials) {
 
             List<Image> images = images.collect { String v -> Image.fromImageString(v) }
 

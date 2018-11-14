@@ -1,10 +1,9 @@
 package com.boxboat.jenkins.pipeline
 
 import com.boxboat.jenkins.library.SecretScript
-import com.boxboat.jenkins.library.ServerConfig
 import com.boxboat.jenkins.library.Utils
 import com.boxboat.jenkins.library.docker.Image
-
+import static com.boxboat.jenkins.library.Config.Config
 
 class BoxDeploy extends BoxBase {
 
@@ -13,6 +12,8 @@ class BoxDeploy extends BoxBase {
     public List<String> images
     public Map<String, String> events
     public Map<String, Map<String, String>> eventOverrides
+    public String registryConfig = "default"
+    public String vaultConfig = "default"
 
     private static final String imageTagsFile = "image-tags.yml"
 
@@ -45,7 +46,7 @@ class BoxDeploy extends BoxBase {
     def deploy() {
         List<Image> images = images.collect { String v -> Image.fromImageString(v) }
         def primaryEvent = events.get(deployment)
-        gitAccount.checkoutRepository(ServerConfig.buildVersionsGitRemoteUrl, "build-versions", 1)
+        gitAccount.checkoutRepository(Config.buildVersionsGitRemoteUrl, "build-versions", 1)
         images.each { image ->
             def event = primaryEvent
             def eventOverridesDeployment = eventOverrides?.get(deployment)
@@ -85,11 +86,11 @@ class BoxDeploy extends BoxBase {
     }
 
     def secretReplaceScript(List<String> globs) {
-        SecretScript.replace(steps, globs)
+        SecretScript.replace(steps, Config.getVault(vaultConfig), globs)
     }
 
     def secretFileScript(List<String> vaultKeys, String outFile, String format = "", boolean append = false) {
-        SecretScript.file(steps, vaultKeys, outFile, format, append)
+        SecretScript.file(steps, Config.getVault(vaultConfig), vaultKeys, outFile, format, append)
     }
 
 }

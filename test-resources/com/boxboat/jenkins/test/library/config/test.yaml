@@ -1,0 +1,12 @@
+buildVersionsGitRemoteUrl: ssh://git@github.com/boxboat/build-versions.git
+gitEmail: jenkins@boxboat.com
+gitCredentials: git
+registryMap:
+  default:
+    scheme: https
+    host: dtr.boxboat.com
+    credentials: registry
+vaultMap:
+  default:
+    url: http://localhost:8200
+    credentials: vault

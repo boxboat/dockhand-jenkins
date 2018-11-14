@@ -1,6 +1,6 @@
 package com.boxboat.jenkins.library.git
 
-import com.boxboat.jenkins.library.ServerConfig
+import static com.boxboat.jenkins.library.Config.Config
 
 class GitAccount implements Serializable {
 
@@ -12,7 +12,7 @@ class GitAccount implements Serializable {
             return true
         }
         steps.withCredentials([steps.sshUserPrivateKey(
-                credentialsId: ServerConfig.gitCredentials,
+                credentialsId: Config.gitCredentials,
                 keyFileVariable: 'sshKey',
                 usernameVariable: 'username'
         )]) {
@@ -24,7 +24,7 @@ class GitAccount implements Serializable {
 
                 # Git Config
                 git config --global user.name "Jenkins Service Account"
-                git config --global user.email "${ServerConfig.gitEmail}"
+                git config --global user.email "${Config.gitEmail}"
                 git config --global push.default simple
             """
         }

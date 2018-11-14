@@ -1,17 +1,19 @@
 package com.boxboat.jenkins.pipeline
 
 import com.boxboat.jenkins.library.SecretScript
-import com.boxboat.jenkins.library.ServerConfig
 import com.boxboat.jenkins.library.Utils
 import com.boxboat.jenkins.library.docker.Compose
 import com.boxboat.jenkins.library.docker.Image
 import com.boxboat.jenkins.library.docker.Registry
+import static com.boxboat.jenkins.library.Config.Config
 
 class BoxRepo extends BoxBase {
 
     public Map<String, String> composeProfiles = [:]
     public List<String> pullImages = []
     public List<String> pushImages = []
+    public String registryConfig = "default"
+    public String vaultConfig = "default"
 
     BoxRepo(Map config) {
         super(config)
@@ -29,21 +31,21 @@ class BoxRepo extends BoxBase {
         // pull images
         pullImages.each { image ->
             steps.sh """
-                export REGISTRY="${ServerConfig.registryMap.get("dtr").host}"
+                export REGISTRY="${Config.getRegistry(registryConfig).host}"
                 docker pull "${image}"
             """
         }
     }
 
     def composeBuild(String profile) {
-        steps.sh Compose.build(composeProfiles.get(profile), profile, ServerConfig.registryMap.get("dtr").host)
+        steps.sh Compose.build(composeProfiles.get(profile), profile, Config.getRegistry(registryConfig).host)
     }
 
     def composeUp(String profile) {
         // clean up all profiles
         cleanup()
         // start the specified profile
-        steps.sh Compose.up(composeProfiles.get(profile), profile, ServerConfig.registryMap.get("dtr").host)
+        steps.sh Compose.up(composeProfiles.get(profile), profile, Config.getRegistry(registryConfig).host)
     }
 
     def composeDown(String profile) {
@@ -62,15 +64,15 @@ class BoxRepo extends BoxBase {
             if (isBranchTip) {
                 tags.add(event)
             }
-            Registry registry = ServerConfig.registryMap.get("dtr")
+            Registry registry = registry
             List<Image> images = pushImages.collect { String v -> Image.fromImageString(v) }
             steps.docker.withRegistry(
-                    registry.getRegistryUrl(),
-                    registry.credentials) {
+                    Config.getRegistry(registryConfig).getRegistryUrl(),
+                    Config.getRegistry(registryConfig).credentials) {
                 images.each { Image image ->
                     tags.each { String tag ->
                         def newImage = image.copy()
-                        newImage.host = registry.host
+                        newImage.host = Config.getRegistry(registryConfig).host
                         newImage.tag = tag
                         image.reTag(steps, newImage)
                         newImage.push(steps)
@@ -90,7 +92,7 @@ class BoxRepo extends BoxBase {
                     """
                 }
 
-                def buildVersions = gitAccount.checkoutRepository(ServerConfig.buildVersionsGitRemoteUrl, "build-versions", 1)
+                def buildVersions = gitAccount.checkoutRepository(Config.buildVersionsGitRemoteUrl, "build-versions", 1)
                 steps.sh script
                 buildVersions.commitAndPush("update build-versions")
             }
@@ -110,11 +112,11 @@ class BoxRepo extends BoxBase {
     }
 
     def secretReplaceScript(List<String> globs) {
-        SecretScript.replace(steps, globs)
+        SecretScript.replace(steps, Config.getVault(vaultConfig), globs)
     }
 
     def secretFileScript(List<String> vaultKeys, String outFile, String format = "", boolean append = false) {
-        SecretScript.file(steps, vaultKeys, outFile, format, append)
+        SecretScript.file(steps, Config.getVault(vaultConfig), vaultKeys, outFile, format, append)
     }
 
     def cleanup() {

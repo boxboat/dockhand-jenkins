@@ -12,7 +12,7 @@ abstract class PipelineBase extends BasePipelineTest {
         super.setUp()
         helper.registerAllowedMethod('file', [Map.class], null)
         helper.registerAllowedMethod('libraryResource', [String.class], { fileName ->
-            return new File("resources/${fileName}").getText('UTF-8')
+            return new File("resources/${fileName}").getText('Utf8')
         })
         helper.registerAllowedMethod('libraryResource', [Map.class], { config ->
             return config.resource

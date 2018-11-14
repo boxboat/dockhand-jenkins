@@ -1,31 +1,24 @@
-package com.boxboat.jenkins.library.docker
+package com.boxboat.jenkins.library
 
 @Grab('org.apache.commons:commons-lang3:3.7')
 import org.apache.commons.lang3.builder.EqualsBuilder
 import org.apache.commons.lang3.builder.HashCodeBuilder
 
-class Registry implements Serializable {
+class Vault implements Serializable {
 
-    String scheme = "https"
+    String url = ""
 
-    String host = ""
-
-    String credentials = ""
-
-    def getRegistryUrl() {
-        return "${scheme}://${host}"
-    }
+    String credentials = "s"
 
     @Override
     boolean equals(Object o) {
-        if (!(o instanceof Registry)) {
+        if (!(o instanceof Vault)) {
             return false
         }
-        Registry m = (Registry) o
+        Vault m = (Vault) o
 
         return new EqualsBuilder()
-                .append(this.scheme, m.scheme)
-                .append(this.host, m.host)
+                .append(this.url, m.url)
                 .append(this.credentials, m.credentials)
                 .isEquals()
     }
@@ -33,8 +26,7 @@ class Registry implements Serializable {
     @Override
     int hashCode() {
         return new HashCodeBuilder(17, 37)
-                .append(this.scheme)
-                .append(this.host)
+                .append(this.url)
                 .append(this.credentials)
                 .toHashCode()
     }

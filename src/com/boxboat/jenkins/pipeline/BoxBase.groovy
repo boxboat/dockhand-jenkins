@@ -2,6 +2,7 @@ package com.boxboat.jenkins.pipeline
 
 import com.boxboat.jenkins.library.git.GitAccount
 import com.boxboat.jenkins.library.git.GitRepo
+import com.boxboat.jenkins.library.Config
 
 abstract class BoxBase {
 
@@ -15,11 +16,15 @@ abstract class BoxBase {
     }
 
     def init() {
+        // load the config
+        String configYaml = steps.libraryResource('com/boxboat/jenkins/config.yaml')
+        Config.loadConfig(configYaml)
+
         // update from Git
         gitRepo = gitAccount.checkoutScm()
 
         // copy the shared library
-        def sharedLibraryZip = steps.libraryResource(resource: 'com/boxboat/jenkins/sharedLibraryScripts.zip', encoding: "Base64")
+        String sharedLibraryZip = steps.libraryResource(resource: 'com/boxboat/jenkins/sharedLibraryScripts.zip', encoding: "Base64")
         steps.writeFile(file: "sharedLibraryScripts.zip", text: sharedLibraryZip, encoding: "Base64")
         steps.sh """
             rm -rf sharedLibraryScripts
