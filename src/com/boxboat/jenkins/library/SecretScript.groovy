@@ -3,7 +3,7 @@ package com.boxboat.jenkins.library
 class SecretScript {
 
     static replace(steps, Vault vault, List<String> globs, Map<String, String> env) {
-        steps.withCredentials(vault.getCredentials()) {
+        steps.withCredentials(vault.getCredentials(steps)) {
             def envStr = env.collect { k, v ->
                 return "--env \"${k}=${v}\""
             }.join(" ")
@@ -25,7 +25,7 @@ class SecretScript {
                 format = "env"
             }
         }
-        steps.withCredentials(vault.getCredentials()) {
+        steps.withCredentials(vault.getCredentials(steps)) {
             steps.sh """
                 export VAULT_ADDR="${vault.url}"
                 ${LibraryScript.run(steps, "secret-env.sh")} \\
