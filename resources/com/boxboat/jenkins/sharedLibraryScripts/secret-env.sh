@@ -78,7 +78,7 @@ fi
 for key in "${keys[@]}"; do
     echo "vault : kv=$key"
     vault kv get --format json "$key" \
-        | jq -r '.data | to_entries[] | .key + "'$sep'\"" + ( .value | gsub("\""; "\\\"") ) + "\""' \
+        | jq -r "$data_path"' | to_entries[] | .key + "'$sep'\"" + ( .value | gsub("\""; "\\\"") ) + "\""' \
         | tee $append "$output" > /dev/null
     [ ${PIPESTATUS[0]} -eq 0 -a ${PIPESTATUS[1]} -eq 0 -a ${PIPESTATUS[2]} -eq 0 ]
     append="-a"
