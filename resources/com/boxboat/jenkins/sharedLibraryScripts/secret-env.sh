@@ -1,14 +1,16 @@
 #!/bin/bash
 
 append=""
+data_path=""
 format="env"
-sep="="
 help=0
-output=""
 keys=()
+kv_version=""
+sep="="
+output=""
 
 usage () {
-    echo "Usage: ./secret-env.sh --output <filename> [--format env|yaml] [--append] ...keys" >&2
+    echo "Usage: ./secret-env.sh --output <filename> --kv-version 1|2 [--format env|yaml] [--append] ...keys" >&2
 }
 
 while [ $# -gt 0 ]; do
@@ -22,6 +24,10 @@ while [ $# -gt 0 ]; do
             ;;
         "-h" | "--help")
             help=1
+            ;;
+        "--kv-version")
+            kv_version="$2"
+            shift
             ;;
         "-o" | "--output")
             output="$2"
@@ -43,6 +49,16 @@ fi
 
 if [ "$output" = "" ]; then
     echo "--output <filename> is required" >&2
+    usage
+    exit 1
+fi
+
+if [ "$kv_version" = "1" ]; then
+    data_path=".data"
+elif [ "$kv_version" = "2" ]; then
+    data_path=".data.data"
+else
+    echo "--kv-version is required and must be 1 or 2" >&2
     usage
     exit 1
 fi

@@ -10,7 +10,7 @@ class Registry implements Serializable {
 
     String host = ""
 
-    String credentials = ""
+    String credential = ""
 
     def getRegistryUrl() {
         return "${scheme}://${host}"
@@ -26,7 +26,7 @@ class Registry implements Serializable {
         return new EqualsBuilder()
                 .append(this.scheme, m.scheme)
                 .append(this.host, m.host)
-                .append(this.credentials, m.credentials)
+                .append(this.credential, m.credential)
                 .isEquals()
     }
 
@@ -35,7 +35,7 @@ class Registry implements Serializable {
         return new HashCodeBuilder(17, 37)
                 .append(this.scheme)
                 .append(this.host)
-                .append(this.credentials)
+                .append(this.credential)
                 .toHashCode()
     }
 

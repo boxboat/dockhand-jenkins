@@ -63,7 +63,7 @@ class BoxPromote extends BoxBase {
         Registry registry = Config.getRegistry(registryConfig)
         steps.docker.withRegistry(
                 registry.getRegistryUrl(),
-                registry.credentials) {
+                registry.credential) {
 
             List<Image> images = images.collect { String v -> Image.fromImageString(v) }
 
