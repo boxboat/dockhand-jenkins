@@ -10,6 +10,7 @@ class SecretScript {
 
             steps.sh """
                 export VAULT_ADDR="${vault.url}"
+                source ${LibraryScrpt.run(steps, "vault-login.sh")}
                 ${LibraryScript.run(steps, "secret-replace.sh")} \\
                     ${envStr} \\
                     "${globs.join('" "')}"
@@ -28,6 +29,7 @@ class SecretScript {
         steps.withCredentials(vault.getCredentials(steps)) {
             steps.sh """
                 export VAULT_ADDR="${vault.url}"
+                source ${LibraryScrpt.run(steps, "vault-login.sh")}
                 ${LibraryScript.run(steps, "secret-env.sh")} \\
                     ${append ? "--append" : ""} \\
                     --format "${format}" \\
