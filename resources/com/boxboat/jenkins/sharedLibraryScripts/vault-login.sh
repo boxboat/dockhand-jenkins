@@ -27,7 +27,7 @@ if [[ "${VAULT_ROLE_ID}" = "" || "${VAULT_SECRET_ID}" = "" ]]; then
 fi
 
 if [[ "${VAULT_AUTH_METHOD}" = "TOKEN" && "${VAULT_TOKEN}" = "" ]]; then
-  usage
+  echo "VAULT_TOKEN or VAULT_ROLE_ID and VAULT_SECRET_ID must be defined in the environment"
   return
 fi
 
