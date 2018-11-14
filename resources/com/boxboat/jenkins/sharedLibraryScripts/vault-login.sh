@@ -1,7 +1,5 @@
 #!/bin/bash
 
-set -e
-
 usage () {
     echo "Usage: VAULT_ROLE_ID=<vault-role-id> VAULT_SECRET_ID=<vault-secret-id> source vault-login.sh" >&2
 }
@@ -39,4 +37,3 @@ export VAULT_TOKEN=$(vault write --format=json auth/approle/login \
     secret_id=${VAULT_SECRET_ID} | jq -r .auth.client_token)
 fi
 
-set +e
