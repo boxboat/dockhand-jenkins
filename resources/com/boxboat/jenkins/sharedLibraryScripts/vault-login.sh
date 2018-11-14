@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 usage () {
     echo "Usage: VAULT_ROLE_ID=<vault-role-id> VAULT_SECRET_ID=<vault-secret-id> source vault-login.sh" >&2
@@ -22,11 +22,11 @@ fi
 
 VAULT_AUTH_METHOD="ROLE"
 
-if [[ "${VAULT_ROLE_ID}" = "" || "${VAULT_SECRET_ID}" = "" ]]; then
+if [ "${VAULT_ROLE_ID}" = "" -o "${VAULT_SECRET_ID}" = "" ]; then
   VAULT_AUTH_METHOD="TOKEN"
 fi
 
-if [[ "${VAULT_AUTH_METHOD}" = "TOKEN" && "${VAULT_TOKEN}" = "" ]]; then
+if [ "${VAULT_AUTH_METHOD}" = "TOKEN" -a "${VAULT_TOKEN}" = "" ]; then
   echo "VAULT_TOKEN or VAULT_ROLE_ID and VAULT_SECRET_ID must be defined in the environment"
   return
 fi
@@ -36,4 +36,3 @@ export VAULT_TOKEN=$(vault write --format=json auth/approle/login \
     role_id=${VAULT_ROLE_ID} \
     secret_id=${VAULT_SECRET_ID} | jq -r .auth.client_token)
 fi
-
