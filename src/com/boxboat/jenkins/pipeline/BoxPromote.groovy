@@ -57,7 +57,7 @@ class BoxPromote extends BoxBase {
             """
         }
 
-        def buildVersions = gitAccount.checkoutRepository(Config.buildVersionsGitRemoteUrl, "build-versions", 1)
+        def buildVersions = gitAccount.checkoutRepository(Config.git.buildVersionsUrl, "build-versions", 1)
         def updateBuildVersions = false
 
         Registry registry = Config.getRegistry(registryConfig)

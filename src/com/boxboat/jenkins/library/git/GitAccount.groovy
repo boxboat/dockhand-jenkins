@@ -12,7 +12,7 @@ class GitAccount implements Serializable {
             return true
         }
         steps.withCredentials([steps.sshUserPrivateKey(
-                credentialsId: Config.gitCredentials,
+                credentialsId: Config.git.credentials,
                 keyFileVariable: 'sshKey',
                 usernameVariable: 'username'
         )]) {
@@ -24,7 +24,7 @@ class GitAccount implements Serializable {
 
                 # Git Config
                 git config --global user.name "Jenkins Service Account"
-                git config --global user.email "${Config.gitEmail}"
+                git config --global user.email "${Config.git.email}"
                 git config --global push.default simple
             """
         }

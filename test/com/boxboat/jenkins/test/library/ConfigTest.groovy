@@ -3,6 +3,7 @@ package com.boxboat.jenkins.test.library
 import com.boxboat.jenkins.library.Config
 import com.boxboat.jenkins.library.Vault
 import com.boxboat.jenkins.library.docker.Registry
+import com.boxboat.jenkins.library.git.GitConfig
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
@@ -37,6 +38,7 @@ class ConfigTest {
 //        System.out.println("")
 //        System.out.println(yaml.dump(config))
         assertEquals(expectedConfig, config)
+        assertEquals(config.git.buildVersionsUrl, config.git.getRemoteUrl(config.git.getRemotePath(config.git.buildVersionsUrl)))
     }
 
     @Parameters(name = "{index}: {0}")
@@ -44,9 +46,13 @@ class ConfigTest {
         return [[
                         "test.yaml",
                         new Config(
-                                buildVersionsGitRemoteUrl: "ssh://git@github.com/boxboat/build-versions.git",
-                                gitEmail: "jenkins@boxboat.com",
-                                gitCredentials: "git",
+                                git: new GitConfig(
+                                        buildVersionsUrl: "git@github.com/boxboat/build-versions.git",
+                                        credentials: "git",
+                                        email: "jenkins@boxboat.com",
+                                        remotePathRegex: "github\\.com/(.*)\\.git\$",
+                                        remoteUrlReplace: 'git@github.com/{{ path }}.git',
+                                ),
                                 registryMap: [
                                         "default": new Registry(
                                                 scheme: "https",

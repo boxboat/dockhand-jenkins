@@ -46,7 +46,7 @@ class BoxDeploy extends BoxBase {
     def deploy() {
         List<Image> images = images.collect { String v -> Image.fromImageString(v) }
         def primaryEvent = events.get(deployment)
-        gitAccount.checkoutRepository(Config.buildVersionsGitRemoteUrl, "build-versions", 1)
+        gitAccount.checkoutRepository(Config.git.buildVersionsUrl, "build-versions", 1)
         images.each { image ->
             def event = primaryEvent
             def eventOverridesDeployment = eventOverrides?.get(deployment)

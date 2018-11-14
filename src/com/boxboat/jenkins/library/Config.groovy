@@ -1,6 +1,7 @@
 package com.boxboat.jenkins.library
 
 import com.boxboat.jenkins.library.docker.Registry
+import com.boxboat.jenkins.library.git.GitConfig
 
 @Grab('org.yaml:snakeyaml:1.19')
 import org.yaml.snakeyaml.Yaml
@@ -23,11 +24,9 @@ class Config implements Serializable {
         Config = createConfig(yamlStr)
     }
 
-    String buildVersionsGitRemoteUrl = ""
+    GitConfig git
 
-    String gitEmail = ""
 
-    String gitCredentials = ""
 
     Map<String, Registry> registryMap = [:]
 
@@ -49,15 +48,6 @@ class Config implements Serializable {
         return vault
     }
 
-    static String gitRemotePath(String url) {
-        def matcher = url =~ /github\.com\/(.*)\.git$/
-        return matcher.hasGroup() ? matcher[0][1] : null
-    }
-
-    static String gitRemoteUrl(String path) {
-        return "git@github.com/${path}.git"
-    }
-
     @Override
     boolean equals(Object o) {
         if (!(o instanceof Config)) {
@@ -66,9 +56,7 @@ class Config implements Serializable {
         Config m = (Config) o
 
         return new EqualsBuilder()
-                .append(this.buildVersionsGitRemoteUrl, m.buildVersionsGitRemoteUrl)
-                .append(this.gitEmail, m.gitEmail)
-                .append(this.gitCredentials, m.gitCredentials)
+                .append(this.git, m.git)
                 .append(this.registryMap, m.registryMap)
                 .append(this.vaultMap, m.vaultMap)
                 .isEquals()
@@ -77,9 +65,7 @@ class Config implements Serializable {
     @Override
     int hashCode() {
         return new HashCodeBuilder(17, 37)
-                .append(this.buildVersionsGitRemoteUrl)
-                .append(this.gitEmail)
-                .append(this.gitCredentials)
+                .append(this.git)
                 .append(this.registryMap)
                 .append(this.vaultMap)
                 .toHashCode()
