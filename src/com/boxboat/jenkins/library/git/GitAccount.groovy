@@ -35,13 +35,13 @@ class GitAccount implements Serializable {
     def checkoutScm() {
         _ensureInitialized()
         steps.sh """
+            set +ex
             if [ -d .git ]
             then
-                git add --all
-                git stash || :
-                git stash drop || :
+                git reset --hard
                 git clean -fd
             fi
+            exit 0
         """
         def checkoutData = steps.checkout steps.scm
         return new GitRepo(steps: steps, relativeDir: ".", checkoutData: checkoutData)

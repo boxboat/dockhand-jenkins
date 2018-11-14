@@ -64,7 +64,6 @@ class BoxRepo extends BoxBase {
             if (isBranchTip) {
                 tags.add(event)
             }
-            Registry registry = registry
             List<Image> images = pushImages.collect { String v -> Image.fromImageString(v) }
             steps.docker.withRegistry(
                     Config.getRegistry(registryConfig).getRegistryUrl(),
