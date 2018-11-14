@@ -10,7 +10,7 @@ class GitConfig {
 
     String email = ""
 
-    String credentials = ""
+    String credential = ""
 
     String remotePathRegex = ""
 
@@ -35,7 +35,7 @@ class GitConfig {
         return new EqualsBuilder()
                 .append(this.buildVersionsUrl, m.buildVersionsUrl)
                 .append(this.email, m.email)
-                .append(this.credentials, m.credentials)
+                .append(this.credential, m.credential)
                 .append(this.remotePathRegex, m.remotePathRegex)
                 .append(this.remoteUrlReplace, m.remoteUrlReplace)
                 .isEquals()
@@ -46,7 +46,7 @@ class GitConfig {
         return new HashCodeBuilder(17, 37)
                 .append(this.buildVersionsUrl)
                 .append(this.email)
-                .append(this.credentials)
+                .append(this.credential)
                 .append(this.remotePathRegex)
                 .append(this.remoteUrlReplace)
                 .toHashCode()

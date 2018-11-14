@@ -12,7 +12,7 @@ class GitAccount implements Serializable {
             return true
         }
         steps.withCredentials([steps.sshUserPrivateKey(
-                credentialsId: Config.git.credentials,
+                credentialsId: Config.git.credential,
                 keyFileVariable: 'sshKey',
                 usernameVariable: 'username'
         )]) {

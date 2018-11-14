@@ -47,7 +47,7 @@ class ConfigTest {
                         new Config(
                                 git: new GitConfig(
                                         buildVersionsUrl: "git@github.com/boxboat/build-versions.git",
-                                        credentials: "git",
+                                        credential: "git",
                                         email: "jenkins@boxboat.com",
                                         remotePathRegex: "github\\.com/(.*)\\.git\$",
                                         remoteUrlReplace: 'git@github.com/{{ path }}.git',
