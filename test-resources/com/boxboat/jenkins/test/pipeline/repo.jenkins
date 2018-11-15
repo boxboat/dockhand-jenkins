@@ -35,6 +35,9 @@ def execute() {
           stage ('Push'){
             repo.push()
           }
+          repo.success()
+        } catch (Exception ex) {
+          repo.failure(ex)
         } finally {
           stage('Cleanup'){
             repo.cleanup()

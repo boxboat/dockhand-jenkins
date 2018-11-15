@@ -17,6 +17,7 @@ abstract class PipelineBase extends BasePipelineTest {
         helper.registerAllowedMethod('libraryResource', [Map.class], { config ->
             return config.resource
         })
+        helper.registerAllowedMethod('httpRequest', [Map.class], null)
         helper.registerAllowedMethod('writeFile', [Map.class], null)
         helper.registerAllowedMethod('sshUserPrivateKey', [Map.class], null)
         helper.registerAllowedMethod('throttle', [List.class, Closure.class], {

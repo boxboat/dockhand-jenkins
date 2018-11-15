@@ -2,7 +2,7 @@ package com.boxboat.jenkins.library
 
 import com.boxboat.jenkins.library.docker.Registry
 import com.boxboat.jenkins.library.git.GitConfig
-
+import com.boxboat.jenkins.library.notification.NotificationsConfig
 @Grab('org.yaml:snakeyaml:1.19')
 import org.yaml.snakeyaml.Yaml
 import org.yaml.snakeyaml.constructor.CustomClassLoaderConstructor
@@ -15,16 +15,18 @@ class Config implements Serializable {
 
     static Config Config = new Config()
 
-    static Config createConfig(String yamlStr) {
+    static Config CreateConfig(String yamlStr) {
         Yaml yaml = new Yaml(new CustomClassLoaderConstructor(Config.class.classLoader))
-        return yaml.loadAs(yamlStr, Config.class)
+        return (Config) yaml.loadAs(yamlStr, Config.class)
     }
 
-    static void loadConfig(String yamlStr) {
-        Config = createConfig(yamlStr)
+    static void LoadConfig(String yamlStr) {
+        Config = CreateConfig(yamlStr)
     }
 
-    GitConfig git
+    GitConfig git = new GitConfig()
+
+    NotificationsConfig notifications = new NotificationsConfig()
 
     Map<String, Registry> registryMap = [:]
 
@@ -55,6 +57,7 @@ class Config implements Serializable {
 
         return new EqualsBuilder()
                 .append(this.git, m.git)
+                .append(this.notifications, m.notifications)
                 .append(this.registryMap, m.registryMap)
                 .append(this.vaultMap, m.vaultMap)
                 .isEquals()
@@ -64,6 +67,7 @@ class Config implements Serializable {
     int hashCode() {
         return new HashCodeBuilder(17, 37)
                 .append(this.git)
+                .append(this.notifications)
                 .append(this.registryMap)
                 .append(this.vaultMap)
                 .toHashCode()

@@ -4,6 +4,8 @@ import com.boxboat.jenkins.library.Config
 import com.boxboat.jenkins.library.Vault
 import com.boxboat.jenkins.library.docker.Registry
 import com.boxboat.jenkins.library.git.GitConfig
+import com.boxboat.jenkins.library.notification.NotificationsConfig
+import com.boxboat.jenkins.library.notification.SlackNotificationProvider
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
@@ -25,7 +27,7 @@ class ConfigTest {
 
     @Test
     void testConfig() {
-        def config = Config.createConfig(fileText("${fileBase}${fileName}"))
+        def config = Config.CreateConfig(fileText("${fileBase}${fileName}"))
 //        Yaml yaml = new Yaml()
 //        System.out.println("")
 //        System.out.println("Expected:")
@@ -52,12 +54,21 @@ class ConfigTest {
                                         remotePathRegex: "github\\.com/(.*)\\.git\$",
                                         remoteUrlReplace: 'git@github.com/{{ path }}.git',
                                 ),
+                                notifications: new NotificationsConfig(
+                                        failureProvider: "default",
+                                        successProvider: "default",
+                                        providerMap: [
+                                                default: new SlackNotificationProvider(
+                                                        credential: "slack-webhook-url",
+                                                ),
+                                        ],
+                                ),
                                 registryMap: [
                                         "default": new Registry(
                                                 scheme: "https",
                                                 host: "dtr.boxboat.com",
                                                 credential: "registry",
-                                        )
+                                        ),
                                 ],
                                 vaultMap: [
                                         "default": new Vault(
@@ -66,7 +77,7 @@ class ConfigTest {
                                                 secretIdCredential: "vault-secret-id",
                                                 tokenCredential: "vault-token",
                                                 url: "http://localhost:8200",
-                                        )
+                                        ),
                                 ],
                         )
                 ]]*.toArray()

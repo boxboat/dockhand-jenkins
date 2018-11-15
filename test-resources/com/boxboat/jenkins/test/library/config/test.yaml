@@ -4,6 +4,12 @@ git:
   email: jenkins@boxboat.com
   remotePathRegex: github\.com/(.*)\.git$
   remoteUrlReplace: git@github.com/{{ path }}.git
+notifications:
+  failureProvider: default
+  successProvider: default
+  providerMap:
+    default: !!com.boxboat.jenkins.library.notification.SlackNotificationProvider
+      credential: slack-webhook-url
 registryMap:
   default:
     scheme: https
