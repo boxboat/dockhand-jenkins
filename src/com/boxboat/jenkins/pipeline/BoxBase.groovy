@@ -32,6 +32,7 @@ abstract class BoxBase {
 
         // update from Git
         gitRepo = gitAccount.checkoutScm()
+        steps.env.GIT_COMMIT_SHORT_HASH = gitRepo.shortHash
 
         // create directory for shared library
         steps.sh """
