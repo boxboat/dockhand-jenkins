@@ -24,6 +24,9 @@ abstract class PipelineBase extends BasePipelineTest {
             category, next -> next()
         })
         helper.registerAllowedMethod('usernamePassword', [Map.class], null)
+        helper.registerAllowedMethod('withKubeConfig', [Map.class, Closure.class], {
+            config, next -> next()
+        })
 
         binding.setVariable('env', [
                 'sshKey'     : 'sshKey',

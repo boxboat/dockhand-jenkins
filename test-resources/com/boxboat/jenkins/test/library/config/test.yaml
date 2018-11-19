@@ -1,3 +1,7 @@
+deployTargetMap:
+  default: !!com.boxboat.jenkins.library.deployTarget.KubernetesDeployTarget
+    contextName: boxboat
+    credential: kubeconfig
 git:
   buildVersionsUrl: git@github.com/boxboat/build-versions.git
   credential: git

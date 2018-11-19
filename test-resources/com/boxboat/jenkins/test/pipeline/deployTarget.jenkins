@@ -1,0 +1,35 @@
+@Library('jenkins-shared-library@master')
+import com.boxboat.jenkins.pipeline.*
+
+
+def execute() {
+    node() {
+
+        def deploy = new BoxDeployTarget(
+            steps: this,
+            deployTarget: "default",
+        )
+
+        try {
+          stage('Setup') {
+            deploy.init()
+          }
+          stage('Deploy'){
+            deploy.withCredentials(){
+              sh "helm upgrade --install test ."
+            }
+          }
+          deploy.success()
+        } catch (Exception ex) {
+          deploy.failure(ex)
+          throw ex
+        } finally {
+          stage('Cleanup') {
+            deploy.cleanup()
+          }
+        }
+
+    }
+}
+
+return this

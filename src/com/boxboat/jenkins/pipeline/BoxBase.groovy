@@ -1,5 +1,6 @@
 package com.boxboat.jenkins.pipeline
 
+import com.boxboat.jenkins.library.SecretScript
 import com.boxboat.jenkins.library.git.GitAccount
 import com.boxboat.jenkins.library.git.GitRepo
 import com.boxboat.jenkins.library.notification.INotificationProvider
@@ -66,6 +67,14 @@ abstract class BoxBase {
 
     def cleanup() {
         gitRepo?.resetAndClean()
+    }
+
+    def secretReplaceScript(List<String> globs, Map<String,String> env = [:]) {
+        SecretScript.replace(steps, Config.getVault(vaultConfig), globs, env)
+    }
+
+    def secretFileScript(List<String> vaultKeys, String outFile, String format = "", boolean append = false) {
+        SecretScript.file(steps, Config.getVault(vaultConfig), vaultKeys, outFile, format, append)
     }
 
 }
