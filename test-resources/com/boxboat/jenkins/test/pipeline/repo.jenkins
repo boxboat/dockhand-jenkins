@@ -38,6 +38,7 @@ def execute() {
           repo.success()
         } catch (Exception ex) {
           repo.failure(ex)
+          throw ex
         } finally {
           stage('Cleanup'){
             repo.cleanup()

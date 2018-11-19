@@ -1,8 +1,10 @@
 package com.boxboat.jenkins.library
 
+import com.boxboat.jenkins.library.deployTarget.IDeployTarget
 import com.boxboat.jenkins.library.docker.Registry
 import com.boxboat.jenkins.library.git.GitConfig
 import com.boxboat.jenkins.library.notification.NotificationsConfig
+
 @Grab('org.yaml:snakeyaml:1.19')
 import org.yaml.snakeyaml.Yaml
 import org.yaml.snakeyaml.constructor.CustomClassLoaderConstructor
@@ -24,6 +26,8 @@ class Config implements Serializable {
         Config = CreateConfig(yamlStr)
     }
 
+    Map<String, IDeployTarget> deployTargetMap = [:]
+
     GitConfig git = new GitConfig()
 
     NotificationsConfig notifications = new NotificationsConfig()
@@ -31,6 +35,14 @@ class Config implements Serializable {
     Map<String, Registry> registryMap = [:]
 
     Map<String, Vault> vaultMap = [:]
+
+    IDeployTarget getDeployTarget(String key) {
+        def deploymentTarget = deployTargetMap.get(key)
+        if (!deploymentTarget) {
+            throw new Exception("deployTarget entry '${key}' does not exist in config file")
+        }
+        return deploymentTarget
+    }
 
     Registry getRegistry(String key) {
         def registry = registryMap.get(key)

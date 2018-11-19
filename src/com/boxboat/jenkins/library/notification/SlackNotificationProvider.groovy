@@ -1,6 +1,7 @@
 package com.boxboat.jenkins.library.notification
 
 import groovy.json.JsonBuilder
+
 @Grab('org.apache.commons:commons-lang3:3.7')
 import org.apache.commons.lang3.builder.EqualsBuilder
 import org.apache.commons.lang3.builder.HashCodeBuilder

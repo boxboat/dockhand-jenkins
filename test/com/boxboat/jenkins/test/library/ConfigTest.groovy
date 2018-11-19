@@ -2,6 +2,7 @@ package com.boxboat.jenkins.test.library
 
 import com.boxboat.jenkins.library.Config
 import com.boxboat.jenkins.library.Vault
+import com.boxboat.jenkins.library.deployTarget.KubernetesDeployTarget
 import com.boxboat.jenkins.library.docker.Registry
 import com.boxboat.jenkins.library.git.GitConfig
 import com.boxboat.jenkins.library.notification.NotificationsConfig
@@ -47,6 +48,12 @@ class ConfigTest {
         return [[
                         "test.yaml",
                         new Config(
+                                deployTargetMap: [
+                                        "default": new KubernetesDeployTarget(
+                                                contextName: "default",
+                                                credential: "kubeconfig",
+                                        ),
+                                ],
                                 git: new GitConfig(
                                         buildVersionsUrl: "git@github.com/boxboat/build-versions.git",
                                         credential: "git",
