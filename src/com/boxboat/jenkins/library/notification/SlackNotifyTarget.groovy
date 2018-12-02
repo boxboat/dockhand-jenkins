@@ -1,12 +1,9 @@
 package com.boxboat.jenkins.library.notification
 
+import com.boxboat.jenkins.library.config.BaseConfig
 import groovy.json.JsonBuilder
 
-@Grab('org.apache.commons:commons-lang3:3.7')
-import org.apache.commons.lang3.builder.EqualsBuilder
-import org.apache.commons.lang3.builder.HashCodeBuilder
-
-class SlackNotificationProvider implements INotificationProvider, Serializable {
+class SlackNotifyTarget extends BaseConfig<SlackNotifyTarget> implements INotifyTarget {
 
     String credential = ""
 
@@ -42,25 +39,6 @@ class SlackNotificationProvider implements INotificationProvider, Serializable {
                     requestBody: jsonStr
             )
         }
-    }
-
-    @Override
-    boolean equals(Object o) {
-        if (!(o instanceof SlackNotificationProvider)) {
-            return false
-        }
-        SlackNotificationProvider m = (SlackNotificationProvider) o
-
-        return new EqualsBuilder()
-                .append(this.credential, m.credential)
-                .isEquals()
-    }
-
-    @Override
-    int hashCode() {
-        return new HashCodeBuilder(17, 37)
-                .append(this.credential)
-                .toHashCode()
     }
 
 }

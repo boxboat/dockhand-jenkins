@@ -3,7 +3,7 @@ package com.boxboat.jenkins.test.pipeline
 import org.junit.Before
 import org.junit.Test
 
-class DeployTargetTest extends PipelineBase {
+class DeploymentTest extends PipelineBase {
 
     @Override
     @Before
@@ -12,8 +12,8 @@ class DeployTargetTest extends PipelineBase {
     }
 
     @Test
-    void deployTargetTest() throws Exception {
-        def script = loadScript("${this.scriptBase}deployTarget.jenkins")
+    void deploymentTest() throws Exception {
+        def script = loadScript("${this.scriptBase}deployment.jenkins")
         script.execute()
         printCallStack()
     }

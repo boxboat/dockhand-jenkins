@@ -1,0 +1,50 @@
+common:
+  images:
+  - apps/app-1
+  - apps/app-2
+  - apps/app-3
+  - apps/app-4
+  eventRegistryKeys:
+  - event: commit/dev
+    registryKey: default
+  - event: commit/master
+    registryKey: default
+  - event: commit/feature-.*
+    registryKey: default
+  - event: tag/.*
+    registryKey: default
+    notify: true
+build:
+  composeProfileMap:
+    docker: ./build/docker
+  pullImages:
+  - path: base-images/app-base
+    event: tag/release
+    trigger: true
+promote:
+  baseVersion: 0.0.1
+  promotionMap:
+    qa:
+      event: commit/master
+      promoteToEvent: tag/preview
+    stage:
+      event: tag/preview
+      promoteToEvent: tag/rc
+    prod:
+      event: tag/rc
+      promoteToEvent: tag/release
+deploy:
+  deploymentMap:
+    feature:
+      environmentKey: dev
+      event: commit/feature-.*
+      eventFallback: commit/master
+      imageOverrides:
+      - path: apps/app-4
+        event: commit/test
+        eventFallback: commit/test2
+      trigger: true
+  imageOverrides:
+  - path: apps/app-3
+    event: commit/test
+    eventFallback: commit/test2

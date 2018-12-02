@@ -1,96 +1,125 @@
 package com.boxboat.jenkins.pipeline
 
-import com.boxboat.jenkins.library.SecretScript
 import com.boxboat.jenkins.library.Utils
+import com.boxboat.jenkins.library.config.BaseConfig
+import com.boxboat.jenkins.library.config.DeployConfig
+import com.boxboat.jenkins.library.config.GlobalConfig
+import com.boxboat.jenkins.library.deploy.DeployType
+import com.boxboat.jenkins.library.deploy.Deployment
+import com.boxboat.jenkins.library.deployTarget.IDeployTarget
 import com.boxboat.jenkins.library.docker.Image
-import static com.boxboat.jenkins.library.Config.Config
+import com.boxboat.jenkins.library.environment.Environment
 
-class BoxDeploy extends BoxBase {
+class BoxDeploy extends BoxBase<DeployConfig> {
 
-    String deployment = ""
-    String release = ""
-    public List<String> images
-    public Map<String, String> events
-    public Map<String, Map<String, String>> eventOverrides
-    public String registryConfig = "default"
-    public String vaultConfig = "default"
-
-    private static final String imageTagsFile = "image-tags.yml"
+    protected DeployType deployType
+    protected IDeployTarget deployTarget
+    protected Environment environment
+    protected Deployment deployment
 
     BoxDeploy(Map config) {
         super(config)
-        config?.each { k, v -> this[k] = v }
     }
 
-    static def createBoxDeploy(Map config) {
+    @Override
+    protected String configKey() {
+        return "deploy"
+    }
+
+    static def create(Map config) {
         def deploy = new BoxDeploy(config)
         return deploy
     }
 
     def init() {
         super.init()
-        if (!deployment) {
-            steps.error "'deployment' must be set"
+        if (config.deployTargetKey) {
+            deployType = DeployType.DeployTarget
+        } else if (config.environmentKey) {
+            deployType = DeployType.Environment
+        } else if (config.deploymentKey) {
+            deployType = DeployType.Deployment
+        } else {
+            steps.error "'deployTargetKey', 'environmentKey', or 'deploymentKey'  must be set"
         }
-        if (!images || images.size() == 0) {
-            steps.error "'images' must be set"
-        }
-        if (!events || events.size() == 0) {
-            steps.error "'events' must be set"
-        }
-        if (!events.containsKey(deployment)) {
-            steps.error "deployment '${deployment}' is not defined in 'events'"
+        //noinspection GroovyFallthrough
+        switch (deployType) {
+            case DeployType.Deployment:
+                deployment = config.getDeployment(config.deploymentKey)
+                config.environmentKey = deployment.environmentKey
+            case DeployType.Environment:
+                environment = GlobalConfig.config.getEnvironment(config.environmentKey)
+                config.deployTargetKey = environment.deployTargetKey
+            case DeployType.DeployTarget:
+                deployTarget = GlobalConfig.config.getDeployTarget(config.deployTargetKey)
         }
     }
 
-    def deploy() {
-        List<Image> images = images.collect { String v -> Image.fromImageString(v) }
-        def primaryEvent = events.get(deployment)
-        gitAccount.checkoutRepository(Config.git.buildVersionsUrl, "build-versions", 1)
-        images.each { image ->
-            def event = primaryEvent
-            def eventOverridesDeployment = eventOverrides?.get(deployment)
-            if (eventOverridesDeployment) {
-                def eventOverridesImage = eventOverridesDeployment.get(image.path)
-                if (eventOverridesImage) {
-                    event = eventOverridesImage
+    static class ImageTagsParams extends BaseConfig<ImageTagsParams> {
+        String format
+        String outFile
+        List<String> yamlPath
+    }
+
+    def writeImageTags(Map paramsMap) {
+        ImageTagsParams params = (new ImageTagsParams()).newFromObject(paramsMap)
+        if (!params.outFile) {
+            steps.error "'outFile' is required"
+        }
+        if (!params.format) {
+            params.format = Utils.fileFormatDetect(params.outFile)
+        }
+        params.format = Utils.fileFormatNormalize(params.format)
+        if (params.format != "yaml") {
+            steps.error "'format' is required and must be 'yaml'"
+        }
+
+        gitAccount.checkoutRepository(GlobalConfig.config.git.buildVersionsUrl, "build-versions", 1)
+        steps.sh """
+            rm -f "${params.outFile}"
+        """
+        config.images.each { Image image ->
+            def event = deployment.event
+            def eventFallback = deployment.eventFallback
+            def imageOverridesCl = { Image imageOverride ->
+                if (imageOverride.path == image.path) {
+                    event = imageOverride.event
+                    eventFallback = imageOverride.eventFallback
                 }
             }
-            def filePath = "build-versions/${event}/${Utils.alphaNumericDashLower(image.path)}.yaml"
-            def rc = steps.sh(returnStatus: true, script: """
-                if [ -f "${filePath}" ]; then
-                    cat "$filePath" >> "${imageTagsFile}"
-                    exit 0
-                fi
-                exit 1
-            """)
-            if (rc != 0) {
-                steps.error """
-                    build-versions does not contain a version for event: ${event}, image '${image.path}'
-                """
+            config.imageOverrides.each imageOverridesCl
+            deployment.imageOverrides.each imageOverridesCl
+            def writeTagCl = { tryEvent ->
+                def filePath = "build-versions/image-versions/${tryEvent}/${Utils.alphaNumericDashLower(image.path)}.yaml"
+                def rc = steps.sh(returnStatus: true, script: """
+                    if [ -f "${filePath}" ]; then
+                        cat "$filePath" >> "${params.outFile}"
+                        exit 0
+                    fi
+                    exit 1
+                """)
+                return rc == 0
             }
+            if (writeTagCl(event)) {
+                return
+            }
+            String triedEvents = event
+            if (eventFallback) {
+                if (writeTagCl(eventFallback)) {
+                    return
+                }
+                triedEvents = "[${event}, ${eventFallback}]"
+            }
+            steps.error "build-versions does not contain a version for image '${image.path}', event: ${triedEvents}"
         }
-
-        // this is where you would do helm deploy
-
-        this.steps.withKubeConfig(credentialsId: deployment + "-kube-config") {
-            this.steps.sh """
-                helm upgrade \
-                ${release}-${deployment} \
-                --namespace ${release}-${deployment} \
-                --install \
-                --values ./values-${deployment}.yaml,./${imageTagsFile} \
-                .
-            """
+        def yamlPathScript = Utils.yamlPathScript(params.yamlPath, params.outFile, params.format)
+        if (yamlPathScript) {
+            steps.sh yamlPathScript
         }
     }
 
-    def secretReplaceScript(List<String> globs, Map<String,String> env = [:]) {
-        SecretScript.replace(steps, Config.getVault(vaultConfig), globs, env)
-    }
-
-    def secretFileScript(List<String> vaultKeys, String outFile, String format = "", boolean append = false) {
-        SecretScript.file(steps, Config.getVault(vaultConfig), vaultKeys, outFile, format, append)
+    def withCredentials(closure) {
+        deployTarget.withCredentials(steps, closure)
     }
 
 }

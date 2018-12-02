@@ -1,35 +1,63 @@
 package com.boxboat.jenkins.pipeline
 
 import com.boxboat.jenkins.library.SecretScript
+import com.boxboat.jenkins.library.config.*
 import com.boxboat.jenkins.library.git.GitAccount
 import com.boxboat.jenkins.library.git.GitRepo
-import com.boxboat.jenkins.library.notification.INotificationProvider
+import com.boxboat.jenkins.library.notification.INotifyTarget
 import com.boxboat.jenkins.library.notification.NotificationType
 
-import static com.boxboat.jenkins.library.Config.LoadConfig
-import static com.boxboat.jenkins.library.Config.Config
+abstract class BoxBase<T extends CommonConfigBase> {
 
-abstract class BoxBase {
+    public T config
 
-    public steps
-    public boolean notifySuccessDisable = false
-    public boolean notifyFailureDisable = false
-    public String notifySuccessProvider = ""
-    public String notifyFailureProvider = ""
-
+    protected initialConfig
     protected GitAccount gitAccount
     protected GitRepo gitRepo
-    protected INotificationProvider notifySuccess
-    protected INotificationProvider notifyFailure
+    protected INotifyTarget notifySuccess
+    protected INotifyTarget notifyFailure
+    protected steps
+
 
     BoxBase(Map config) {
+        def className = this.class.simpleName
+        config.each { k, v ->
+            switch (k) {
+                case "steps":
+                    steps = v
+                    break
+                case "config":
+                    initialConfig = v
+                    break
+                default:
+                    throw new Exception("${className} does not support property '${k}'")
+            }
+        }
+        if (!steps) {
+            throw new Exception("${className} should be initialized with ${className}(steps: this)")
+        }
         gitAccount = new GitAccount(steps: config.steps)
     }
 
+    protected String configKey() {
+        return "common"
+    }
+
     def init() {
-        // load the config
+        // load the global config
         String configYaml = steps.libraryResource('com/boxboat/jenkins/config.yaml')
-        LoadConfig(configYaml)
+        def globalConfig = GlobalConfig.create(configYaml)
+        def globalConfigDefault = (new GlobalConfig()).newDefault()
+        globalConfigDefault.merge(globalConfig)
+        GlobalConfig.config = globalConfigDefault
+
+        // create the config
+        def configKey = configKey()
+        config = globalConfigDefault.repo."$configKey".newDefault()
+        if (configKey != "common") {
+            config.merge(globalConfig.repo.common)
+        }
+        config.merge(globalConfig.repo."$configKey")
 
         // update from Git
         gitRepo = gitAccount.checkoutScm()
@@ -41,19 +69,36 @@ abstract class BoxBase {
             mkdir sharedLibraryScripts
         """
 
-        if (!notifySuccessDisable) {
-            if (notifySuccessProvider) {
-                notifySuccess = Config.notifications.getProvider(notifySuccessProvider)
-            } else if (Config.notifications.successProvider) {
-                notifySuccess = Config.notifications.getProvider(Config.notifications.successProvider)
+        // merge config from jenkins.yaml if exists
+        def configFile = steps.sh(returnStdout: true, script: """
+            set +x
+            for f in "jenkins.yml" "jenkins.yaml"; do
+                if [ -f "\$f" ]; then
+                    echo  "\$f"
+                    break
+                fi
+            done
+        """)?.trim()
+        if (configFile) {
+            String configFileContents = steps.readFile(configFile)
+            def configFileObj = RepoConfig.create(configFileContents)
+            if (configKey != "common") {
+                config.merge(configFileObj.common)
             }
+            config.merge(configFileObj."$configKey")
         }
-        if (!notifyFailureDisable) {
-            if (notifyFailureProvider) {
-                notifyFailure = Config.notifications.getProvider(notifyFailureProvider)
-            } else if (Config.notifications.failureProvider) {
-                notifyFailure = Config.notifications.getProvider(Config.notifications.failureProvider)
-            }
+
+        // merge the initial config
+        if (initialConfig) {
+            def initialConfigObj = config.newFromObject(initialConfig)
+            config.merge(initialConfigObj)
+        }
+
+        if (config.notifyTargetKeySuccess) {
+            notifySuccess = GlobalConfig.config.getNotifyTarget(config.notifyTargetKeySuccess)
+        }
+        if (config.notifyTargetKeyFailure) {
+            notifyFailure = GlobalConfig.config.getNotifyTarget(config.notifyTargetKeyFailure)
         }
     }
 
@@ -69,12 +114,12 @@ abstract class BoxBase {
         gitRepo?.resetAndClean()
     }
 
-    def secretReplaceScript(List<String> globs, Map<String,String> env = [:]) {
-        SecretScript.replace(steps, Config.getVault(vaultConfig), globs, env)
+    def secretReplaceScript(Map paramsMap) {
+        SecretScript.replace(steps, paramsMap, config)
     }
 
-    def secretFileScript(List<String> vaultKeys, String outFile, String format = "", boolean append = false) {
-        SecretScript.file(steps, Config.getVault(vaultConfig), vaultKeys, outFile, format, append)
+    def secretFileScript(Map paramsMap) {
+        SecretScript.file(steps, paramsMap, config)
     }
 
 }

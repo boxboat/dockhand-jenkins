@@ -11,6 +11,9 @@ abstract class PipelineBase extends BasePipelineTest {
     void setUp() throws Exception {
         super.setUp()
         helper.registerAllowedMethod('file', [Map.class], null)
+        helper.registerAllowedMethod('fileExists', [String.class], { fileName ->
+            return false
+        })
         helper.registerAllowedMethod('libraryResource', [String.class], { fileName ->
             return new File("resources/${fileName}").getText('Utf8')
         })

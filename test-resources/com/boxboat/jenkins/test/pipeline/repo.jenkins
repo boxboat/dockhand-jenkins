@@ -5,18 +5,13 @@ import com.boxboat.jenkins.pipeline.*
 def execute() {
     node() {
 
-        def repo = new BoxRepo(
+        def repo = new BoxBuild(
             steps: this,
-            composeProfiles: [
-                "dev" : "./build/docker/dev/",
-                "prod": "./build/docker/prod/",
-            ],
-            pullImages: [
-                "test1",
-                "test2",
-            ],
-            pushImages: [
-                "test3",
+            config: [
+                composeProfileMap: [
+                    "dev" : "./build/docker/dev/",
+                    "prod": "./build/docker/prod/",
+                ],
             ],
         )
 
