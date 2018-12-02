@@ -6,7 +6,6 @@ format="env"
 help=0
 keys=()
 kv_version=""
-sep="="
 output=""
 
 usage () {
@@ -71,15 +70,18 @@ if [ "$format" != "env" -a "$format" != "yaml" ]; then
     usage
     exit 1
 fi
-if [ "$format" = "yaml" ]; then
-    sep=":"
-fi
 
 for key in "${keys[@]}"; do
-    echo "vault : kv=$key"
-    vault kv get --format json "$key" \
-        | jq -r "$data_path"' | to_entries[] | .key + "'$sep'\"" + ( .value | gsub("\""; "\\\"") ) + "\""' \
-        | tee $append "$output" > /dev/null
+    echo "vault : path=$key"
+    if [ "$format" = "yaml" ]; then
+        vault kv get --format json "$key" \
+            | jq -r "$data_path"' | to_entries[] | .key + ": \"" + ( .value | gsub("\""; "\\\"") ) + "\""' \
+            | tee $append "$output" > /dev/null
+    else
+        vault kv get --format json "$key" \
+            | jq -r "$data_path"' | to_entries[] | .key + "='\''" + ( .value | gsub("'\''"; "'\''\\'\'\''") ) + "'\''"' \
+            | tee $append "$output" > /dev/null
+    fi
     [ ${PIPESTATUS[0]} -eq 0 -a ${PIPESTATUS[1]} -eq 0 -a ${PIPESTATUS[2]} -eq 0 ]
     append="-a"
 done

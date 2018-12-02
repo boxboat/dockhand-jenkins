@@ -1,26 +1,24 @@
 package com.boxboat.jenkins.pipeline
 
-
 import com.boxboat.jenkins.library.SemVer
 import com.boxboat.jenkins.library.Utils
+import com.boxboat.jenkins.library.config.GlobalConfig
+import com.boxboat.jenkins.library.config.PromoteConfig
 import com.boxboat.jenkins.library.docker.Image
 import com.boxboat.jenkins.library.docker.Registry
-import static com.boxboat.jenkins.library.Config.Config
 
-class BoxPromote extends BoxBase {
-
-    public List<String> images
-    public String existingTag
-    public String newTag
-    public String registryConfig = "default"
-    private SemVer _newSemVer
+class BoxPromote extends BoxBase<PromoteConfig> {
 
     BoxPromote(Map config) {
         super(config)
-        config?.each { k, v -> this[k] = v }
     }
 
-    static def createBoxPromote(Map config) {
+    @Override
+    protected String configKey() {
+        return "promote"
+    }
+
+    static def create(Map config) {
         def promote = new BoxPromote(config)
         return promote
     }
@@ -30,15 +28,14 @@ class BoxPromote extends BoxBase {
         if (!images || images.size() == 0) {
             steps.error "'images' must be set"
         }
-        if (!existingTag) {
-            steps.error "'existingTag' must be set"
+        if (!checkout && !event) {
+            steps.error "'checkout' or 'event' must be set"
         }
-        if (!newTag) {
-            steps.error "'newTag' must be set"
+        if (!promoteToEvent) {
+            steps.error "'promoteToEvent' must be set"
         }
-        _newSemVer = new SemVer(newTag)
-        if (!_newSemVer.isValid) {
-            steps.error "Tag '${newTag}' is not a valid Semantic Version"
+        if (!baseVersion) {
+            steps.error "'baseVersion' must be set"
         }
     }
 
@@ -57,15 +54,15 @@ class BoxPromote extends BoxBase {
             """
         }
 
-        def buildVersions = gitAccount.checkoutRepository(Config.git.buildVersionsUrl, "build-versions", 1)
+        def buildVersions = gitAccount.checkoutRepository(GlobalConfig.config.git.buildVersionsUrl, "build-versions", 1)
         def updateBuildVersions = false
 
-        Registry registry = Config.getRegistry(registryConfig)
+        Registry registry = GlobalConfig.config.getRegistry(registryConfig)
         steps.docker.withRegistry(
                 registry.getRegistryUrl(),
                 registry.credential) {
 
-            List<Image> images = images.collect { String v -> Image.fromImageString(v) }
+            List<Image> images = images.collect { String v -> new Image(v) }
 
             images.each { Image image ->
                 def pullImage = image.copy()

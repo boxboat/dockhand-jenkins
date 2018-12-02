@@ -21,7 +21,7 @@ interpolate () {
             matchSubstituted=$(printf "$match" | envsubst)
             kv=$(get_match "$matchSubstituted" "1")
             key=$(get_match "$matchSubstituted" "2")
-            echo "vault : kv=$kv key=$key"
+            echo "vault : path=$kv key=$key"
             value=$(vault kv get -field "$key" "$kv")
             sed -i "s|${match//$/\\$}|${value//|/\\|}|g" "$1"
         done

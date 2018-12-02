@@ -1,6 +1,6 @@
 package com.boxboat.jenkins.library.notification
 
-interface INotificationProvider {
+interface INotifyTarget {
 
     void postMessage(steps, String message, NotificationType notificationType)
 

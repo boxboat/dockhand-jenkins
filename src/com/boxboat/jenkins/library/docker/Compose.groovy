@@ -4,9 +4,9 @@ import com.boxboat.jenkins.library.LibraryScript
 
 class Compose {
 
-    static String up(steps, dir, profile, registry) {
+    static String up(steps, dir, profile) {
         steps.sh """
-            ${LibraryScript.run(steps, "compose-up.sh")} "$dir" "$profile" "$registry"
+            ${LibraryScript.run(steps, "compose-up.sh")} "$dir" "$profile"
         """
     }
 
@@ -16,9 +16,9 @@ class Compose {
         """
     }
 
-    static String build(steps, dir, profile, registry) {
+    static String build(steps, dir, profile) {
         steps.sh """
-            ${LibraryScript.run(steps, "compose-build.sh")} "$dir" "$profile" "$registry"
+            ${LibraryScript.run(steps, "compose-build.sh")} "$dir" "$profile"
         """
     }
 

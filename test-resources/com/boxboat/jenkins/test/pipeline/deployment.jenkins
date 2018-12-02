@@ -8,7 +8,8 @@ def execute() {
         def deploy = new BoxDeploy(
             steps: this,
             config: [
-                deployTargetKey: "dev01",
+                deploymentKey: "dev",
+                images: ["test"],
             ]
         )
 
@@ -17,6 +18,17 @@ def execute() {
             deploy.init()
           }
           stage('Deploy'){
+            deploy.writeImageTags(
+                outFile: "image-tags.yaml",
+                yamlPath: ["global"],
+            )
+            deploy.secretFileScript(
+                base64: true,
+                format: "env",
+                outFile: "env-vars.yaml",
+                vaultPaths: ["secret/test"],
+                yamlPath: ["global", "envVarsFileContent"],
+            )
             deploy.withCredentials(){
               sh "helm upgrade --install test ."
             }

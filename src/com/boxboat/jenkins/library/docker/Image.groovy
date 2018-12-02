@@ -1,15 +1,45 @@
 package com.boxboat.jenkins.library.docker
 
-class Image {
+import com.boxboat.jenkins.library.config.BaseConfig
 
-    String host = ""
+class Image extends BaseConfig<Image> {
+
+    String event
+
+    String eventFallback
+
+    String host
 
     String path
 
-    String tag = "latest"
+    String tag
+
+    Object trigger
+
+    Image() {
+    }
+
+    Image(Map config) {
+        config?.each { k, v -> this[k] = v }
+    }
+
+    Image(String imageString) {
+        def hostPath = imageString.split("/", 2)
+        if (hostPath.size() > 1 && hostPath[0].contains(".")) {
+            host = hostPath[0]
+            path = hostPath[1]
+        } else {
+            path = imageString
+        }
+        def pathTag = path.split(":", 2)
+        if (pathTag.size() > 1) {
+            path = pathTag[0]
+            tag = pathTag[1]
+        }
+    }
 
     String getUrl() {
-        return (host ? "${host}/" : "") + "${path}:${tag}"
+        return (host ? "${host}/" : "") + "${path}:${tag ?: "latest"}"
     }
 
     Image copy() {
@@ -33,23 +63,6 @@ class Image {
         steps.sh """
             docker pull "${this.url}"
         """
-    }
-
-    static Image fromImageString(String imageString) {
-        def image = new Image()
-        def hostPath = imageString.split("/", 2)
-        if (hostPath.size() > 1 && hostPath[0].contains(".")) {
-            image.host = hostPath[0]
-            image.path = hostPath[1]
-        } else {
-            image.path = imageString
-        }
-        def pathTag = image.path.split(":", 2)
-        if (pathTag.size() > 1) {
-            image.path = pathTag[0]
-            image.tag = pathTag[1]
-        }
-        return image
     }
 
 }

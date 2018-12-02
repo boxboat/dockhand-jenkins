@@ -1,5 +1,7 @@
 package com.boxboat.jenkins.library
 
+import java.lang.reflect.Modifier
+
 class Utils {
 
     static String cleanEvent(String event) {
@@ -32,6 +34,40 @@ class Utils {
             return null
         }
         return value.replaceAll(/[^a-zA-Z0-9_]/, '_').toLowerCase()
+    }
+
+    static String yamlPathScript(List<String> yamlPath, String fileName, String fileFormat) {
+        if (!yamlPath) {
+            return ""
+        }
+        def script = ""
+        def stringContents = fileFormatNormalize(fileFormat) == "yaml" ? "" : " |"
+        yamlPath.reverseEach { path ->
+            script += """
+                sed -i 's/^/  /g' "${fileName}"
+                sed -i '1s/^/${path}:${stringContents}\\n/' "${fileName}"
+            """
+            stringContents = ""
+        }
+        return script
+    }
+
+    static String fileFormatDetect(String fileName) {
+        fileName = fileName?.toLowerCase()
+        if (fileName.endsWith(".yml") || fileName.endsWith(".yaml")) {
+            return "yaml"
+        } else if (fileName.endsWith(".env")) {
+            return "env"
+        }
+        return ""
+    }
+
+    static String fileFormatNormalize(String format) {
+        format = format?.toLowerCase()
+        if (format == "yml") {
+            format = "yaml"
+        }
+        return format
     }
 
 }
