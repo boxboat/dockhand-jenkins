@@ -1,24 +1,25 @@
 package com.boxboat.jenkins.library.docker
 
 import com.boxboat.jenkins.library.LibraryScript
+import com.boxboat.jenkins.library.config.GlobalConfig
 
 class Compose {
 
-    static String up(steps, dir, profile) {
-        steps.sh """
-            ${LibraryScript.run(steps, "compose-up.sh")} "$dir" "$profile"
+    static String up(dir, profile) {
+        GlobalConfig.pipeline.sh """
+            ${LibraryScript.run("compose-up.sh")} "$dir" "$profile"
         """
     }
 
-    static String down(steps, dir, profile) {
-        steps.sh """
-            ${LibraryScript.run(steps, "compose-down.sh")} "$dir" "$profile"
+    static String down(dir, profile) {
+        GlobalConfig.pipeline.sh """
+            ${LibraryScript.run("compose-down.sh")} "$dir" "$profile"
         """
     }
 
-    static String build(steps, dir, profile) {
-        steps.sh """
-            ${LibraryScript.run(steps, "compose-build.sh")} "$dir" "$profile"
+    static String build(dir, profile) {
+        GlobalConfig.pipeline.sh """
+            ${LibraryScript.run("compose-build.sh")} "$dir" "$profile"
         """
     }
 

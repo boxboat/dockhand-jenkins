@@ -1,5 +1,6 @@
 package com.boxboat.jenkins.library
 
+import com.boxboat.jenkins.library.config.GlobalConfig
 @Grab('org.apache.commons:commons-lang3:3.7')
 import org.apache.commons.lang3.builder.EqualsBuilder
 import org.apache.commons.lang3.builder.HashCodeBuilder
@@ -16,16 +17,16 @@ class Vault implements Serializable {
 
     String url = ""
 
-    List<Object> getCredentials(steps) {
+    List<Object> getCredentials() {
         List<Object> credentials = []
         if (roleIdCredential){
-            credentials.add(steps.string(credentialsId: roleIdCredential, variable: 'VAULT_ROLE_ID',))
+            credentials.add(GlobalConfig.pipeline.string(credentialsId: roleIdCredential, variable: 'VAULT_ROLE_ID',))
         }
         if (secretIdCredential){
-            credentials.add(steps.string(credentialsId: secretIdCredential, variable: 'VAULT_SECRET_ID',))
+            credentials.add(GlobalConfig.pipeline.string(credentialsId: secretIdCredential, variable: 'VAULT_SECRET_ID',))
         }
         if (tokenCredential){
-            credentials.add(steps.string(credentialsId: tokenCredential, variable: 'VAULT_TOKEN',))
+            credentials.add(GlobalConfig.pipeline.string(credentialsId: tokenCredential, variable: 'VAULT_TOKEN',))
         }
         return credentials
     }

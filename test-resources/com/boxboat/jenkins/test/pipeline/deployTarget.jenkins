@@ -6,7 +6,7 @@ def execute() {
     node() {
 
         def deploy = new BoxDeploy(
-            steps: this,
+            pipeline: this,
             config: [
                 deployTargetKey: "dev01",
             ]

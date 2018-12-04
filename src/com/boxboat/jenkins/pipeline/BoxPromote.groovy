@@ -26,16 +26,16 @@ class BoxPromote extends BoxBase<PromoteConfig> {
     def init() {
         super.init()
         if (!images || images.size() == 0) {
-            steps.error "'images' must be set"
+            GlobalConfig.pipeline.error "'images' must be set"
         }
         if (!checkout && !event) {
-            steps.error "'checkout' or 'event' must be set"
+            GlobalConfig.pipeline.error "'checkout' or 'event' must be set"
         }
         if (!promoteToEvent) {
-            steps.error "'promoteToEvent' must be set"
+            GlobalConfig.pipeline.error "'promoteToEvent' must be set"
         }
         if (!baseVersion) {
-            steps.error "'baseVersion' must be set"
+            GlobalConfig.pipeline.error "'baseVersion' must be set"
         }
     }
 
@@ -44,7 +44,7 @@ class BoxPromote extends BoxBase<PromoteConfig> {
         if (!_newSemVer.isPreRelease) {
             events.add("tag")
         }
-        steps.echo "Promoting images '${images.join("', '")}' from '${existingTag}' to '${newTag}' " +
+        GlobalConfig.pipeline.echo "Promoting images '${images.join("', '")}' from '${existingTag}' to '${newTag}' " +
                 "for event(s) '${events.join("', '")}'"
 
         def script = ""
@@ -58,7 +58,7 @@ class BoxPromote extends BoxBase<PromoteConfig> {
         def updateBuildVersions = false
 
         Registry registry = GlobalConfig.config.getRegistry(registryConfig)
-        steps.docker.withRegistry(
+        GlobalConfig.pipeline.docker.withRegistry(
                 registry.getRegistryUrl(),
                 registry.credential) {
 
@@ -68,13 +68,13 @@ class BoxPromote extends BoxBase<PromoteConfig> {
                 def pullImage = image.copy()
                 pullImage.host = registry.host
                 pullImage.tag = existingTag
-                pullImage.pull(steps)
+                pullImage.pull()
             }
 
             events.each { event ->
                 images.each { Image image ->
                     def filePath = "build-versions/${event}/${Utils.alphaNumericDashLower(image.path)}.yaml"
-                    def currentTag = steps.sh(
+                    def currentTag = GlobalConfig.pipeline.sh(
                             returnStdout: true,
                             script: """
                                 if [ -f "${filePath}" ]; then
@@ -98,16 +98,16 @@ class BoxPromote extends BoxBase<PromoteConfig> {
                         updateBuildVersions = true
                     }
                     if (!currentSemVer) {
-                        steps.echo "This is the first version for image '${image.path}', event '${event}'; " +
+                        GlobalConfig.pipeline.echo "This is the first version for image '${image.path}', event '${event}'; " +
                                 "adding build version"
                         updateBuildVersion()
                     } else if (_newSemVer.compareTo(currentSemVer) > 0) {
-                        steps.echo "Image '${image.path}' version '${newTag}' is newer than existing version " +
+                        GlobalConfig.pipeline.echo "Image '${image.path}' version '${newTag}' is newer than existing version " +
                                 "'${currentVersion}' for event '${event}'; " +
                                 "updating build version"
                         updateBuildVersion()
                     } else {
-                        steps.echo "Image '${image.path}' version '${newTag}' is " +
+                        GlobalConfig.pipeline.echo "Image '${image.path}' version '${newTag}' is " +
                                 (_newSemVer.compareTo(currentSemVer) == 0 ? "the same as" : "older than") +
                                 " existing version " +
                                 "'${currentVersion}' for event '${event}'; " +
@@ -120,12 +120,12 @@ class BoxPromote extends BoxBase<PromoteConfig> {
                 def pushImage = image.copy()
                 pushImage.host = registry.host
                 pushImage.tag = newTag
-                image.reTag(steps, pushImage)
-                pushImage.push(steps)
+                image.reTag(pushImage)
+                pushImage.push()
             }
 
             if (updateBuildVersions) {
-                steps.sh script
+                GlobalConfig.pipeline.sh script
                 buildVersions.commitAndPush("update build-versions")
             }
 

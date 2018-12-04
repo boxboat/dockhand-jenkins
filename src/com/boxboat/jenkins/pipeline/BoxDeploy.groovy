@@ -40,7 +40,7 @@ class BoxDeploy extends BoxBase<DeployConfig> {
         } else if (config.deploymentKey) {
             deployType = DeployType.Deployment
         } else {
-            steps.error "'deployTargetKey', 'environmentKey', or 'deploymentKey'  must be set"
+            GlobalConfig.pipeline.error "'deployTargetKey', 'environmentKey', or 'deploymentKey'  must be set"
         }
         //noinspection GroovyFallthrough
         switch (deployType) {
@@ -64,18 +64,18 @@ class BoxDeploy extends BoxBase<DeployConfig> {
     def writeImageTags(Map paramsMap) {
         ImageTagsParams params = (new ImageTagsParams()).newFromObject(paramsMap)
         if (!params.outFile) {
-            steps.error "'outFile' is required"
+            GlobalConfig.pipeline.error "'outFile' is required"
         }
         if (!params.format) {
             params.format = Utils.fileFormatDetect(params.outFile)
         }
         params.format = Utils.fileFormatNormalize(params.format)
         if (params.format != "yaml") {
-            steps.error "'format' is required and must be 'yaml'"
+            GlobalConfig.pipeline.error "'format' is required and must be 'yaml'"
         }
 
         gitAccount.checkoutRepository(GlobalConfig.config.git.buildVersionsUrl, "build-versions", 1)
-        steps.sh """
+        GlobalConfig.pipeline.sh """
             rm -f "${params.outFile}"
         """
         config.images.each { Image image ->
@@ -91,7 +91,7 @@ class BoxDeploy extends BoxBase<DeployConfig> {
             deployment.imageOverrides.each imageOverridesCl
             def writeTagCl = { tryEvent ->
                 def filePath = "build-versions/image-versions/${tryEvent}/${Utils.alphaNumericDashLower(image.path)}.yaml"
-                def rc = steps.sh(returnStatus: true, script: """
+                def rc = GlobalConfig.pipeline.sh(returnStatus: true, script: """
                     if [ -f "${filePath}" ]; then
                         cat "$filePath" >> "${params.outFile}"
                         exit 0
@@ -110,16 +110,16 @@ class BoxDeploy extends BoxBase<DeployConfig> {
                 }
                 triedEvents = "[${event}, ${eventFallback}]"
             }
-            steps.error "build-versions does not contain a version for image '${image.path}', event: ${triedEvents}"
+            GlobalConfig.pipeline.error "build-versions does not contain a version for image '${image.path}', event: ${triedEvents}"
         }
         def yamlPathScript = Utils.yamlPathScript(params.yamlPath, params.outFile, params.format)
         if (yamlPathScript) {
-            steps.sh yamlPathScript
+            GlobalConfig.pipeline.sh yamlPathScript
         }
     }
 
     def withCredentials(closure) {
-        deployTarget.withCredentials(steps, closure)
+        deployTarget.withCredentials(closure)
     }
 
 }
