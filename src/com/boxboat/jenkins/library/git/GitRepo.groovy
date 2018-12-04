@@ -7,14 +7,13 @@ import java.nio.file.Paths
 class GitRepo implements Serializable {
 
     public checkoutData = [:]
-    public steps
     public relativeDir
 
     private String _dir
 
     private String getDir() {
         if (!_dir) {
-            _dir = Paths.get(steps.env.WORKSPACE, relativeDir).toAbsolutePath().toString()
+            _dir = Paths.get(GlobalConfig.pipeline.env.WORKSPACE, relativeDir).toAbsolutePath().toString()
         }
         return _dir
     }
@@ -23,7 +22,7 @@ class GitRepo implements Serializable {
 
     String getHash() {
         if (!_hash) {
-            _hash = checkoutData?.GIT_COMMIT ?: steps.sh(returnStdout: true, script: """
+            _hash = checkoutData?.GIT_COMMIT ?: GlobalConfig.pipeline.sh(returnStdout: true, script: """
                 cd "${this.dir}"
                 git show -s --format=%H
             """)
@@ -39,7 +38,7 @@ class GitRepo implements Serializable {
 
     String getBranch() {
         if (!_branch) {
-            _branch = checkoutData?.GIT_BRANCH ?: steps.sh(returnStdout: true, script: """
+            _branch = checkoutData?.GIT_BRANCH ?: GlobalConfig.pipeline.sh(returnStdout: true, script: """
                 git rev-parse --abbrev-ref HEAD
             """)
         }
@@ -47,7 +46,7 @@ class GitRepo implements Serializable {
     }
 
     String getRemoteUrl() {
-        return steps.sh(returnStdout: true, script: """
+        return GlobalConfig.pipeline.sh(returnStdout: true, script: """
             cd "${this.dir}"
             git config remote.origin.url
         """)
@@ -58,7 +57,7 @@ class GitRepo implements Serializable {
     }
 
     boolean isBranchTip() {
-        String originHash = steps.sh(returnStdout: true, script: """
+        String originHash = GlobalConfig.pipeline.sh(returnStdout: true, script: """
             git show-branch --sha1-name origin/${this.branch} || :
         """)
         def matcher = originHash =~ /^\[([0-9a-f]+)\]/
@@ -70,7 +69,7 @@ class GitRepo implements Serializable {
     }
 
     def checkoutBranch(branch) {
-        steps.sh """
+        GlobalConfig.pipeline.sh """
             cd "${this.dir}"
             if git rev-parse --verify "${branch}" > /dev/null 2>&1
             then
@@ -85,7 +84,7 @@ class GitRepo implements Serializable {
 
     def resetToHash(commitHash, branch) {
         this.checkoutBranch(branch)
-        steps.sh """
+        GlobalConfig.pipeline.sh """
             cd "${this.dir}"
             git reset --hard "${commitHash}"
             git clean -fd
@@ -93,7 +92,7 @@ class GitRepo implements Serializable {
     }
 
     def resetAndClean() {
-        steps.sh """
+        GlobalConfig.pipeline.sh """
             cd "${this.dir}"
             git reset --hard
             git clean -fd
@@ -101,7 +100,7 @@ class GitRepo implements Serializable {
     }
 
     def shallowCheckoutBranch(branch) {
-        steps.sh """
+        GlobalConfig.pipeline.sh """
             cd "${this.dir}"
             git remote set-branches origin "${branch}"
             git fetch --depth 1 origin "${branch}"
@@ -110,7 +109,7 @@ class GitRepo implements Serializable {
     }
 
     def commitAndPush(commitMessage) {
-        steps.sh(returnStdout: true, script: """
+        GlobalConfig.pipeline.sh(returnStdout: true, script: """
             cd "${this.dir}"
             git add --all
             
@@ -128,21 +127,21 @@ class GitRepo implements Serializable {
     }
 
     def forcePush() {
-        steps.sh """
+        GlobalConfig.pipeline.sh """
             cd "${this.dir}"
             git push -f
         """
     }
 
     def rollback() {
-        steps.sh """
+        GlobalConfig.pipeline.sh """
             cd "${this.dir}"
             git reset --hard HEAD~1
         """
     }
 
     def updateSubmodules() {
-        steps.sh """
+        GlobalConfig.pipeline.sh """
             cd "${this.dir}"
             git submodule update --init --recursive
         """

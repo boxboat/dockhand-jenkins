@@ -1,13 +1,15 @@
 package com.boxboat.jenkins.library
 
+import com.boxboat.jenkins.library.config.GlobalConfig
+
 class LibraryScript {
 
-    static String run(steps, String script) {
+    static String run(String script) {
         def path = "sharedLibraryScripts/${script}"
-        if (!steps.fileExists(path)) {
-            String data = steps.libraryResource(resource: "com/boxboat/jenkins/${path}", encoding: "Base64")
-            steps.writeFile(file: path, text: data, encoding: "Base64")
-            steps.sh "chmod +x ${path}"
+        if (!GlobalConfig.pipeline.fileExists(path)) {
+            String data = GlobalConfig.pipeline.libraryResource(resource: "com/boxboat/jenkins/${path}", encoding: "Base64")
+            GlobalConfig.pipeline.writeFile(file: path, text: data, encoding: "Base64")
+            GlobalConfig.pipeline.sh "chmod +x ${path}"
         }
         return "./${path}"
     }

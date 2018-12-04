@@ -12,29 +12,29 @@ class SecretScript {
         List<String> globs
     }
 
-    static replace(steps, Map<String, Object> paramsMap, CommonConfigBase config) {
+    static replace(Map<String, Object> paramsMap, CommonConfigBase config) {
         def params = (new ReplaceParams()).newFromObject(paramsMap)
 
         if (!params.globs) {
-            steps.error "'globs' is required"
+            GlobalConfig.pipeline.error "'globs' is required"
         }
         String vaultKey = params.vaultKey ?: config.vaultKey
         if (!vaultKey) {
-            steps.error "'vaultKey' is required"
+            GlobalConfig.pipeline.error "'vaultKey' is required"
         }
         Vault vault = GlobalConfig.config.getVault(vaultKey)
 
-        steps.withCredentials(vault.getCredentials(steps)) {
+        GlobalConfig.pipeline.withCredentials(vault.getCredentials()) {
             def envStr = params.env ? params.env.collect { k, v ->
                 return "--env \"${k}=${v}\""
             }.join(" ") : ""
 
-            steps.sh """
+            GlobalConfig.pipeline.sh """
                 set +x
                 export VAULT_ADDR="${vault.url}"
-                . ${LibraryScript.run(steps, "vault-login.sh")}
+                . ${LibraryScript.run( "vault-login.sh")}
                 set -x
-                ${LibraryScript.run(steps, "secret-replace.sh")} \\
+                ${LibraryScript.run( "secret-replace.sh")} \\
                     ${envStr} \\
                     "${params.globs.join('" "')}"
             """
@@ -50,26 +50,26 @@ class SecretScript {
         List<String> vaultPaths
     }
 
-    static file(steps, Map<String, Object> paramsMap, CommonConfigBase config) {
+    static file(Map<String, Object> paramsMap, CommonConfigBase config) {
         def params = (new FileParams()).newFromObject(paramsMap)
 
         if (!params.outFile) {
-            steps.error "'outFile' is required"
+            GlobalConfig.pipeline.error "'outFile' is required"
         }
         if (!params.vaultPaths) {
-            steps.error "'vaultPaths' is required"
+            GlobalConfig.pipeline.error "'vaultPaths' is required"
         }
         if (!params.format) {
             params.format = Utils.fileFormatDetect(params.outFile)
         }
         params.format = Utils.fileFormatNormalize(params.format)
         if (params.format != "yaml" && params.format != "env") {
-            steps.error "'format' is required and must be either 'yaml' or 'env'"
+            GlobalConfig.pipeline.error "'format' is required and must be either 'yaml' or 'env'"
         }
 
         String vaultKey = params.vaultKey ?: config.vaultKey
         if (!vaultKey) {
-            steps.error "'vaultKey' is required"
+            GlobalConfig.pipeline.error "'vaultKey' is required"
         }
         Vault vault = GlobalConfig.config.getVault(vaultKey)
 
@@ -81,13 +81,13 @@ class SecretScript {
             """
         }
 
-        steps.withCredentials(vault.getCredentials(steps)) {
-            steps.sh """
+        GlobalConfig.pipeline.withCredentials(vault.getCredentials()) {
+            GlobalConfig.pipeline.sh """
                 set +x
                 export VAULT_ADDR="${vault.url}"
-                . ${LibraryScript.run(steps, "vault-login.sh")}
+                . ${LibraryScript.run("vault-login.sh")}
                 set -x
-                ${LibraryScript.run(steps, "secret-env.sh")} \\
+                ${LibraryScript.run("secret-env.sh")} \\
                     --format "${params.format}" \\
                     --kv-version "${vault.kvVersion}" \\
                     --output "${params.outFile}" \\

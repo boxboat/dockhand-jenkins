@@ -4,23 +4,22 @@ import com.boxboat.jenkins.library.config.GlobalConfig
 
 class GitAccount implements Serializable {
 
-    public steps
     private _initialized = false
 
     private _ensureInitialized() {
         if (_initialized) {
             return true
         }
-        steps.withCredentials([steps.sshUserPrivateKey(
+        GlobalConfig.pipeline.withCredentials([GlobalConfig.pipeline.sshUserPrivateKey(
                 credentialsId: GlobalConfig.config.git.credential,
                 keyFileVariable: 'sshKey',
                 usernameVariable: 'username'
         )]) {
-            steps.sh """
+            GlobalConfig.pipeline.sh """
                 # Private Key
                 mkdir -p ~/.ssh
-                chmod 400 "${steps.env.sshKey}"
-                mv "${steps.env.sshKey}" ~/.ssh/id_rsa
+                chmod 400 "${GlobalConfig.pipeline.env.sshKey}"
+                mv "${GlobalConfig.pipeline.env.sshKey}" ~/.ssh/id_rsa
 
                 # Git GlobalConfig
                 git config --global user.name "Jenkins Service Account"
@@ -34,7 +33,7 @@ class GitAccount implements Serializable {
     // Checkout SCM
     def checkoutScm() {
         _ensureInitialized()
-        steps.sh """
+        GlobalConfig.pipeline.sh """
             set +ex
             if [ -d .git ]
             then
@@ -43,8 +42,8 @@ class GitAccount implements Serializable {
             fi
             exit 0
         """
-        def checkoutData = steps.checkout steps.scm
-        return new GitRepo(steps: steps, relativeDir: ".", checkoutData: checkoutData)
+        def checkoutData = GlobalConfig.pipeline.checkout GlobalConfig.pipeline.scm
+        return new GitRepo(relativeDir: ".", checkoutData: checkoutData)
     }
 
     // Checkout Remote Repository into a targetDir
@@ -54,14 +53,14 @@ class GitAccount implements Serializable {
         if (depth > 0) {
             depthStr = "--depth ${depth}"
         }
-        steps.sh """
+        GlobalConfig.pipeline.sh """
             rm -rf "${targetDir}"
             mkdir -p "${targetDir}"
             cd "${targetDir}"
             git clone ${depthStr} "${remoteUrl}" .
         """
 
-        return new GitRepo(steps: steps, relativeDir: targetDir)
+        return new GitRepo(relativeDir: targetDir)
     }
 
 }

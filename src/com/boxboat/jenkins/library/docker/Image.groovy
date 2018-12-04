@@ -1,6 +1,7 @@
 package com.boxboat.jenkins.library.docker
 
 import com.boxboat.jenkins.library.config.BaseConfig
+import com.boxboat.jenkins.library.config.GlobalConfig
 
 class Image extends BaseConfig<Image> {
 
@@ -46,21 +47,21 @@ class Image extends BaseConfig<Image> {
         return new Image(host: host, path: path, tag: tag)
     }
 
-    Image reTag(steps, Image newImage) {
-        steps.sh """
+    Image reTag(Image newImage) {
+        GlobalConfig.pipeline.sh """
             docker tag "${this.url}" "${newImage.url}"
         """
         return newImage
     }
 
-    void push(steps) {
-        steps.sh """
+    void push() {
+        GlobalConfig.pipeline.sh """
             docker push "${this.url}"
         """
     }
 
-    void pull(steps) {
-        steps.sh """
+    void pull() {
+        GlobalConfig.pipeline.sh """
             docker pull "${this.url}"
         """
     }

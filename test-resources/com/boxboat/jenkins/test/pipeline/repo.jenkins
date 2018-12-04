@@ -6,7 +6,7 @@ def execute() {
     node() {
 
         def repo = new BoxBuild(
-            steps: this,
+            pipeline: this,
             config: [
                 composeProfileMap: [
                     "dev" : "./build/docker/dev/",

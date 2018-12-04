@@ -31,32 +31,32 @@ class BoxBuild extends BoxBase<BuildConfig> {
         }
         // pull images
         config.pullImages.each { image ->
-            steps.sh """
+            GlobalConfig.pipeline.sh """
                 docker pull "${image}"
             """
         }
     }
 
     def composeBuild(String profile) {
-        Compose.build(steps, config.composeProfileMap.get(profile), profile)
+        Compose.build(config.composeProfileMap.get(profile), profile)
     }
 
     def composeUp(String profile) {
         // clean up all profiles
         this.composeCleanup()
         // start the specified profile
-        Compose.up(steps, config.composeProfileMap.get(profile), profile)
+        Compose.up(config.composeProfileMap.get(profile), profile)
     }
 
     def composeDown(String profile) {
-        Compose.down(steps, config.composeProfileMap.get(profile), profile)
+        Compose.down(config.composeProfileMap.get(profile), profile)
     }
 
     def push() {
         def branch = gitRepo.branch?.toLowerCase()
         def event = Utils.cleanEvent("commit/${branch}")
         def eventTag = Utils.cleanTag(event)
-        steps.echo branch
+        GlobalConfig.pipeline.echo branch
         def hash = gitRepo.shortHash
         def registries = config.getEventRegistries(event)
 
@@ -68,7 +68,7 @@ class BoxBuild extends BoxBase<BuildConfig> {
             }
 
             registries.each { registry ->
-                steps.docker.withRegistry(
+                GlobalConfig.pipeline.docker.withRegistry(
                         registry.getRegistryUrl(),
                         registry.credential) {
                     config.images.each { Image image ->
@@ -76,8 +76,8 @@ class BoxBuild extends BoxBase<BuildConfig> {
                             def newImage = image.copy()
                             newImage.host = registry.host
                             newImage.tag = tag
-                            image.reTag(steps, newImage)
-                            newImage.push(steps)
+                            image.reTag(newImage)
+                            newImage.push()
                         }
                     }
                 }
@@ -96,7 +96,7 @@ class BoxBuild extends BoxBase<BuildConfig> {
                 }
 
                 def buildVersions = gitAccount.checkoutRepository(GlobalConfig.config.git.buildVersionsUrl, "build-versions", 1)
-                steps.sh script
+                GlobalConfig.pipeline.sh script
                 buildVersions.commitAndPush("update build-versions")
             }
         }

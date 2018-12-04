@@ -16,15 +16,13 @@ abstract class BoxBase<T extends CommonConfigBase> {
     protected GitRepo gitRepo
     protected INotifyTarget notifySuccess
     protected INotifyTarget notifyFailure
-    protected steps
-
 
     BoxBase(Map config) {
         def className = this.class.simpleName
         config.each { k, v ->
             switch (k) {
-                case "steps":
-                    steps = v
+                case "pipeline":
+                    GlobalConfig.pipeline = v
                     break
                 case "config":
                     initialConfig = v
@@ -33,10 +31,10 @@ abstract class BoxBase<T extends CommonConfigBase> {
                     throw new Exception("${className} does not support property '${k}'")
             }
         }
-        if (!steps) {
-            throw new Exception("${className} should be initialized with ${className}(steps: this)")
+        if (!GlobalConfig.pipeline) {
+            throw new Exception("${className} should be initialized with ${className}(pipeline: this)")
         }
-        gitAccount = new GitAccount(steps: config.steps)
+        gitAccount = new GitAccount()
     }
 
     protected String configKey() {
@@ -45,7 +43,7 @@ abstract class BoxBase<T extends CommonConfigBase> {
 
     def init() {
         // load the global config
-        String configYaml = steps.libraryResource('com/boxboat/jenkins/config.yaml')
+        String configYaml = GlobalConfig.pipeline.libraryResource('com/boxboat/jenkins/config.yaml')
         def globalConfig = GlobalConfig.create(configYaml)
         def globalConfigDefault = (new GlobalConfig()).newDefault()
         globalConfigDefault.merge(globalConfig)
@@ -61,16 +59,16 @@ abstract class BoxBase<T extends CommonConfigBase> {
 
         // update from Git
         gitRepo = gitAccount.checkoutScm()
-        steps.env.GIT_COMMIT_SHORT_HASH = gitRepo.shortHash
+        GlobalConfig.pipeline.env.GIT_COMMIT_SHORT_HASH = gitRepo.shortHash
 
         // create directory for shared library
-        steps.sh """
+        GlobalConfig.pipeline.sh """
             rm -rf sharedLibraryScripts
             mkdir sharedLibraryScripts
         """
 
         // merge config from jenkins.yaml if exists
-        def configFile = steps.sh(returnStdout: true, script: """
+        def configFile = GlobalConfig.pipeline.sh(returnStdout: true, script: """
             set +x
             for f in "jenkins.yml" "jenkins.yaml"; do
                 if [ -f "\$f" ]; then
@@ -80,7 +78,7 @@ abstract class BoxBase<T extends CommonConfigBase> {
             done
         """)?.trim()
         if (configFile) {
-            String configFileContents = steps.readFile(configFile)
+            String configFileContents = GlobalConfig.pipeline.readFile(configFile)
             def configFileObj = RepoConfig.create(configFileContents)
             if (configKey != "common") {
                 config.merge(configFileObj.common)
@@ -103,11 +101,11 @@ abstract class BoxBase<T extends CommonConfigBase> {
     }
 
     def success() {
-        notifySuccess?.postMessage(steps, "Build Succeeded", NotificationType.SUCCESS)
+        notifySuccess?.postMessage("Build Succeeded", NotificationType.SUCCESS)
     }
 
     def failure(Exception ex) {
-        notifyFailure?.postMessage(steps, "Build Failed", NotificationType.FAILURE)
+        notifyFailure?.postMessage("Build Failed", NotificationType.FAILURE)
     }
 
     def cleanup() {
@@ -115,11 +113,11 @@ abstract class BoxBase<T extends CommonConfigBase> {
     }
 
     def secretReplaceScript(Map paramsMap) {
-        SecretScript.replace(steps, paramsMap, config)
+        SecretScript.replace(paramsMap, config)
     }
 
     def secretFileScript(Map paramsMap) {
-        SecretScript.file(steps, paramsMap, config)
+        SecretScript.file(paramsMap, config)
     }
 
 }
