@@ -1,10 +1,11 @@
-package com.boxboat.jenkins.pipeline
+package com.boxboat.jenkins.pipeline.build
 
 import com.boxboat.jenkins.library.Utils
 import com.boxboat.jenkins.library.config.BuildConfig
-import com.boxboat.jenkins.library.config.GlobalConfig
+import com.boxboat.jenkins.library.config.Config
 import com.boxboat.jenkins.library.docker.Compose
 import com.boxboat.jenkins.library.docker.Image
+import com.boxboat.jenkins.pipeline.BoxBase
 
 class BoxBuild extends BoxBase<BuildConfig> {
 
@@ -31,7 +32,7 @@ class BoxBuild extends BoxBase<BuildConfig> {
         }
         // pull images
         config.pullImages.each { image ->
-            GlobalConfig.pipeline.sh """
+            Config.pipeline.sh """
                 docker pull "${image}"
             """
         }
@@ -56,7 +57,7 @@ class BoxBuild extends BoxBase<BuildConfig> {
         def branch = gitRepo.branch?.toLowerCase()
         def event = Utils.cleanEvent("commit/${branch}")
         def eventTag = Utils.cleanTag(event)
-        GlobalConfig.pipeline.echo branch
+        Config.pipeline.echo branch
         def hash = gitRepo.shortHash
         def registries = config.getEventRegistries(event)
 
@@ -68,7 +69,7 @@ class BoxBuild extends BoxBase<BuildConfig> {
             }
 
             registries.each { registry ->
-                GlobalConfig.pipeline.docker.withRegistry(
+                Config.pipeline.docker.withRegistry(
                         registry.getRegistryUrl(),
                         registry.credential) {
                     config.images.each { Image image ->
@@ -95,8 +96,8 @@ class BoxBuild extends BoxBase<BuildConfig> {
                     """
                 }
 
-                def buildVersions = gitAccount.checkoutRepository(GlobalConfig.config.git.buildVersionsUrl, "build-versions", 1)
-                GlobalConfig.pipeline.sh script
+                def buildVersions = gitAccount.checkoutRepository(Config.global.git.buildVersionsUrl, "build-versions", 1)
+                Config.pipeline.sh script
                 buildVersions.commitAndPush("update build-versions")
             }
         }
@@ -104,7 +105,7 @@ class BoxBuild extends BoxBase<BuildConfig> {
     }
 
     protected composeCleanup(){
-        config.composeProfileMap.each { profile, dir ->
+        config?.composeProfileMap?.each { profile, dir ->
             composeDown(profile)
         }
     }

@@ -1,6 +1,6 @@
 package com.boxboat.jenkins.test.library.config
 
-import com.boxboat.jenkins.library.Vault
+import com.boxboat.jenkins.library.vault.Vault
 import com.boxboat.jenkins.library.config.CommonConfig
 import com.boxboat.jenkins.library.config.DeployConfig
 import com.boxboat.jenkins.library.config.GlobalConfig
@@ -34,7 +34,7 @@ class GlobalConfigTest {
 
     @Test
     void testConfig() {
-        def config = GlobalConfig.create(fileText("${fileBase}${fileName}"))
+        def config = new GlobalConfig().newFromYaml(fileText("${fileBase}${fileName}"))
 //        Yaml yaml = new Yaml()
 //        System.out.println("")
 //        System.out.println("Expected:")

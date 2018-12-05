@@ -1,5 +1,6 @@
-package com.boxboat.jenkins.test.pipeline
+package com.boxboat.jenkins.test.pipeline.deploy
 
+import com.boxboat.jenkins.test.pipeline.PipelineBase
 import org.junit.Before
 import org.junit.Test
 

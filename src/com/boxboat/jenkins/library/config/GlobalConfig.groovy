@@ -1,6 +1,6 @@
 package com.boxboat.jenkins.library.config
 
-import com.boxboat.jenkins.library.Vault
+import com.boxboat.jenkins.library.vault.Vault
 import com.boxboat.jenkins.library.deployTarget.IDeployTarget
 import com.boxboat.jenkins.library.docker.Registry
 import com.boxboat.jenkins.library.environment.Environment
@@ -9,15 +9,6 @@ import com.boxboat.jenkins.library.git.GitConfig
 import com.boxboat.jenkins.library.notification.INotifyTarget
 
 class GlobalConfig extends BaseConfig<GlobalConfig> {
-
-    static GlobalConfig config
-
-    static Object pipeline
-
-    static GlobalConfig create(String yamlStr) {
-        def globalConfig = new GlobalConfig()
-        return globalConfig.newFromYaml(yamlStr)
-    }
 
     Map<String, IDeployTarget> deployTargetMap
 

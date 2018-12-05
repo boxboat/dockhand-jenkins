@@ -1,0 +1,33 @@
+@Library('jenkins-shared-library@master')
+import com.boxboat.jenkins.pipeline.build.*
+
+
+def execute() {
+
+    def build = BoxBuild.create(
+        config: [
+            composeProfileMap: [
+                "dev" : "./build/docker/dev/",
+                "prod": "./build/docker/prod/",
+            ],
+        ],
+    )
+
+    node() {
+        build.wrap {
+            stage('Test'){
+                sh './build/ci/test.sh'
+                sh './build/ci/test-api.sh'
+            }
+            stage('Build'){
+                build.composeUp("prod")
+            }
+            stage ('Push'){
+                build.push()
+            }
+        }
+    }
+
+}
+
+return this

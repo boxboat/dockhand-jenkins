@@ -1,6 +1,6 @@
 package com.boxboat.jenkins.library.event
 
-import com.boxboat.jenkins.library.config.GlobalConfig
+import com.boxboat.jenkins.library.config.Config
 import com.boxboat.jenkins.library.docker.Registry
 
 class EventConfig {
@@ -13,7 +13,7 @@ class EventConfig {
             eventList.each { eventRe ->
                 def matcher = event =~ eventRe
                 if (matcher.hasGroup()) {
-                    registries.add(GlobalConfig.config.getRegistry(registryStr))
+                    registries.add(Config.global.getRegistry(registryStr))
                 }
             }
         }

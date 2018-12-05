@@ -1,9 +1,10 @@
-package com.boxboat.jenkins.test.pipeline
+package com.boxboat.jenkins.test.pipeline.build
 
+import com.boxboat.jenkins.test.pipeline.PipelineBase
 import org.junit.Before
 import org.junit.Test
 
-class RepoTest extends PipelineBase {
+class BuildTest extends PipelineBase {
 
     @Override
     @Before
@@ -13,7 +14,7 @@ class RepoTest extends PipelineBase {
 
     @Test
     void repoPipelineTest() throws Exception {
-        def script = loadScript("${this.scriptBase}repo.jenkins")
+        def script = loadScript("${this.scriptBase}build.jenkins")
         script.execute()
         printCallStack()
     }

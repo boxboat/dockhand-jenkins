@@ -1,49 +1,38 @@
 @Library('jenkins-shared-library@master')
-import com.boxboat.jenkins.pipeline.*
+import com.boxboat.jenkins.pipeline.common.vault.*
+import com.boxboat.jenkins.pipeline.deploy.*
 
 
 def execute() {
+
+    def deploy = BoxDeploy.create(
+        config: [
+            deploymentKey: "dev",
+            images: ["test"],
+        ]
+    )
+
     node() {
-
-        def deploy = new BoxDeploy(
-            pipeline: this,
-            config: [
-                deploymentKey: "dev",
-                images: ["test"],
-            ]
-        )
-
-        try {
-          stage('Setup') {
-            deploy.init()
-          }
-          stage('Deploy'){
-            deploy.writeImageTags(
-                outFile: "image-tags.yaml",
-                yamlPath: ["global"],
-            )
-            deploy.secretFileScript(
-                base64: true,
-                format: "env",
-                outFile: "env-vars.yaml",
-                vaultPaths: ["secret/test"],
-                yamlPath: ["global", "envVarsFileContent"],
-            )
-            deploy.withCredentials(){
-              sh "helm upgrade --install test ."
+        deploy.wrap {
+            stage('Deploy'){
+                deploy.writeImageTags(
+                    outFile: "image-tags.yaml",
+                    yamlPath: ["global"],
+                )
+                VaultSecretScriptHelper.file(
+                    base64: true,
+                    format: "env",
+                    outFile: "env-vars.yaml",
+                    vaultPaths: ["secret/test"],
+                    yamlPath: ["global", "envVarsFileContent"],
+                )
+                deploy.withCredentials() {
+                    sh "helm upgrade --install test ."
+                }
             }
-          }
-          deploy.success()
-        } catch (Exception ex) {
-          deploy.failure(ex)
-          throw ex
-        } finally {
-          stage('Cleanup') {
-            deploy.cleanup()
-          }
         }
-
     }
+
 }
 
 return this

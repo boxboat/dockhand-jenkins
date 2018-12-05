@@ -1,7 +1,9 @@
 package com.boxboat.jenkins.pipeline
 
-import com.boxboat.jenkins.library.SecretScript
-import com.boxboat.jenkins.library.config.*
+import com.boxboat.jenkins.library.config.CommonConfigBase
+import com.boxboat.jenkins.library.config.Config
+import com.boxboat.jenkins.library.config.GlobalConfig
+import com.boxboat.jenkins.library.config.RepoConfig
 import com.boxboat.jenkins.library.git.GitAccount
 import com.boxboat.jenkins.library.git.GitRepo
 import com.boxboat.jenkins.library.notification.INotifyTarget
@@ -22,7 +24,7 @@ abstract class BoxBase<T extends CommonConfigBase> {
         config.each { k, v ->
             switch (k) {
                 case "pipeline":
-                    GlobalConfig.pipeline = v
+                    Config.pipeline = v
                     break
                 case "config":
                     initialConfig = v
@@ -31,9 +33,6 @@ abstract class BoxBase<T extends CommonConfigBase> {
                     throw new Exception("${className} does not support property '${k}'")
             }
         }
-        if (!GlobalConfig.pipeline) {
-            throw new Exception("${className} should be initialized with ${className}(pipeline: this)")
-        }
         gitAccount = new GitAccount()
     }
 
@@ -41,13 +40,31 @@ abstract class BoxBase<T extends CommonConfigBase> {
         return "common"
     }
 
+    def wrap(Closure closure) {
+        try {
+            Config.pipeline = closure.thisObject
+            Config.pipeline.stage("Initialize") {
+                init()
+            }
+            closure()
+            success()
+        } catch (Exception ex) {
+            failure(ex)
+            throw ex
+        } finally {
+            Config.pipeline.stage("Cleanup") {
+                cleanup()
+            }
+        }
+    }
+
     def init() {
         // load the global config
-        String configYaml = GlobalConfig.pipeline.libraryResource('com/boxboat/jenkins/config.yaml')
-        def globalConfig = GlobalConfig.create(configYaml)
-        def globalConfigDefault = (new GlobalConfig()).newDefault()
+        String configYaml = Config.pipeline.libraryResource('com/boxboat/jenkins/config.yaml')
+        def globalConfig = new GlobalConfig().newFromYaml(configYaml)
+        def globalConfigDefault = new GlobalConfig().newDefault()
         globalConfigDefault.merge(globalConfig)
-        GlobalConfig.config = globalConfigDefault
+        Config.global = globalConfigDefault
 
         // create the config
         def configKey = configKey()
@@ -59,16 +76,16 @@ abstract class BoxBase<T extends CommonConfigBase> {
 
         // update from Git
         gitRepo = gitAccount.checkoutScm()
-        GlobalConfig.pipeline.env.GIT_COMMIT_SHORT_HASH = gitRepo.shortHash
+        Config.pipeline.env.GIT_COMMIT_SHORT_HASH = gitRepo.shortHash
 
         // create directory for shared library
-        GlobalConfig.pipeline.sh """
+        Config.pipeline.sh """
             rm -rf sharedLibraryScripts
             mkdir sharedLibraryScripts
         """
 
         // merge config from jenkins.yaml if exists
-        def configFile = GlobalConfig.pipeline.sh(returnStdout: true, script: """
+        def configFile = Config.pipeline.sh(returnStdout: true, script: """
             set +x
             for f in "jenkins.yml" "jenkins.yaml"; do
                 if [ -f "\$f" ]; then
@@ -78,8 +95,8 @@ abstract class BoxBase<T extends CommonConfigBase> {
             done
         """)?.trim()
         if (configFile) {
-            String configFileContents = GlobalConfig.pipeline.readFile(configFile)
-            def configFileObj = RepoConfig.create(configFileContents)
+            String configFileContents = Config.pipeline.readFile(configFile)
+            def configFileObj = new RepoConfig().newFromYaml(configFileContents)
             if (configKey != "common") {
                 config.merge(configFileObj.common)
             }
@@ -91,12 +108,13 @@ abstract class BoxBase<T extends CommonConfigBase> {
             def initialConfigObj = config.newFromObject(initialConfig)
             config.merge(initialConfigObj)
         }
+        Config.repo = config
 
         if (config.notifyTargetKeySuccess) {
-            notifySuccess = GlobalConfig.config.getNotifyTarget(config.notifyTargetKeySuccess)
+            notifySuccess = Config.global.getNotifyTarget(config.notifyTargetKeySuccess)
         }
         if (config.notifyTargetKeyFailure) {
-            notifyFailure = GlobalConfig.config.getNotifyTarget(config.notifyTargetKeyFailure)
+            notifyFailure = Config.global.getNotifyTarget(config.notifyTargetKeyFailure)
         }
     }
 
@@ -110,14 +128,6 @@ abstract class BoxBase<T extends CommonConfigBase> {
 
     def cleanup() {
         gitRepo?.resetAndClean()
-    }
-
-    def secretReplaceScript(Map paramsMap) {
-        SecretScript.replace(paramsMap, config)
-    }
-
-    def secretFileScript(Map paramsMap) {
-        SecretScript.file(paramsMap, config)
     }
 
 }
