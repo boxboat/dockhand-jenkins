@@ -18,18 +18,13 @@ class BoxDeploy extends BoxBase<DeployConfig> {
     protected Environment environment
     protected Deployment deployment
 
-    BoxDeploy(Map config) {
+    BoxDeploy(Map config = [:]) {
         super(config)
     }
 
     @Override
     protected String configKey() {
         return "deploy"
-    }
-
-    static def create(Map config) {
-        def deploy = new BoxDeploy(config)
-        return deploy
     }
 
     def init() {

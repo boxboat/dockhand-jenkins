@@ -19,7 +19,7 @@ abstract class BoxBase<T extends CommonConfigBase> {
     protected INotifyTarget notifySuccess
     protected INotifyTarget notifyFailure
 
-    BoxBase(Map config) {
+    BoxBase(Map config = [:]) {
         def className = this.class.simpleName
         config.each { k, v ->
             switch (k) {

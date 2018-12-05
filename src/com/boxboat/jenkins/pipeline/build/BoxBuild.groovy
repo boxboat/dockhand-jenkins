@@ -9,17 +9,13 @@ import com.boxboat.jenkins.pipeline.BoxBase
 
 class BoxBuild extends BoxBase<BuildConfig> {
 
-    BoxBuild(Map config) {
+    BoxBuild(Map config = [:]) {
         super(config)
     }
 
     @Override
     protected String configKey() {
         return "build"
-    }
-
-    static def create(Map config) {
-        return new BoxBuild(config)
     }
 
     def init() {
