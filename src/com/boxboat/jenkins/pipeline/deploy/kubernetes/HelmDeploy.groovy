@@ -1,6 +1,6 @@
-package com.boxboat.jenkins.pipeline.kubernetes
+package com.boxboat.jenkins.pipeline.deploy.kubernetes
 
-import com.boxboat.jenkins.library.config.GlobalConfig
+import com.boxboat.jenkins.library.config.Config
 
 class HelmDeploy {
 
@@ -13,7 +13,7 @@ class HelmDeploy {
     Map<String, Object> options = [:]
 
     public install(Map<String, Object> additionalOptions = [:]) {
-        GlobalConfig.pipeline.sh installScript(additionalOptions)
+        Config.pipeline.sh installScript(additionalOptions)
     }
 
     public installScript(Map<String, Object> additionalOptions = [:]) {
@@ -28,7 +28,7 @@ class HelmDeploy {
     }
 
     public upgrade(Map<String, Object> additionalOptions = [:]) {
-        GlobalConfig.pipeline.sh upgradeScript(additionalOptions)
+        Config.pipeline.sh upgradeScript(additionalOptions)
     }
 
     public upgradeScript(Map<String, Object> additionalOptions = [:]) {

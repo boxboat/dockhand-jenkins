@@ -1,7 +1,5 @@
 package com.boxboat.jenkins.library
 
-import java.lang.reflect.Modifier
-
 class Utils {
 
     static String cleanEvent(String event) {

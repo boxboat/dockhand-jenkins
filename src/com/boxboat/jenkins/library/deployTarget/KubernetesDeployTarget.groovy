@@ -1,7 +1,7 @@
 package com.boxboat.jenkins.library.deployTarget
 
 import com.boxboat.jenkins.library.config.BaseConfig
-import com.boxboat.jenkins.library.config.GlobalConfig
+import com.boxboat.jenkins.library.config.Config
 
 class KubernetesDeployTarget extends BaseConfig<KubernetesDeployTarget> implements IDeployTarget {
 
@@ -15,7 +15,7 @@ class KubernetesDeployTarget extends BaseConfig<KubernetesDeployTarget> implemen
 
     @Override
     void withCredentials(closure) {
-        GlobalConfig.pipeline.withKubeConfig(
+        Config.pipeline.withKubeConfig(
                 credentialsId: credential,
                 caCertificate: caCertificate,
                 serverUrl: serverUrl,

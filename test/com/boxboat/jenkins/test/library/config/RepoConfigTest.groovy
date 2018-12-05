@@ -27,7 +27,7 @@ class RepoConfigTest {
 
     @Test
     void testConfig() {
-        def config = RepoConfig.create(fileText("${fileBase}${fileName}"))
+        def config = new RepoConfig().newFromYaml(fileText("${fileBase}${fileName}"))
 //        Yaml yaml = new Yaml()
 //        System.out.println("")
 //        System.out.println("Expected:")
@@ -88,7 +88,7 @@ class RepoConfigTest {
                                 promote: new PromoteConfig(
                                         baseVersion: "0.0.1",
                                         promotionMap: [
-                                                qa: new Promotion(
+                                                qa   : new Promotion(
                                                         event: "commit/master",
                                                         promoteToEvent: "tag/preview",
                                                 ),
@@ -96,7 +96,7 @@ class RepoConfigTest {
                                                         event: "tag/preview",
                                                         promoteToEvent: "tag/rc",
                                                 ),
-                                                prod: new Promotion(
+                                                prod : new Promotion(
                                                         event: "tag/rc",
                                                         promoteToEvent: "tag/release",
                                                 ),

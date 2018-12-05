@@ -1,7 +1,7 @@
-package com.boxboat.jenkins.test.pipeline.kubernetes
+package com.boxboat.jenkins.test.pipeline.deploy.kubernetes
 
 
-import com.boxboat.jenkins.pipeline.kubernetes.HelmDeploy
+import com.boxboat.jenkins.pipeline.deploy.kubernetes.HelmDeploy
 import org.junit.Test
 
 import static org.junit.Assert.assertEquals

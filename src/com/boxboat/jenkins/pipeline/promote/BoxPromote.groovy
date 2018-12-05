@@ -1,11 +1,12 @@
-package com.boxboat.jenkins.pipeline
+package com.boxboat.jenkins.pipeline.promote
 
 import com.boxboat.jenkins.library.SemVer
 import com.boxboat.jenkins.library.Utils
-import com.boxboat.jenkins.library.config.GlobalConfig
+import com.boxboat.jenkins.library.config.Config
 import com.boxboat.jenkins.library.config.PromoteConfig
 import com.boxboat.jenkins.library.docker.Image
 import com.boxboat.jenkins.library.docker.Registry
+import com.boxboat.jenkins.pipeline.BoxBase
 
 class BoxPromote extends BoxBase<PromoteConfig> {
 
@@ -26,16 +27,16 @@ class BoxPromote extends BoxBase<PromoteConfig> {
     def init() {
         super.init()
         if (!images || images.size() == 0) {
-            GlobalConfig.pipeline.error "'images' must be set"
+            Config.pipeline.error "'images' must be set"
         }
         if (!checkout && !event) {
-            GlobalConfig.pipeline.error "'checkout' or 'event' must be set"
+            Config.pipeline.error "'checkout' or 'event' must be set"
         }
         if (!promoteToEvent) {
-            GlobalConfig.pipeline.error "'promoteToEvent' must be set"
+            Config.pipeline.error "'promoteToEvent' must be set"
         }
         if (!baseVersion) {
-            GlobalConfig.pipeline.error "'baseVersion' must be set"
+            Config.pipeline.error "'baseVersion' must be set"
         }
     }
 
@@ -44,7 +45,7 @@ class BoxPromote extends BoxBase<PromoteConfig> {
         if (!_newSemVer.isPreRelease) {
             events.add("tag")
         }
-        GlobalConfig.pipeline.echo "Promoting images '${images.join("', '")}' from '${existingTag}' to '${newTag}' " +
+        Config.pipeline.echo "Promoting images '${images.join("', '")}' from '${existingTag}' to '${newTag}' " +
                 "for event(s) '${events.join("', '")}'"
 
         def script = ""
@@ -54,11 +55,11 @@ class BoxPromote extends BoxBase<PromoteConfig> {
             """
         }
 
-        def buildVersions = gitAccount.checkoutRepository(GlobalConfig.config.git.buildVersionsUrl, "build-versions", 1)
+        def buildVersions = gitAccount.checkoutRepository(Config.global.git.buildVersionsUrl, "build-versions", 1)
         def updateBuildVersions = false
 
-        Registry registry = GlobalConfig.config.getRegistry(registryConfig)
-        GlobalConfig.pipeline.docker.withRegistry(
+        Registry registry = Config.global.getRegistry(registryConfig)
+        Config.pipeline.docker.withRegistry(
                 registry.getRegistryUrl(),
                 registry.credential) {
 
@@ -74,7 +75,7 @@ class BoxPromote extends BoxBase<PromoteConfig> {
             events.each { event ->
                 images.each { Image image ->
                     def filePath = "build-versions/${event}/${Utils.alphaNumericDashLower(image.path)}.yaml"
-                    def currentTag = GlobalConfig.pipeline.sh(
+                    def currentTag = Config.pipeline.sh(
                             returnStdout: true,
                             script: """
                                 if [ -f "${filePath}" ]; then
@@ -98,16 +99,16 @@ class BoxPromote extends BoxBase<PromoteConfig> {
                         updateBuildVersions = true
                     }
                     if (!currentSemVer) {
-                        GlobalConfig.pipeline.echo "This is the first version for image '${image.path}', event '${event}'; " +
+                        Config.pipeline.echo "This is the first version for image '${image.path}', event '${event}'; " +
                                 "adding build version"
                         updateBuildVersion()
                     } else if (_newSemVer.compareTo(currentSemVer) > 0) {
-                        GlobalConfig.pipeline.echo "Image '${image.path}' version '${newTag}' is newer than existing version " +
+                        Config.pipeline.echo "Image '${image.path}' version '${newTag}' is newer than existing version " +
                                 "'${currentVersion}' for event '${event}'; " +
                                 "updating build version"
                         updateBuildVersion()
                     } else {
-                        GlobalConfig.pipeline.echo "Image '${image.path}' version '${newTag}' is " +
+                        Config.pipeline.echo "Image '${image.path}' version '${newTag}' is " +
                                 (_newSemVer.compareTo(currentSemVer) == 0 ? "the same as" : "older than") +
                                 " existing version " +
                                 "'${currentVersion}' for event '${event}'; " +
@@ -125,7 +126,7 @@ class BoxPromote extends BoxBase<PromoteConfig> {
             }
 
             if (updateBuildVersions) {
-                GlobalConfig.pipeline.sh script
+                Config.pipeline.sh script
                 buildVersions.commitAndPush("update build-versions")
             }
 

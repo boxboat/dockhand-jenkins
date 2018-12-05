@@ -1,10 +1,17 @@
-package com.boxboat.jenkins.library
+package com.boxboat.jenkins.pipeline.common.vault
 
+import com.boxboat.jenkins.library.LibraryScript
+import com.boxboat.jenkins.library.Utils
+import com.boxboat.jenkins.library.config.Config
+import com.boxboat.jenkins.library.vault.Vault
 import com.boxboat.jenkins.library.config.BaseConfig
 import com.boxboat.jenkins.library.config.CommonConfigBase
-import com.boxboat.jenkins.library.config.GlobalConfig
 
-class SecretScript {
+class VaultSecretScriptHelper {
+
+    private static CommonConfigBase repoConfig() {
+        return Config.<CommonConfigBase>castRepo()
+    }
 
     static class ReplaceParams extends BaseConfig<ReplaceParams> {
         String vaultKey
@@ -12,29 +19,29 @@ class SecretScript {
         List<String> globs
     }
 
-    static replace(Map<String, Object> paramsMap, CommonConfigBase config) {
+    static replace(Map<String, Object> paramsMap) {
         def params = (new ReplaceParams()).newFromObject(paramsMap)
 
         if (!params.globs) {
-            GlobalConfig.pipeline.error "'globs' is required"
+            Config.pipeline.error "'globs' is required"
         }
-        String vaultKey = params.vaultKey ?: config.vaultKey
+        String vaultKey = params.vaultKey ?: repoConfig().vaultKey
         if (!vaultKey) {
-            GlobalConfig.pipeline.error "'vaultKey' is required"
+            Config.pipeline.error "'vaultKey' is required"
         }
-        Vault vault = GlobalConfig.config.getVault(vaultKey)
+        Vault vault = Config.global.getVault(vaultKey)
 
-        GlobalConfig.pipeline.withCredentials(vault.getCredentials()) {
+        vault.withCredentials {
             def envStr = params.env ? params.env.collect { k, v ->
                 return "--env \"${k}=${v}\""
             }.join(" ") : ""
 
-            GlobalConfig.pipeline.sh """
+            Config.pipeline.sh """
                 set +x
                 export VAULT_ADDR="${vault.url}"
-                . ${LibraryScript.run( "vault-login.sh")}
+                . ${LibraryScript.run("vault-login.sh")}
                 set -x
-                ${LibraryScript.run( "secret-replace.sh")} \\
+                ${LibraryScript.run("secret-replace.sh")} \\
                     ${envStr} \\
                     "${params.globs.join('" "')}"
             """
@@ -50,28 +57,28 @@ class SecretScript {
         List<String> vaultPaths
     }
 
-    static file(Map<String, Object> paramsMap, CommonConfigBase config) {
+    static file(Map<String, Object> paramsMap) {
         def params = (new FileParams()).newFromObject(paramsMap)
 
         if (!params.outFile) {
-            GlobalConfig.pipeline.error "'outFile' is required"
+            Config.pipeline.error "'outFile' is required"
         }
         if (!params.vaultPaths) {
-            GlobalConfig.pipeline.error "'vaultPaths' is required"
+            Config.pipeline.error "'vaultPaths' is required"
         }
         if (!params.format) {
             params.format = Utils.fileFormatDetect(params.outFile)
         }
         params.format = Utils.fileFormatNormalize(params.format)
         if (params.format != "yaml" && params.format != "env") {
-            GlobalConfig.pipeline.error "'format' is required and must be either 'yaml' or 'env'"
+            Config.pipeline.error "'format' is required and must be either 'yaml' or 'env'"
         }
 
-        String vaultKey = params.vaultKey ?: config.vaultKey
+        String vaultKey = params.vaultKey ?: repoConfig().vaultKey
         if (!vaultKey) {
-            GlobalConfig.pipeline.error "'vaultKey' is required"
+            Config.pipeline.error "'vaultKey' is required"
         }
-        Vault vault = GlobalConfig.config.getVault(vaultKey)
+        Vault vault = Config.global.getVault(vaultKey)
 
         String base64Script = ""
         if (params.base64) {
@@ -81,8 +88,8 @@ class SecretScript {
             """
         }
 
-        GlobalConfig.pipeline.withCredentials(vault.getCredentials()) {
-            GlobalConfig.pipeline.sh """
+        vault.withCredentials {
+            Config.pipeline.sh """
                 set +x
                 export VAULT_ADDR="${vault.url}"
                 . ${LibraryScript.run("vault-login.sh")}

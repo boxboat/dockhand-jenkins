@@ -1,37 +1,25 @@
 @Library('jenkins-shared-library@master')
-import com.boxboat.jenkins.pipeline.*
+import com.boxboat.jenkins.pipeline.deploy.*
 
 
 def execute() {
+
+    def deploy = BoxDeploy.create(
+        config: [
+            deployTargetKey: "dev01",
+        ]
+    )
+
     node() {
-
-        def deploy = new BoxDeploy(
-            pipeline: this,
-            config: [
-                deployTargetKey: "dev01",
-            ]
-        )
-
-        try {
-          stage('Setup') {
-            deploy.init()
-          }
-          stage('Deploy'){
-            deploy.withCredentials(){
-              sh "helm upgrade --install test ."
+        deploy.wrap {
+            stage('Deploy'){
+                deploy.withCredentials() {
+                    sh "helm upgrade --install test ."
+                }
             }
-          }
-          deploy.success()
-        } catch (Exception ex) {
-          deploy.failure(ex)
-          throw ex
-        } finally {
-          stage('Cleanup') {
-            deploy.cleanup()
-          }
         }
-
     }
+
 }
 
 return this
