@@ -4,7 +4,7 @@ import com.boxboat.jenkins.pipeline.build.*
 
 def execute() {
 
-    def build = BoxBuild.create(
+    def build = new BoxBuild(
         config: [
             composeProfileMap: [
                 "dev" : "./build/docker/dev/",
