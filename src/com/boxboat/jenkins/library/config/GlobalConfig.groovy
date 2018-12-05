@@ -12,18 +12,7 @@ class GlobalConfig extends BaseConfig<GlobalConfig> {
 
     static GlobalConfig config
 
-    private static Object _pipeline
-
-    static Object getPipeline() {
-        if (!_pipeline) {
-            throw new Exception("GlobablConfig.pipeline must be set")
-        }
-        return _pipeline
-    }
-
-    static setPipeline(Object pipeline) {
-        _pipeline = pipeline
-    }
+    static Object pipeline
 
     static GlobalConfig create(String yamlStr) {
         def globalConfig = new GlobalConfig()
