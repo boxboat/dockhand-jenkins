@@ -9,6 +9,8 @@ class Deployment extends BaseConfig<Deployment> {
 
     String event
 
+    String eventRegex
+
     String eventFallback
 
     List<Image> imageOverrides

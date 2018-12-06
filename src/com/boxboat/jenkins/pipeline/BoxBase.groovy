@@ -9,9 +9,16 @@ import com.boxboat.jenkins.library.git.GitRepo
 import com.boxboat.jenkins.library.notification.INotifyTarget
 import com.boxboat.jenkins.library.notification.NotificationType
 
+import java.lang.reflect.Modifier
+import java.util.regex.Matcher
+
 abstract class BoxBase<T extends CommonConfigBase> {
 
     public T config
+
+    public boolean trigger
+    public String event
+    public Matcher eventMatcher
 
     protected initialConfig
     protected GitAccount gitAccount
