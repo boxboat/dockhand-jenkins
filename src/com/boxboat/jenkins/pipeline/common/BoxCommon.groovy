@@ -5,13 +5,8 @@ import com.boxboat.jenkins.pipeline.BoxBase
 
 class BoxCommon extends BoxBase<CommonConfig> {
 
-    BoxCommon(Map config) {
+    BoxCommon(Map config = [:]) {
         super(config)
-    }
-
-    static def create(Map config) {
-        def common = new BoxCommon(config)
-        return common
     }
 
     @Override

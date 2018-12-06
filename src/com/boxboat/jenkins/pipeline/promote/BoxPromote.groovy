@@ -10,18 +10,13 @@ import com.boxboat.jenkins.pipeline.BoxBase
 
 class BoxPromote extends BoxBase<PromoteConfig> {
 
-    BoxPromote(Map config) {
+    BoxPromote(Map config = [:]) {
         super(config)
     }
 
     @Override
     protected String configKey() {
         return "promote"
-    }
-
-    static def create(Map config) {
-        def promote = new BoxPromote(config)
-        return promote
     }
 
     def init() {

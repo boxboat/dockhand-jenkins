@@ -4,15 +4,15 @@ import com.boxboat.jenkins.library.config.BaseConfig
 
 class GitConfig extends BaseConfig<GitConfig> {
 
-    String buildVersionsUrl = ""
+    String buildVersionsUrl
 
-    String email = ""
+    String email
 
-    String credential = ""
+    String credential
 
-    String remotePathRegex = ""
+    String remotePathRegex
 
-    String remoteUrlReplace = ""
+    String remoteUrlReplace
 
     String getRemotePath(String url) {
         def matcher = url =~ remotePathRegex

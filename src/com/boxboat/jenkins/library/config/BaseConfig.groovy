@@ -42,7 +42,7 @@ abstract class BaseConfig<T> implements Serializable, ICopyableConfig<T>, IMerge
                         newT."$name" = [:]
                         break
                     default:
-                        newT."$name" = type.newInstance()
+                        newT."$name" = null
                         break
                 }
             }
@@ -54,6 +54,11 @@ abstract class BaseConfig<T> implements Serializable, ICopyableConfig<T>, IMerge
     T copy() {
         Yaml yaml = new Yaml(new GroovyRepresenter())
         return newFromYaml(yaml.dump(this))
+    }
+
+    String dumpYaml() {
+        Yaml yaml = new Yaml(new GroovyRepresenter())
+        yaml.dump(this)
     }
 
     @Override
