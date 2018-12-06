@@ -9,6 +9,8 @@ import com.boxboat.jenkins.library.git.GitRepo
 import com.boxboat.jenkins.library.notification.INotifyTarget
 import com.boxboat.jenkins.library.notification.NotificationType
 
+import java.lang.reflect.Modifier
+
 abstract class BoxBase<T extends CommonConfigBase> {
 
     public T config
@@ -30,7 +32,13 @@ abstract class BoxBase<T extends CommonConfigBase> {
                     initialConfig = v
                     break
                 default:
-                    throw new Exception("${className} does not support property '${k}'")
+                    k = k.toString()
+                    def property = this.metaClass.getMetaProperty(k)
+                    if (property && Modifier.isPublic(property.modifiers) && !Modifier.isStatic(property.modifiers)){
+                        this."$k" = v
+                    } else {
+                        throw new Exception("${className} does not support property '${k}'")
+                    }
             }
         }
         gitAccount = new GitAccount()
