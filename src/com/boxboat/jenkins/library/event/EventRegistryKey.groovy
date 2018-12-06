@@ -6,6 +6,8 @@ class EventRegistryKey extends BaseConfig<EventRegistryKey> {
 
     String event
 
+    String eventRegex
+
     Object notify
 
     String registryKey
