@@ -18,18 +18,13 @@ class BoxDeploy extends BoxBase<DeployConfig> {
     protected Environment environment
     protected Deployment deployment
 
-    BoxDeploy(Map config) {
+    BoxDeploy(Map config = [:]) {
         super(config)
     }
 
     @Override
     protected String configKey() {
         return "deploy"
-    }
-
-    static def create(Map config) {
-        def deploy = new BoxDeploy(config)
-        return deploy
     }
 
     def init() {
@@ -48,6 +43,20 @@ class BoxDeploy extends BoxBase<DeployConfig> {
             case DeployType.Deployment:
                 deployment = config.getDeployment(config.deploymentKey)
                 config.environmentKey = deployment.environmentKey
+                if (!deployment.event) {
+                    if (!deployment.eventRegex) {
+                        Config.pipeline.error "'deployment.event' or 'deployment.eventRegex' must be set"
+                    }
+                    if (!this.event) {
+                        Config.pipeline.error "'event' must be set for this deployment"
+                    }
+                    this.event = Utils.cleanEvent(this.event)
+                    this.eventMatcher = event =~ deployment.eventRegex
+                    if (!eventMatcher.matches()) {
+                        Config.pipeline.error "event '${this.event}' does not match deployment.eventRegex '${deployment.eventRegex}'"
+                    }
+                    deployment.event = this.event
+                }
             case DeployType.Environment:
                 environment = Config.global.getEnvironment(config.environmentKey)
                 config.deployTargetKey = environment.deployTargetKey

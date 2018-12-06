@@ -9,8 +9,6 @@ class CommonConfigBase<T> extends BaseConfig<T> {
 
     String defaultBranch
 
-    String event
-
     List<EventRegistryKey> eventRegistryKeys
 
     List<Image> images
@@ -26,12 +24,15 @@ class CommonConfigBase<T> extends BaseConfig<T> {
     List<Registry> getEventRegistries(String event) {
         List<Registry> registries = []
         eventRegistryKeys?.each { EventRegistryKey eventRegistryKey ->
-//            def matcher = event =~ eventRegistry.event
-//            if (matcher.hasGroup()) {
-//                registries.add(GlobalConfig.config.getRegistry(eventRegistry.registryKey))
-//            }
-            if (event == eventRegistryKey.event) {
-                registries.add(GlobalConfig.config.getRegistry(eventRegistryKey.registryKey))
+            if (eventRegistryKey.event) {
+                if (event == eventRegistryKey.event) {
+                    registries.add(Config.global.getRegistry(eventRegistryKey.registryKey))
+                }
+            } else if (eventRegistryKey.eventRegex) {
+                def matcher = event =~ eventRegistryKey.eventRegex
+                if (matcher.matches()) {
+                    registries.add(Config.global.getRegistry(eventRegistryKey.registryKey))
+                }
             }
         }
         return registries

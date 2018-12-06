@@ -10,10 +10,15 @@ import com.boxboat.jenkins.library.notification.INotifyTarget
 import com.boxboat.jenkins.library.notification.NotificationType
 
 import java.lang.reflect.Modifier
+import java.util.regex.Matcher
 
 abstract class BoxBase<T extends CommonConfigBase> {
 
     public T config
+
+    public boolean trigger
+    public String event
+    public Matcher eventMatcher
 
     protected initialConfig
     protected GitAccount gitAccount
@@ -21,7 +26,7 @@ abstract class BoxBase<T extends CommonConfigBase> {
     protected INotifyTarget notifySuccess
     protected INotifyTarget notifyFailure
 
-    BoxBase(Map config) {
+    BoxBase(Map config = [:]) {
         def className = this.class.simpleName
         config.each { k, v ->
             switch (k) {
@@ -70,17 +75,16 @@ abstract class BoxBase<T extends CommonConfigBase> {
         // load the global config
         String configYaml = Config.pipeline.libraryResource('com/boxboat/jenkins/config.yaml')
         def globalConfig = new GlobalConfig().newFromYaml(configYaml)
-        def globalConfigDefault = new GlobalConfig().newDefault()
-        globalConfigDefault.merge(globalConfig)
-        Config.global = globalConfigDefault
+        Config.global = new GlobalConfig().newDefault()
+        Config.global.merge(globalConfig)
 
         // create the config
         def configKey = configKey()
-        config = globalConfigDefault.repo."$configKey".newDefault()
+        config = Config.global.repo."$configKey".newDefault()
         if (configKey != "common") {
-            config.merge(globalConfig.repo.common)
+            config.merge(Config.global.repo.common)
         }
-        config.merge(globalConfig.repo."$configKey")
+        config.merge(Config.global.repo."$configKey")
 
         // update from Git
         gitRepo = gitAccount.checkoutScm()
