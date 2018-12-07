@@ -92,15 +92,22 @@ class BoxBuild extends BoxBase<BuildConfig> {
                     """
                 }
 
-                def buildVersions = gitAccount.checkoutRepository(Config.global.git.buildVersionsUrl, "build-versions", 1)
-                Config.pipeline.sh script
-                buildVersions.commitAndPush("update build-versions")
+                def closure = {
+                    def buildVersions = gitAccount.checkoutRepository(Config.global.git.buildVersionsUrl, "build-versions", 1)
+                    Config.pipeline.sh script
+                    buildVersions.commitAndPush("update build-versions")
+                }
+                if (Config.global.git.buildVersionsLockableResource) {
+                    Config.pipeline.lock(Config.global.git.buildVersionsLockableResource, closure)
+                } else {
+                    closure()
+                }
             }
         }
 
     }
 
-    protected composeCleanup(){
+    protected composeCleanup() {
         config?.composeProfileMap?.each { profile, dir ->
             composeDown(profile)
         }
