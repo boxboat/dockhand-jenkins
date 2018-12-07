@@ -6,6 +6,8 @@ class GitConfig extends BaseConfig<GitConfig> {
 
     String buildVersionsUrl
 
+    String buildVersionsLockableResource
+
     String email
 
     String credential
