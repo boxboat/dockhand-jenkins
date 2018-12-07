@@ -82,9 +82,9 @@ abstract class BoxBase<T extends CommonConfigBase> {
         def configKey = configKey()
         config = Config.global.repo."$configKey".newDefault()
         if (configKey != "common") {
-            config.merge(Config.global.repo.common)
+            config.merge(globalConfig.repo.common)
         }
-        config.merge(Config.global.repo."$configKey")
+        config.merge(globalConfig.repo."$configKey")
 
         // update from Git
         gitRepo = gitAccount.checkoutScm()
