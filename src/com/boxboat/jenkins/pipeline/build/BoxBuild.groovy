@@ -1,6 +1,7 @@
 package com.boxboat.jenkins.pipeline.build
 
 import com.boxboat.jenkins.library.Utils
+import com.boxboat.jenkins.library.buildVersions.GitBuildVersions
 import com.boxboat.jenkins.library.config.BuildConfig
 import com.boxboat.jenkins.library.config.Config
 import com.boxboat.jenkins.library.docker.Compose
@@ -54,12 +55,12 @@ class BoxBuild extends BoxBase<BuildConfig> {
         def event = Utils.cleanEvent("commit/${branch}")
         def eventTag = Utils.cleanTag(event)
         Config.pipeline.echo branch
-        def hash = gitRepo.shortHash
+        def buildTag = "build-${gitRepo.shortHash}"
         def registries = config.getEventRegistries(event)
 
         if (registries) {
             def isBranchTip = gitRepo.isBranchTip()
-            def tags = [hash]
+            def tags = [buildTag]
             if (isBranchTip) {
                 tags.add(eventTag)
             }
@@ -81,27 +82,12 @@ class BoxBuild extends BoxBase<BuildConfig> {
             }
 
             if (isBranchTip) {
-                def dir = "build-versions/image-versions/${event}"
-                def script = """
-                    mkdir -p "${dir}"
-                """
-                config.images.each { Image image ->
-                    script += """
-                        echo 'image_tag_${Utils.alphaNumericUnderscoreLower(image.path)}: "${hash}"' \\
-                            > "${dir}/${Utils.alphaNumericDashLower(image.path)}.yaml"
-                    """
+                def buildVersions = new GitBuildVersions()
+                buildVersions.checkout(gitAccount)
+                config.images.each { image ->
+                    buildVersions.setEventImageVersion(event, image, buildTag)
                 }
-
-                def closure = {
-                    def buildVersions = gitAccount.checkoutRepository(Config.global.git.buildVersionsUrl, "build-versions", 1)
-                    Config.pipeline.sh script
-                    buildVersions.commitAndPush("update build-versions")
-                }
-                if (Config.global.git.buildVersionsLockableResource) {
-                    Config.pipeline.lock(Config.global.git.buildVersionsLockableResource, closure)
-                } else {
-                    closure()
-                }
+                buildVersions.save()
             }
         }
 

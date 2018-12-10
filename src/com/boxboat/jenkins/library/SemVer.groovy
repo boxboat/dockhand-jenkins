@@ -18,10 +18,7 @@ class SemVer implements Comparable<SemVer>, Serializable {
 
     String buildInfo
 
-    String version
-
     SemVer(String version) {
-        this.version = version
         this.isPreRelease = false
         this.hasBuildInfo = false
 
@@ -62,6 +59,23 @@ class SemVer implements Comparable<SemVer>, Serializable {
 
     String toString() {
         return """${major}.${minor}.${patch}${preRelease ? "-" + preRelease : ""}${buildInfo ? "+" + buildInfo : ""}"""
+    }
+
+    def incrementPreRelease(String preReleaseType) {
+        def preReleaseNumber = 0
+        if (preRelease && preRelease.startsWith(preReleaseType)) {
+            def preReleaseNumberStr = preRelease.substring(preReleaseType.length())
+            try {
+                preReleaseNumber = preReleaseNumberStr.toInteger()
+            } catch (ignored) {
+            }
+        }
+        preReleaseNumber++
+        preRelease = "${preReleaseType}${preReleaseNumber}"
+    }
+
+    SemVer copy() {
+        return new SemVer(this.toString())
     }
 
     @Override

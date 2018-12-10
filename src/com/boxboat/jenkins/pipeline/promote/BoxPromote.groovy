@@ -2,13 +2,20 @@ package com.boxboat.jenkins.pipeline.promote
 
 import com.boxboat.jenkins.library.SemVer
 import com.boxboat.jenkins.library.Utils
+import com.boxboat.jenkins.library.buildVersions.GitBuildVersions
 import com.boxboat.jenkins.library.config.Config
 import com.boxboat.jenkins.library.config.PromoteConfig
-import com.boxboat.jenkins.library.docker.Image
 import com.boxboat.jenkins.library.docker.Registry
+import com.boxboat.jenkins.library.promote.Promotion
 import com.boxboat.jenkins.pipeline.BoxBase
 
 class BoxPromote extends BoxBase<PromoteConfig> {
+
+    public String promotionKey
+    public String registryKey
+    protected SemVer baseSemVer
+    protected Promotion promotion
+    protected Registry promoteFromRegistry
 
     BoxPromote(Map config = [:]) {
         super(config)
@@ -21,111 +28,127 @@ class BoxPromote extends BoxBase<PromoteConfig> {
 
     def init() {
         super.init()
-        if (!images || images.size() == 0) {
-            Config.pipeline.error "'images' must be set"
+        if (!config.images || config.images.size() == 0) {
+            Config.pipeline.error "'config.images' must be set"
         }
-        if (!checkout && !event) {
-            Config.pipeline.error "'checkout' or 'event' must be set"
+        if (!config.baseVersion) {
+            Config.pipeline.error "'config.baseVersion' must be set"
         }
-        if (!promoteToEvent) {
-            Config.pipeline.error "'promoteToEvent' must be set"
+        baseSemVer = new SemVer(config.baseVersion)
+        if (!baseSemVer.isValid) {
+            Config.pipeline.error "'config.baseVersion' is not a valid Semantic Version"
         }
-        if (!baseVersion) {
-            Config.pipeline.error "'baseVersion' must be set"
+        if (!promotionKey) {
+            Config.pipeline.error "'promotionKey' must be set"
+        }
+        promotion = config.getPromotion(promotionKey)
+        if (!promotion.promoteToEvent.startsWith("tag/")) {
+            Config.pipeline.error "'promoteToEvent' must start with 'tag/'"
+        }
+        if (!event) {
+            event = promotion.event
+        }
+        if (registryKey) {
+            promoteFromRegistry = Config.global.getRegistry(registryKey)
+        } else {
+            def registries = config.getEventRegistries(event)
+            if (registries.size() == 0) {
+                Config.pipeline.error "'registryKey' must be set"
+            }
+            promoteFromRegistry = registries[0]
         }
     }
 
     def promote() {
-        def events = ["tag-pre"]
-        if (!_newSemVer.isPreRelease) {
-            events.add("tag")
+        def tagType = promotion.promoteToEvent.substring("tag/".length())
+
+        def buildVersions = new GitBuildVersions()
+        buildVersions.checkout(gitAccount)
+
+        String gitCommitToTag
+        config.images.each { image ->
+            image.host = promoteFromRegistry.host
+            if (event.startsWith("image-tag/")) {
+                image.tag = event.substring("image-tag/".length())
+            } else {
+                def tag = buildVersions.getEventImageVersion(event, image)
+                if (!tag) {
+                    Config.pipeline.error "build-versions does not contain a version for image '${image.path}', event: ${event}"
+                }
+                image.tag = tag
+            }
+            if (!gitCommitToTag) {
+                gitCommitToTag = Utils.buildTagCommit(image.tag)
+            }
         }
-        Config.pipeline.echo "Promoting images '${images.join("', '")}' from '${existingTag}' to '${newTag}' " +
-                "for event(s) '${events.join("', '")}'"
 
-        def script = ""
-        events.each { event ->
-            script += """
-                mkdir -p "build-versions/${event}"
-            """
+        def nextSemVer = buildVersions.getRepoEventVersion(gitRepo.getRemotePath(), promotion.promoteToEvent)
+        if (nextSemVer == null || !nextSemVer.isValid) {
+            nextSemVer = baseSemVer.copy()
+        } else if (tagType == "release") {
+            nextSemVer.patch++
+        }
+        if (tagType != "release") {
+            def releaseSemVer = buildVersions.getRepoEventVersion(gitRepo.getRemotePath(), "tag/release")
+            if (releaseSemVer != null && releaseSemVer > nextSemVer) {
+                nextSemVer = releaseSemVer.copy()
+                nextSemVer.patch++
+            }
+            nextSemVer.incrementPreRelease(tagType)
         }
 
-        def buildVersions = gitAccount.checkoutRepository(Config.global.git.buildVersionsUrl, "build-versions", 1)
-        def updateBuildVersions = false
+        config.images.each { image ->
+            Config.pipeline.echo "Promoting '${image.path}' from '${image.tag}' to '${nextSemVer.toString()}'"
+        }
+        if (!trigger) {
+            Config.pipeline.timeout(time: 10, unit: 'MINUTES') {
+                Config.pipeline.input "Upgrade images to versin '${nextSemVer.toString()}'?"
+            }
+        }
 
-        Registry registry = Config.global.getRegistry(registryConfig)
-        Config.pipeline.docker.withRegistry(
-                registry.getRegistryUrl(),
-                registry.credential) {
-
-            List<Image> images = images.collect { String v -> new Image(v) }
-
-            images.each { Image image ->
-                def pullImage = image.copy()
-                pullImage.host = registry.host
-                pullImage.tag = existingTag
-                pullImage.pull()
+        def promoteClosure = { String pushEvent ->
+            def pushRegistries = config.getEventRegistries(pushEvent)
+            if (pushRegistries.size() == 0) {
+                Config.pipeline.error "'config.eventRegistryKeys' must specify a registry for event '${pushEvent}'"
             }
 
-            events.each { event ->
-                images.each { Image image ->
-                    def filePath = "build-versions/${event}/${Utils.alphaNumericDashLower(image.path)}.yaml"
-                    def currentTag = Config.pipeline.sh(
-                            returnStdout: true,
-                            script: """
-                                if [ -f "${filePath}" ]; then
-                                    cat "${filePath}" | head -n 1
-                                fi
-                            """)
-                    String currentVersion = null
-                    SemVer currentSemVer = null
-                    if (currentTag) {
-                        def matcher = currentTag =~ /: "(.*)"$/
-                        currentVersion = matcher.hasGroup() ? matcher[0][1] : null
-                        if (currentVersion) {
-                            currentSemVer = new SemVer(currentVersion)
-                        }
-                    }
-                    def updateBuildVersion = {
-                        script += """
-                        echo 'image_tag_${Utils.alphaNumericUnderscoreLower(image.path)}: "${newTag}"' \\
-                            > "${filePath}"
-                        """
-                        updateBuildVersions = true
-                    }
-                    if (!currentSemVer) {
-                        Config.pipeline.echo "This is the first version for image '${image.path}', event '${event}'; " +
-                                "adding build version"
-                        updateBuildVersion()
-                    } else if (_newSemVer.compareTo(currentSemVer) > 0) {
-                        Config.pipeline.echo "Image '${image.path}' version '${newTag}' is newer than existing version " +
-                                "'${currentVersion}' for event '${event}'; " +
-                                "updating build version"
-                        updateBuildVersion()
-                    } else {
-                        Config.pipeline.echo "Image '${image.path}' version '${newTag}' is " +
-                                (_newSemVer.compareTo(currentSemVer) == 0 ? "the same as" : "older than") +
-                                " existing version " +
-                                "'${currentVersion}' for event '${event}'; " +
-                                "not updating build version"
+            config.images.each { image ->
+                image.pull()
+                pushRegistries.each { pushRegistry ->
+                    def newImage = image.copy()
+                    newImage.host = pushRegistry.host
+                    newImage.tag = nextSemVer.toString()
+                    image.reTag(newImage)
+                    newImage.push()
+                }
+                buildVersions.setEventImageVersion(pushEvent, image, nextSemVer.toString())
+            }
+            buildVersions.setRepoEventVersion(gitRepo.getRemotePath(), pushEvent, nextSemVer)
+        }
+
+        if (tagType == "release") {
+            def keys = config.promotionMap.keySet().toArray()
+            keys.each { k ->
+                def v = config.promotionMap.get(k)
+                if (v.promoteToEvent?.startsWith("tag/")) {
+                    def currentSemVer = buildVersions.getRepoEventVersion(gitRepo.getRemotePath(), v.promoteToEvent)
+                    if (nextSemVer > currentSemVer) {
+                        promoteClosure(v.promoteToEvent)
                     }
                 }
             }
-
-            images.each { Image image ->
-                def pushImage = image.copy()
-                pushImage.host = registry.host
-                pushImage.tag = newTag
-                image.reTag(pushImage)
-                pushImage.push()
-            }
-
-            if (updateBuildVersions) {
-                Config.pipeline.sh script
-                buildVersions.commitAndPush("update build-versions")
-            }
-
+        } else {
+            promoteClosure(promotion.promoteToEvent)
         }
+
+        buildVersions.save()
+
+        if (gitCommitToTag) {
+            gitRepo.fetchBranches()
+            gitRepo.checkout(gitCommitToTag)
+            gitRepo.tagAndPush(nextSemVer.toString())
+        }
+
     }
 
 }

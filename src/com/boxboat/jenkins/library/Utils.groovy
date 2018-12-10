@@ -1,5 +1,7 @@
 package com.boxboat.jenkins.library
 
+import com.boxboat.jenkins.library.config.Config
+
 class Utils {
 
     static String cleanEvent(String event) {
@@ -66,6 +68,20 @@ class Utils {
             format = "yaml"
         }
         return format
+    }
+
+    static String buildTagCommit(String tag) {
+        if (tag.startsWith("build-")) {
+            return tag.substring("build-".length())
+        }
+        return null
+    }
+
+    static resultOrTest(result, test) {
+        if (Config.pipeline.env.GRADLE_TEST_ENV == "true") {
+            return test
+        }
+        return result
     }
 
 }
