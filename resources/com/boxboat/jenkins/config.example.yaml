@@ -39,7 +39,7 @@ repo:
     eventRegistryKeys:
       - event: commit/master
         registryKey: default
-      - event: tag/release
+      - event: tag/(.*)
         registryKey: default
         notify: true
   promote:

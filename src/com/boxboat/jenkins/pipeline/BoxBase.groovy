@@ -91,13 +91,12 @@ abstract class BoxBase<T extends CommonConfigBase> {
         // update from Git
         gitRepo = gitAccount.checkoutScm()
         if (overrideBranch) {
-            gitRepo.fetchBranches()
             Config.pipeline.echo "Changing Branch to '${overrideBranch}'"
-            gitRepo.checkoutBranch(overrideBranch)
+            gitRepo.fetchAndCheckoutBranch(overrideBranch)
         }
         if (overrideCommit) {
             if (!overrideBranch) {
-                gitRepo.checkoutBranch(gitRepo.branch)
+                gitRepo.fetchAndCheckoutBranch(gitRepo.branch)
             }
             Config.pipeline.echo "Changing Commit to '${overrideCommit}'"
             if (!gitRepo.currentBranchContainsCommit(overrideCommit)) {
