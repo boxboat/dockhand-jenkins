@@ -1,6 +1,7 @@
 package com.boxboat.jenkins.pipeline.deploy
 
 import com.boxboat.jenkins.library.Utils
+import com.boxboat.jenkins.library.buildVersions.GitBuildVersions
 import com.boxboat.jenkins.library.config.BaseConfig
 import com.boxboat.jenkins.library.config.Config
 import com.boxboat.jenkins.library.config.DeployConfig
@@ -80,11 +81,12 @@ class BoxDeploy extends BoxBase<DeployConfig> {
             params.format = Utils.fileFormatDetect(params.outFile)
         }
         params.format = Utils.fileFormatNormalize(params.format)
-        if (params.format != "yaml") {
-            Config.pipeline.error "'format' is required and must be 'yaml'"
+        if (params.format != "yaml" && params.format != "env") {
+            Config.pipeline.error "'format' is required and must be 'yaml'or 'env'"
         }
 
-        gitAccount.checkoutRepository(Config.global.git.buildVersionsUrl, "build-versions", 1)
+        def buildVersions = new GitBuildVersions()
+        buildVersions.checkout(gitAccount)
         Config.pipeline.sh """
             rm -f "${params.outFile}"
         """
@@ -99,23 +101,12 @@ class BoxDeploy extends BoxBase<DeployConfig> {
             }
             config.imageOverrides.each imageOverridesCl
             deployment.imageOverrides.each imageOverridesCl
-            def writeTagCl = { tryEvent ->
-                def filePath = "build-versions/image-versions/${tryEvent}/${Utils.alphaNumericDashLower(image.path)}.yaml"
-                def rc = Config.pipeline.sh(returnStatus: true, script: """
-                    if [ -f "${filePath}" ]; then
-                        cat "$filePath" >> "${params.outFile}"
-                        exit 0
-                    fi
-                    exit 1
-                """)
-                return rc == 0
-            }
-            if (writeTagCl(event)) {
+            if (buildVersions.writeEventImageVersion(event, image, params.outFile, params.format)) {
                 return
             }
             String triedEvents = event
             if (eventFallback) {
-                if (writeTagCl(eventFallback)) {
+                if (buildVersions.writeEventImageVersion(event, image, params.outFile, params.format)) {
                     return
                 }
                 triedEvents = "[${event}, ${eventFallback}]"

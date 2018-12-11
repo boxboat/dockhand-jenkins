@@ -14,6 +14,9 @@ abstract class PipelineBase extends BasePipelineTest {
         helper.registerAllowedMethod('fileExists', [String.class], { fileName ->
             return false
         })
+        helper.registerAllowedMethod('error', [String.class], { error ->
+            throw new Exception(error)
+        })
         helper.registerAllowedMethod('libraryResource', [String.class], { fileName ->
             return new File("resources/${fileName}").getText('Utf8')
         })
@@ -32,14 +35,11 @@ abstract class PipelineBase extends BasePipelineTest {
         })
 
         binding.setVariable('env', [
-                'sshKey'     : 'sshKey',
-                'username'   : 'username',
-                'BRANCH_NAME': 'master',
-                'WORKSPACE'  : System.getProperty('java.io.tmpdir'),
-        ])
-        binding.setVariable('params', [
-                'tagCommitHash': '0123456789abcdef0123456789abcdef',
-                'testEnv'      : 'true'
+                'sshKey'         : 'sshKey',
+                'username'       : 'username',
+                'BRANCH_NAME'    : 'master',
+                'WORKSPACE'      : System.getProperty('java.io.tmpdir'),
+                'GRADLE_TEST_ENV': 'true',
         ])
         binding.setVariable('scm', [:])
 

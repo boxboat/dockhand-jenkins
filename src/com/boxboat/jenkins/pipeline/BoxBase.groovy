@@ -19,6 +19,8 @@ abstract class BoxBase<T extends CommonConfigBase> {
     public boolean trigger
     public String event
     public Matcher eventMatcher
+    public String overrideBranch
+    public String overrideCommit
 
     protected initialConfig
     protected GitAccount gitAccount
@@ -39,7 +41,7 @@ abstract class BoxBase<T extends CommonConfigBase> {
                 default:
                     k = k.toString()
                     def property = this.metaClass.getMetaProperty(k)
-                    if (property && Modifier.isPublic(property.modifiers) && !Modifier.isStatic(property.modifiers)){
+                    if (property && Modifier.isPublic(property.modifiers) && !Modifier.isStatic(property.modifiers)) {
                         this."$k" = v
                     } else {
                         throw new Exception("${className} does not support property '${k}'")
@@ -88,6 +90,21 @@ abstract class BoxBase<T extends CommonConfigBase> {
 
         // update from Git
         gitRepo = gitAccount.checkoutScm()
+        if (overrideBranch) {
+            gitRepo.fetchBranches()
+            Config.pipeline.echo "Changing Branch to '${overrideBranch}'"
+            gitRepo.checkoutBranch(overrideBranch)
+        }
+        if (overrideCommit) {
+            if (!overrideBranch) {
+                gitRepo.checkoutBranch(gitRepo.branch)
+            }
+            Config.pipeline.echo "Changing Commit to '${overrideCommit}'"
+            if (!gitRepo.currentBranchContainsCommit(overrideCommit)) {
+                Config.pipeline.error "Current branch '${gitRepo.branch}' not include override commit '${overrideCommit}'"
+            }
+            gitRepo.resetToHash(overrideCommit)
+        }
         Config.pipeline.env.GIT_COMMIT_SHORT_HASH = gitRepo.shortHash
 
         // create directory for shared library

@@ -1,5 +1,6 @@
 package com.boxboat.jenkins.library.git
 
+import com.boxboat.jenkins.library.Utils
 import com.boxboat.jenkins.library.config.Config
 
 import java.nio.file.Paths
@@ -9,25 +10,20 @@ class GitRepo implements Serializable {
     public checkoutData = [:]
     public relativeDir
 
-    private String _dir
+    protected String dir
 
-    private String getDir() {
-        if (!_dir) {
-            _dir = Paths.get(Config.pipeline.env.WORKSPACE, relativeDir).toAbsolutePath().toString()
+    public String getDir() {
+        if (!dir) {
+            dir = Paths.get(Config.pipeline.env.WORKSPACE, relativeDir).toAbsolutePath().toString()
         }
-        return _dir
+        return dir
     }
 
-    String _hash
-
     String getHash() {
-        if (!_hash) {
-            _hash = checkoutData?.GIT_COMMIT ?: Config.pipeline.sh(returnStdout: true, script: """
-                cd "${this.dir}"
-                git show -s --format=%H
-            """)
-        }
-        return _hash
+        return Config.pipeline.sh(returnStdout: true, script: """
+            cd "${this.dir}"
+            git show -s --format=%H
+        """)?.trim()
     }
 
     String getShortHash() {
@@ -40,25 +36,30 @@ class GitRepo implements Serializable {
         if (!_branch) {
             _branch = checkoutData?.GIT_BRANCH ?: Config.pipeline.sh(returnStdout: true, script: """
                 git rev-parse --abbrev-ref HEAD
-            """)
+            """)?.trim()
         }
         return _branch
     }
 
+    String setBranch(String value) {
+        _branch = value
+    }
+
     String getRemoteUrl() {
-        return Config.pipeline.sh(returnStdout: true, script: """
+        def result = Config.pipeline.sh(returnStdout: true, script: """
             cd "${this.dir}"
             git config remote.origin.url
-        """)
+        """)?.trim()
+        return Utils.resultOrTest(result, Config.global.git.buildVersionsUrl)
     }
 
     String getRemotePath() {
-        return Config.global.gitRemotePath(getRemoteUrl())
+        return Config.global.git.getRemotePath(getRemoteUrl())
     }
 
     boolean isBranchTip() {
         String originHash = Config.pipeline.sh(returnStdout: true, script: """
-            git show-branch --sha1-name origin/${this.branch} || :
+            git show-branch --sha1-name origin/${this.getBranch()} || :
         """)
         def matcher = originHash =~ /^\[([0-9a-f]+)\]/
         String tipHash = matcher.hasGroup() ? matcher[0][1] : null
@@ -68,26 +69,40 @@ class GitRepo implements Serializable {
         return hash.startsWith(tipHash)
     }
 
-    def checkoutBranch(branch) {
+    def checkoutBranch(String branch) {
+        checkout(branch)
+        setBranch(branch)
+    }
+
+    def checkout(String checkout) {
         Config.pipeline.sh """
             cd "${this.dir}"
-            if git rev-parse --verify "${branch}" > /dev/null 2>&1
-            then
-                git checkout --orphan "jenkins-branch-reset-orphan"
-                git branch -D "${branch}"
-                git reset --hard
-            fi
-            git checkout "${branch}"
+            git checkout "${checkout}"
+            git reset --hard
             git clean -fd
         """
     }
 
-    def resetToHash(commitHash, branch) {
-        this.checkoutBranch(branch)
+    boolean currentBranchContainsCommit(String commit) {
+        def containsCommit = Config.pipeline.sh(returnStdout: true, script: """
+            git branch ${this.getBranch()} --contains "${commit}"
+        """)?.trim()
+        return containsCommit ? true : false
+    }
+
+    def resetToHash(String commitHash) {
         Config.pipeline.sh """
             cd "${this.dir}"
             git reset --hard "${commitHash}"
             git clean -fd
+        """
+    }
+
+    def tagAndPush(String tag) {
+        Config.pipeline.sh """
+            cd "${this.dir}"
+            git tag "${tag}"
+            git push --tags
         """
     }
 
@@ -99,12 +114,23 @@ class GitRepo implements Serializable {
         """
     }
 
-    def shallowCheckoutBranch(branch) {
+    def fetchBranches() {
         Config.pipeline.sh """
             cd "${this.dir}"
-            git remote set-branches origin "${branch}"
-            git fetch --depth 1 origin "${branch}"
-            git checkout "${branch}"
+            git fetch origin --no-tags
+        """
+    }
+
+    def pull() {
+        Config.pipeline.sh """
+            cd "${this.dir}"
+            git add --all
+            git stash clear
+            git stash
+            git pull
+            if git stash show > /dev/null 2>&1; then
+                git stash pop
+            fi
         """
     }
 

@@ -1,0 +1,28 @@
+@Library('jenkins-shared-library@master')
+import com.boxboat.jenkins.pipeline.promote.*
+
+
+def execute() {
+
+    def promote = new BoxPromote(
+        config: [
+            baseVersion: "0.1.0",
+            images: [
+                "test/a",
+                "test/b",
+            ],
+        ],
+        promotionKey: "stage",
+    )
+
+    node() {
+        promote.wrap {
+            stage('Promote'){
+                promote.promote()
+            }
+        }
+    }
+
+}
+
+return this
