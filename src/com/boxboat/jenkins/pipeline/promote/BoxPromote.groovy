@@ -66,6 +66,7 @@ class BoxPromote extends BoxBase<PromoteConfig> {
         buildVersions.checkout(gitAccount)
 
         String gitCommitToTag
+        String gitTagToTag
         config.images.each { image ->
             image.host = promoteFromRegistry.host
             if (event.startsWith("image-tag/")) {
@@ -77,8 +78,14 @@ class BoxPromote extends BoxBase<PromoteConfig> {
                 }
                 image.tag = tag
             }
-            if (!gitCommitToTag) {
+            if (!gitCommitToTag && !gitTagToTag) {
                 gitCommitToTag = Utils.buildTagCommit(image.tag)
+                if (!gitCommitToTag) {
+                    def semVer = new SemVer(image.tag)
+                    if (semVer.isValid) {
+                        gitTagToTag = image.tag
+                    }
+                }
             }
         }
 
@@ -143,9 +150,12 @@ class BoxPromote extends BoxBase<PromoteConfig> {
 
         buildVersions.save()
 
+
         if (gitCommitToTag) {
-            gitRepo.fetchBranches()
-            gitRepo.checkout(gitCommitToTag)
+            gitRepo.fetchAndCheckoutCommit(gitCommitToTag)
+            gitRepo.tagAndPush(nextSemVer.toString())
+        } else if (gitTagToTag) {
+            gitRepo.fetchAndCheckoutTag(gitTagToTag)
             gitRepo.tagAndPush(nextSemVer.toString())
         }
 

@@ -69,11 +69,6 @@ class GitRepo implements Serializable {
         return hash.startsWith(tipHash)
     }
 
-    def checkoutBranch(String branch) {
-        checkout(branch)
-        setBranch(branch)
-    }
-
     def checkout(String checkout) {
         Config.pipeline.sh """
             cd "${this.dir}"
@@ -114,10 +109,27 @@ class GitRepo implements Serializable {
         """
     }
 
-    def fetchBranches() {
+    def fetchAndCheckoutBranch(String branch) {
+        Config.pipeline.sh """
+            cd "${this.dir}"
+            git fetch origin "+refs/heads/${branch}:refs/remotes/origin/${branch}" --no-tags
+            git checkout -B "${branch}" --track "origin/${branch}"
+        """
+        setBranch(branch)
+    }
+
+    def fetchAndCheckoutTag(String tag) {
+        Config.pipeline.sh """
+            git fetch origin "+refs/tags/${tag}:refs/tags/${tag}" --no-tags
+            git checkout "${tag}"
+        """
+    }
+
+    def fetchAndCheckoutCommit(String commit) {
         Config.pipeline.sh """
             cd "${this.dir}"
             git fetch origin --no-tags
+            git checkout "${commit}"
         """
     }
 
