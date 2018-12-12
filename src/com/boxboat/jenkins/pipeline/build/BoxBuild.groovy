@@ -8,7 +8,7 @@ import com.boxboat.jenkins.library.docker.Compose
 import com.boxboat.jenkins.library.docker.Image
 import com.boxboat.jenkins.pipeline.BoxBase
 
-class BoxBuild extends BoxBase<BuildConfig> {
+class BoxBuild extends BoxBase<BuildConfig> implements Serializable {
 
     BoxBuild(Map config = [:]) {
         super(config)

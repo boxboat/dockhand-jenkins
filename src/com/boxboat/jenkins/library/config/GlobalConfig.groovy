@@ -8,7 +8,7 @@ import com.boxboat.jenkins.library.event.EventConfig
 import com.boxboat.jenkins.library.git.GitConfig
 import com.boxboat.jenkins.library.notification.INotifyTarget
 
-class GlobalConfig extends BaseConfig<GlobalConfig> {
+class GlobalConfig extends BaseConfig<GlobalConfig> implements Serializable {
 
     Map<String, IDeployTarget> deployTargetMap
 

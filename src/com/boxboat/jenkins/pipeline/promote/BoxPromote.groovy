@@ -9,7 +9,7 @@ import com.boxboat.jenkins.library.docker.Registry
 import com.boxboat.jenkins.library.promote.Promotion
 import com.boxboat.jenkins.pipeline.BoxBase
 
-class BoxPromote extends BoxBase<PromoteConfig> {
+class BoxPromote extends BoxBase<PromoteConfig> implements Serializable {
 
     public String promotionKey
     public String registryKey
@@ -134,9 +134,8 @@ class BoxPromote extends BoxBase<PromoteConfig> {
         }
 
         if (tagType == "release") {
-            def keys = config.promotionMap.keySet().toArray()
-            keys.each { k ->
-                def v = config.promotionMap.get(k)
+            config.promotionMap.keySet().toList().each { k ->
+                def v = config.promotionMap[k]
                 if (v.promoteToEvent?.startsWith("tag/")) {
                     def currentSemVer = buildVersions.getRepoEventVersion(gitRepo.getRemotePath(), v.promoteToEvent)
                     if (nextSemVer > currentSemVer) {

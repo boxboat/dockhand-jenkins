@@ -2,7 +2,7 @@ package com.boxboat.jenkins.library
 
 import com.boxboat.jenkins.library.config.Config
 
-class LibraryScript {
+class LibraryScript implements Serializable {
 
     static String run(String script) {
         def path = "sharedLibraryScripts/${script}"

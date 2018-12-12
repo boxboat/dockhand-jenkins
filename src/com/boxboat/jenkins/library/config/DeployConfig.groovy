@@ -3,7 +3,7 @@ package com.boxboat.jenkins.library.config
 import com.boxboat.jenkins.library.deploy.Deployment
 import com.boxboat.jenkins.library.docker.Image
 
-class DeployConfig extends CommonConfigBase<DeployConfig> {
+class DeployConfig extends CommonConfigBase<DeployConfig> implements Serializable {
 
     String deploymentKey
 

@@ -7,7 +7,7 @@ import com.boxboat.jenkins.library.docker.Image
 import com.boxboat.jenkins.library.git.GitAccount
 import com.boxboat.jenkins.library.git.GitRepo
 
-class GitBuildVersions {
+class GitBuildVersions implements Serializable {
 
     protected GitRepo gitRepo
 

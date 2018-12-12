@@ -4,9 +4,9 @@ import com.boxboat.jenkins.library.LibraryScript
 import com.boxboat.jenkins.library.config.BaseConfig
 import com.boxboat.jenkins.library.config.Config
 
-class KubeLogs {
+class KubeLogs implements Serializable {
 
-    static class PollParams extends BaseConfig<PollParams> {
+    static class PollParams extends BaseConfig<PollParams> implements Serializable {
         String outFile
         String namespace
         String labels

@@ -1,6 +1,6 @@
 package com.boxboat.jenkins.library.config
 
-class RepoConfig extends BaseConfig<RepoConfig> {
+class RepoConfig extends BaseConfig<RepoConfig> implements Serializable {
 
     BuildConfig build
 

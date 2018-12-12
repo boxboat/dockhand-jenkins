@@ -2,7 +2,7 @@ package com.boxboat.jenkins.library.git
 
 import com.boxboat.jenkins.library.config.BaseConfig
 
-class GitConfig extends BaseConfig<GitConfig> {
+class GitConfig extends BaseConfig<GitConfig> implements Serializable {
 
     String buildVersionsUrl
 

@@ -3,7 +3,7 @@ package com.boxboat.jenkins.library.vault
 import com.boxboat.jenkins.library.config.BaseConfig
 import com.boxboat.jenkins.library.config.Config
 
-class Vault extends BaseConfig<Vault> {
+class Vault extends BaseConfig<Vault> implements Serializable {
 
     int kvVersion
 

@@ -12,7 +12,7 @@ import com.boxboat.jenkins.library.docker.Image
 import com.boxboat.jenkins.library.environment.Environment
 import com.boxboat.jenkins.pipeline.BoxBase
 
-class BoxDeploy extends BoxBase<DeployConfig> {
+class BoxDeploy extends BoxBase<DeployConfig> implements Serializable {
 
     protected DeployType deployType
     protected IDeployTarget deployTarget
@@ -66,7 +66,7 @@ class BoxDeploy extends BoxBase<DeployConfig> {
         }
     }
 
-    static class ImageTagsParams extends BaseConfig<ImageTagsParams> {
+    static class ImageTagsParams extends BaseConfig<ImageTagsParams> implements Serializable {
         String format
         String outFile
         List<String> yamlPath

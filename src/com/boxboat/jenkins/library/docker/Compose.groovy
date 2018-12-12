@@ -3,7 +3,7 @@ package com.boxboat.jenkins.library.docker
 import com.boxboat.jenkins.library.LibraryScript
 import com.boxboat.jenkins.library.config.Config
 
-class Compose {
+class Compose implements Serializable {
 
     static String up(dir, profile) {
         Config.pipeline.sh """

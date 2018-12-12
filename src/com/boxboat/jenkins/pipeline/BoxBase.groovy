@@ -12,7 +12,7 @@ import com.boxboat.jenkins.library.notification.NotificationType
 import java.lang.reflect.Modifier
 import java.util.regex.Matcher
 
-abstract class BoxBase<T extends CommonConfigBase> {
+abstract class BoxBase<T extends CommonConfigBase> implements Serializable {
 
     public T config
 
@@ -28,9 +28,9 @@ abstract class BoxBase<T extends CommonConfigBase> {
     protected INotifyTarget notifySuccess
     protected INotifyTarget notifyFailure
 
-    BoxBase(Map config = [:]) {
-        def className = this.class.simpleName
-        config.each { k, v ->
+    BoxBase(Map<String, Object> config = [:]) {
+        config.keySet().toList().each { k ->
+            def v = config[k]
             switch (k) {
                 case "pipeline":
                     Config.pipeline = v
@@ -39,12 +39,11 @@ abstract class BoxBase<T extends CommonConfigBase> {
                     initialConfig = v
                     break
                 default:
-                    k = k.toString()
                     def property = this.metaClass.getMetaProperty(k)
                     if (property && Modifier.isPublic(property.modifiers) && !Modifier.isStatic(property.modifiers)) {
                         this."$k" = v
                     } else {
-                        throw new Exception("${className} does not support property '${k}'")
+                        throw new Exception("${this.class.simpleName} does not support property '${k}'")
                     }
             }
         }
