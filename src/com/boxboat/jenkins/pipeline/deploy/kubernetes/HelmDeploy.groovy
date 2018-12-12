@@ -2,7 +2,7 @@ package com.boxboat.jenkins.pipeline.deploy.kubernetes
 
 import com.boxboat.jenkins.library.config.Config
 
-class HelmDeploy {
+class HelmDeploy implements Serializable {
 
     public String chart
 

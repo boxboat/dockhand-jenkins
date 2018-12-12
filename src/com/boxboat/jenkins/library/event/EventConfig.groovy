@@ -3,7 +3,7 @@ package com.boxboat.jenkins.library.event
 import com.boxboat.jenkins.library.config.Config
 import com.boxboat.jenkins.library.docker.Registry
 
-class EventConfig {
+class EventConfig implements Serializable {
 
     public Map<String, List<String>> registryEventMap = [:]
 

@@ -1,9 +1,11 @@
 package com.boxboat.jenkins.library.config
 
-@Grab('org.apache.commons:commons-lang3:3.7')
+import com.cloudbees.groovy.cps.NonCPS
+
+@Grab('org.apache.commons:commons-lang3:3.8.1')
 import org.apache.commons.lang3.builder.EqualsBuilder
 import org.apache.commons.lang3.builder.HashCodeBuilder
-@Grab('org.yaml:snakeyaml:1.19')
+@Grab('org.yaml:snakeyaml:1.23')
 import org.yaml.snakeyaml.Yaml
 import org.yaml.snakeyaml.constructor.CustomClassLoaderConstructor
 import org.yaml.snakeyaml.representer.Representer
@@ -13,8 +15,8 @@ import java.lang.reflect.Modifier
 abstract class BaseConfig<T> implements Serializable, ICopyableConfig<T>, IMergeableConfig<T> {
 
     T newFromYaml(String yamlStr) {
-        Yaml yaml = new Yaml(new CustomClassLoaderConstructor(this.class.classLoader))
-        return (T) yaml.loadAs(yamlStr, this.class)
+        Yaml yaml = new Yaml(new CustomClassLoaderConstructor(this.class, this.class.classLoader))
+        return (T) yaml.load(yamlStr)
     }
 
     T newFromObject(Object obj) {
@@ -91,6 +93,7 @@ abstract class BaseConfig<T> implements Serializable, ICopyableConfig<T>, IMerge
     }
 
     @Override
+    @NonCPS
     boolean equals(Object o) {
         if (!(o instanceof T)) {
             return false
@@ -99,15 +102,22 @@ abstract class BaseConfig<T> implements Serializable, ICopyableConfig<T>, IMerge
 
         def equalsBuilder = new EqualsBuilder()
         this.properties.each { k, v ->
+            if (k == "class") {
+                return
+            }
             equalsBuilder.append(v, m."$k")
         }
         return equalsBuilder.equals
     }
 
     @Override
+    @NonCPS // important - SnakeYAML Exception handling does not work without the @NonCPS annotation
     int hashCode() {
-        def hashCodeBuilder = new HashCodeBuilder()
+        def hashCodeBuilder = new HashCodeBuilder(17, 37)
         this.properties.each { k, v ->
+            if (k == "class") {
+                return
+            }
             hashCodeBuilder.append(v)
         }
         return hashCodeBuilder.toHashCode()
@@ -116,7 +126,7 @@ abstract class BaseConfig<T> implements Serializable, ICopyableConfig<T>, IMerge
 }
 
 // https://stackoverflow.com/a/35108062/1419658
-class GroovyRepresenter extends Representer {
+class GroovyRepresenter extends Representer implements Serializable {
 
     GroovyRepresenter() {
         this.multiRepresenters.put(GString.class, this.representers.get(String))

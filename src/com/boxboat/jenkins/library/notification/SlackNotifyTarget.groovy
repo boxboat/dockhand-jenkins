@@ -4,7 +4,7 @@ import com.boxboat.jenkins.library.config.BaseConfig
 import com.boxboat.jenkins.library.config.Config
 import groovy.json.JsonBuilder
 
-class SlackNotifyTarget extends BaseConfig<SlackNotifyTarget> implements INotifyTarget {
+class SlackNotifyTarget extends BaseConfig<SlackNotifyTarget> implements INotifyTarget, Serializable {
 
     String credential = ""
 

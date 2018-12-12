@@ -7,13 +7,13 @@ import com.boxboat.jenkins.library.vault.Vault
 import com.boxboat.jenkins.library.config.BaseConfig
 import com.boxboat.jenkins.library.config.CommonConfigBase
 
-class VaultSecretScriptHelper {
+class VaultSecretScriptHelper implements Serializable {
 
     private static CommonConfigBase repoConfig() {
         return Config.<CommonConfigBase>castRepo()
     }
 
-    static class ReplaceParams extends BaseConfig<ReplaceParams> {
+    static class ReplaceParams extends BaseConfig<ReplaceParams> implements Serializable {
         String vaultKey
         Map<String, String> env
         List<String> globs
@@ -48,7 +48,7 @@ class VaultSecretScriptHelper {
         }
     }
 
-    static class FileParams extends BaseConfig<FileParams> {
+    static class FileParams extends BaseConfig<FileParams> implements Serializable {
         Boolean base64
         String format
         String outFile

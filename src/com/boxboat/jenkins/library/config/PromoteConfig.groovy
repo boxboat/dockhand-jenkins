@@ -2,7 +2,7 @@ package com.boxboat.jenkins.library.config
 
 import com.boxboat.jenkins.library.promote.Promotion
 
-class PromoteConfig extends CommonConfigBase<PromoteConfig> {
+class PromoteConfig extends CommonConfigBase<PromoteConfig> implements Serializable {
 
     String baseVersion
 

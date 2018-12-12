@@ -3,7 +3,9 @@ package com.boxboat.jenkins.library.docker
 import com.boxboat.jenkins.library.config.BaseConfig
 import com.boxboat.jenkins.library.config.Config
 
-class Image extends BaseConfig<Image> {
+import java.lang.reflect.Modifier
+
+class Image extends BaseConfig<Image> implements Serializable {
 
     String event
 
@@ -17,11 +19,17 @@ class Image extends BaseConfig<Image> {
 
     Object trigger
 
-    Image() {
-    }
 
-    Image(Map config) {
-        config?.each { k, v -> this[k] = v }
+    Image(Map<String, Object> config = [:]) {
+        config.keySet().toList().each { k ->
+            def v = config[k]
+            def property = this.metaClass.getMetaProperty(k)
+            if (property && Modifier.isPublic(property.modifiers) && !Modifier.isStatic(property.modifiers)) {
+                this."$k" = v
+            } else {
+                throw new Exception("${this.class.simpleName} does not support property '${k}'")
+            }
+        }
     }
 
     Image(String imageString) {

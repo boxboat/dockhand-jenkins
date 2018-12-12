@@ -2,7 +2,7 @@ package com.boxboat.jenkins.library
 
 import com.boxboat.jenkins.library.config.Config
 
-class Utils {
+class Utils implements Serializable {
 
     static String cleanEvent(String event) {
         if (event == null) {

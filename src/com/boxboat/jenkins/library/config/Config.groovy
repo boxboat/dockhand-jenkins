@@ -1,6 +1,6 @@
 package com.boxboat.jenkins.library.config
 
-class Config {
+class Config implements Serializable {
 
     static GlobalConfig global
 
