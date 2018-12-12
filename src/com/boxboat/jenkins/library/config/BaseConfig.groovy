@@ -1,16 +1,16 @@
 package com.boxboat.jenkins.library.config
 
 import com.cloudbees.groovy.cps.NonCPS
+import java.lang.reflect.Modifier
 
 @Grab('org.apache.commons:commons-lang3:3.8.1')
 import org.apache.commons.lang3.builder.EqualsBuilder
-import org.apache.commons.lang3.builder.HashCodeBuilder
+
 @Grab('org.yaml:snakeyaml:1.23')
 import org.yaml.snakeyaml.Yaml
 import org.yaml.snakeyaml.constructor.CustomClassLoaderConstructor
 import org.yaml.snakeyaml.representer.Representer
 
-import java.lang.reflect.Modifier
 
 abstract class BaseConfig<T> implements Serializable, ICopyableConfig<T>, IMergeableConfig<T> {
 
@@ -93,7 +93,6 @@ abstract class BaseConfig<T> implements Serializable, ICopyableConfig<T>, IMerge
     }
 
     @Override
-    @NonCPS
     boolean equals(Object o) {
         if (!(o instanceof T)) {
             return false
@@ -101,26 +100,14 @@ abstract class BaseConfig<T> implements Serializable, ICopyableConfig<T>, IMerge
         T m = (T) o
 
         def equalsBuilder = new EqualsBuilder()
-        this.properties.each { k, v ->
+        this.properties.keySet().toList().each { k ->
+            def v = this.properties[k]
             if (k == "class") {
                 return
             }
             equalsBuilder.append(v, m."$k")
         }
         return equalsBuilder.equals
-    }
-
-    @Override
-    @NonCPS // important - SnakeYAML Exception handling does not work without the @NonCPS annotation
-    int hashCode() {
-        def hashCodeBuilder = new HashCodeBuilder(17, 37)
-        this.properties.each { k, v ->
-            if (k == "class") {
-                return
-            }
-            hashCodeBuilder.append(v)
-        }
-        return hashCodeBuilder.toHashCode()
     }
 
 }
