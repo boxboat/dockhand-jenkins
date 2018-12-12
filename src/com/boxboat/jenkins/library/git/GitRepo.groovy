@@ -96,7 +96,7 @@ class GitRepo implements Serializable {
     def tagAndPush(String tag) {
         Config.pipeline.sh """
             cd "${this.dir}"
-            git tag "${tag}"
+            git tag -f "${tag}"
             git push --tags
         """
     }

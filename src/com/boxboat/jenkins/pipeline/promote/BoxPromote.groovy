@@ -149,12 +149,12 @@ class BoxPromote extends BoxBase<PromoteConfig> implements Serializable {
 
         buildVersions.save()
 
-
-        if (gitCommitToTag) {
-            gitRepo.fetchAndCheckoutCommit(gitCommitToTag)
-            gitRepo.tagAndPush(nextSemVer.toString())
-        } else if (gitTagToTag) {
-            gitRepo.fetchAndCheckoutTag(gitTagToTag)
+        if (gitCommitToTag || gitTagToTag) {
+            if (gitCommitToTag) {
+                gitRepo.fetchAndCheckoutCommit(gitCommitToTag)
+            } else if (gitTagToTag) {
+                gitRepo.fetchAndCheckoutTag(gitTagToTag)
+            }
             gitRepo.tagAndPush(nextSemVer.toString())
         }
 
