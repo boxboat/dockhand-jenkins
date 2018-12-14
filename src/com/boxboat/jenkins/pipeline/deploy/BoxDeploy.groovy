@@ -1,7 +1,6 @@
 package com.boxboat.jenkins.pipeline.deploy
 
 import com.boxboat.jenkins.library.Utils
-import com.boxboat.jenkins.library.buildVersions.GitBuildVersions
 import com.boxboat.jenkins.library.config.BaseConfig
 import com.boxboat.jenkins.library.config.Config
 import com.boxboat.jenkins.library.config.DeployConfig
@@ -10,6 +9,7 @@ import com.boxboat.jenkins.library.deploy.Deployment
 import com.boxboat.jenkins.library.deployTarget.IDeployTarget
 import com.boxboat.jenkins.library.docker.Image
 import com.boxboat.jenkins.library.environment.Environment
+import com.boxboat.jenkins.library.trigger.Trigger
 import com.boxboat.jenkins.pipeline.BoxBase
 
 class BoxDeploy extends BoxBase<DeployConfig> implements Serializable {
@@ -48,15 +48,15 @@ class BoxDeploy extends BoxBase<DeployConfig> implements Serializable {
                     if (!deployment.eventRegex) {
                         Config.pipeline.error "'deployment.event' or 'deployment.eventRegex' must be set"
                     }
-                    if (!this.event) {
-                        Config.pipeline.error "'event' must be set for this deployment"
+                    if (!this.triggerEvent) {
+                        Config.pipeline.error "'triggerEvent' must be set for this deployment"
                     }
-                    this.event = Utils.cleanEvent(this.event)
-                    this.eventMatcher = event =~ deployment.eventRegex
+                    this.triggerEvent = Utils.cleanEvent(this.triggerEvent)
+                    this.eventMatcher = this.triggerEvent =~ deployment.eventRegex
                     if (!eventMatcher.matches()) {
-                        Config.pipeline.error "event '${this.event}' does not match deployment.eventRegex '${deployment.eventRegex}'"
+                        Config.pipeline.error "triggerEvent '${this.triggerEvent}' does not match deployment.eventRegex '${deployment.eventRegex}'"
                     }
-                    deployment.event = this.event
+                    deployment.event = this.triggerEvent
                 }
             case DeployType.Environment:
                 environment = Config.global.getEnvironment(config.environmentKey)
@@ -64,6 +64,52 @@ class BoxDeploy extends BoxBase<DeployConfig> implements Serializable {
             case DeployType.DeployTarget:
                 deployTarget = Config.global.getDeployTarget(config.deployTargetKey)
         }
+    }
+
+    @Override
+    List<Trigger> triggers() {
+        if (deployType != DeployType.Deployment) {
+            return []
+        }
+        String job = Config.pipeline.env.JOB_NAME
+        def triggers = []
+        config.deploymentMap.keySet().toList().each { deploymentKey ->
+            def deployment = config.deploymentMap[deploymentKey]
+            def params = [
+                    [$class: 'StringParameterValue', name: 'deploymentKey', value: deploymentKey]
+            ]
+            Map<String, Boolean> imageMap = [:]
+            def imageCl = { Image image ->
+                if (!imageMap[image.path]) {
+                    def trigger = new Trigger()
+                    trigger.job = job
+                    trigger.imagePaths = [image.path]
+                    trigger.event = image.event
+                    trigger.params = params
+                    triggers.add(trigger)
+                }
+                imageMap[image.path] = true
+            }
+            deployment.imageOverrides.each(imageCl)
+            config.imageOverrides.each(imageCl)
+            def remainingImages = []
+            config.images.each { image ->
+                if (!imageMap[image.path]) {
+                    remainingImages.add(image.path)
+                    imageMap[image.path] = true
+                }
+            }
+            if (remainingImages) {
+                def trigger = new Trigger()
+                trigger.job = job
+                trigger.imagePaths = remainingImages
+                trigger.event = deployment.event
+                trigger.eventRegex = deployment.eventRegex
+                trigger.params = params
+                triggers.add(trigger)
+            }
+        }
+        return triggers
     }
 
     static class ImageTagsParams extends BaseConfig<ImageTagsParams> implements Serializable {
@@ -85,8 +131,7 @@ class BoxDeploy extends BoxBase<DeployConfig> implements Serializable {
             Config.pipeline.error "'format' is required and must be 'yaml'or 'env'"
         }
 
-        def buildVersions = new GitBuildVersions()
-        buildVersions.checkout(gitAccount)
+        def buildVersions = this.getBuildVersions()
         Config.pipeline.sh """
             rm -f "${params.outFile}"
         """

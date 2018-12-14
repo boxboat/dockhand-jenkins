@@ -10,6 +10,9 @@ def execute() {
                 "dev" : "./build/docker/dev/",
                 "prod": "./build/docker/prod/",
             ],
+            images: [
+                "test/a",
+            ],
         ],
     )
 

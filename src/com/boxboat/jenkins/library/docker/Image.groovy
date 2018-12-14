@@ -17,7 +17,7 @@ class Image extends BaseConfig<Image> implements Serializable {
 
     String tag
 
-    Object trigger
+    Boolean trigger
 
 
     Image(Map<String, Object> config = [:]) {

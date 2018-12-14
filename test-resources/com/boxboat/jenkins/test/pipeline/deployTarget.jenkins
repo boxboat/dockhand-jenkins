@@ -4,11 +4,8 @@ import com.boxboat.jenkins.pipeline.deploy.*
 
 def execute() {
 
-    def deploy = new BoxDeploy(
-        config: [
-            deployTargetKey: "dev01",
-        ]
-    )
+    params.deployTargetKey = "dev01"
+    def deploy = new BoxDeploy()
 
     node() {
         deploy.wrap {

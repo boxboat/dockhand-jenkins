@@ -12,7 +12,7 @@ class EventConfig implements Serializable {
         registryEventMap.each { registryStr, eventList ->
             eventList.each { eventRe ->
                 def matcher = event =~ eventRe
-                if (matcher.hasGroup()) {
+                if (matcher.hasGroup() && matcher.size() > 0) {
                     registries.add(Config.global.getRegistry(registryStr))
                 }
             }

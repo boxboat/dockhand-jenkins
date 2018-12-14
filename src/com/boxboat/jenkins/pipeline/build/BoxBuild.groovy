@@ -82,8 +82,8 @@ class BoxBuild extends BoxBase<BuildConfig> implements Serializable {
             }
 
             if (isBranchTip) {
-                def buildVersions = new GitBuildVersions()
-                buildVersions.checkout(gitAccount)
+                emitEvents.add(event)
+                def buildVersions = this.getBuildVersions()
                 config.images.each { image ->
                     buildVersions.setEventImageVersion(event, image, buildTag)
                 }

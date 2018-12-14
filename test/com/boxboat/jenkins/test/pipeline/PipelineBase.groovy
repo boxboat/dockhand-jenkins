@@ -23,6 +23,7 @@ abstract class PipelineBase extends BasePipelineTest {
         helper.registerAllowedMethod('libraryResource', [Map.class], { config ->
             return config.resource
         })
+        helper.registerAllowedMethod('build', [Map.class], null)
         helper.registerAllowedMethod('httpRequest', [Map.class], null)
         helper.registerAllowedMethod('writeFile', [Map.class], null)
         helper.registerAllowedMethod('sshUserPrivateKey', [Map.class], null)
@@ -38,10 +39,12 @@ abstract class PipelineBase extends BasePipelineTest {
                 'sshKey'         : 'sshKey',
                 'username'       : 'username',
                 'BRANCH_NAME'    : 'master',
+                'JOB_NAME'       : 'test/master',
                 'WORKSPACE'      : System.getProperty('java.io.tmpdir'),
                 'GRADLE_TEST_ENV': 'true',
         ])
         binding.setVariable('scm', [:])
+        binding.setVariable('params', [:])
 
         def sharedLib = 'dist'
         def library = library()

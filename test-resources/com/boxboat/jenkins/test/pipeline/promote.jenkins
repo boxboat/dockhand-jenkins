@@ -4,6 +4,7 @@ import com.boxboat.jenkins.pipeline.promote.*
 
 def execute() {
 
+    params.promotionKey = "stage"
     def promote = new BoxPromote(
         config: [
             baseVersion: "0.1.0",
@@ -12,7 +13,6 @@ def execute() {
                 "test/b",
             ],
         ],
-        promotionKey: "stage",
     )
 
     node() {
