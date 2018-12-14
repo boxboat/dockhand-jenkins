@@ -6,6 +6,8 @@ class PromoteConfig extends CommonConfigBase<PromoteConfig> implements Serializa
 
     String baseVersion
 
+    String promotionKey
+
     Map<String, Promotion> promotionMap
 
     Promotion getPromotion(String key) {

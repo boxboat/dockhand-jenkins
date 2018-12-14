@@ -6,6 +6,8 @@ import com.boxboat.jenkins.library.config.Config
 import com.boxboat.jenkins.library.docker.Image
 import com.boxboat.jenkins.library.git.GitAccount
 import com.boxboat.jenkins.library.git.GitRepo
+import com.boxboat.jenkins.library.trigger.Trigger
+import com.boxboat.jenkins.library.yaml.YamlUtils
 
 class GitBuildVersions implements Serializable {
 
@@ -53,12 +55,12 @@ class GitBuildVersions implements Serializable {
 
         def dir = "${gitRepo.dir}/image-versions/${event}"
         def path = "${dir}/${Utils.alphaNumericDashLower(image.path)}.txt"
-        def key = "image_tag_${Utils.alphaNumericUnderscoreLower(image.tag)}"
-        def divider = format == "yaml" ? ":" : "="
+        def key = "image_tag_${Utils.alphaNumericUnderscoreLower(image.path)}"
+        def divider = format == "yaml" ? ": " : "="
         def rc = Config.pipeline.sh(returnStatus: true, script: """
             if [ -f "${path}" ]; then
                 version=\$(cat "$path")
-                printf "${key}${divider}\\"\$version\\"" >> "$outFile"
+                echo "${key}${divider}\\"\$version\\"" >> "$outFile"
                 exit 0
             fi
             exit 1
@@ -90,15 +92,74 @@ class GitBuildVersions implements Serializable {
         return null
     }
 
-    def save() {
-        def closure = {
-            gitRepo.pull()
-            gitRepo.commitAndPush("update build versions")
+    List<Trigger> getAllJobTriggers() {
+        def dir = "${gitRepo.dir}/job-triggers/"
+        def result = Config.pipeline.sh(returnStdout: true, script: """
+            if [ -d "${dir}" ]; then
+                find "${dir}" -type f -name "triggers.yaml" | xargs cat
+            fi
+        """)?.trim()
+        def testResult = """
+- event: commit/master
+  eventRegex: null
+  imagePaths: [test/b, test/a]
+  job: test/master
+  params:
+  - {\$class: StringParameterValue, name: deploymentKey, value: dev}
+- event: tag/rc
+  eventRegex: null
+  imagePaths: [test/b, test/a]
+  job: test/master
+  params:
+  - {\$class: StringParameterValue, name: deploymentKey, value: stage}
+- event: tag/release
+  eventRegex: null
+  imagePaths: [test/b, test/a]
+  job: test/master
+  params:
+  - {\$class: StringParameterValue, name: deploymentKey, value: prod}
+""".trim()
+        result = Utils.resultOrTest(result, testResult)
+        if (!result) {
+            return []
         }
-        if (Config.global.git.buildVersionsLockableResource) {
-            Config.pipeline.lock(Config.global.git.buildVersionsLockableResource, closure)
-        } else {
-            closure()
+        def triggerInstance = new Trigger()
+        List<Trigger> triggers = []
+        def triggerList = YamlUtils.load(result)
+        triggerList.each { trigger ->
+            triggers.add(triggerInstance.newFromObject(trigger))
+        }
+        return triggers
+    }
+
+    def setJobTriggers(String job, List<Trigger> triggers) {
+        def dir = "${gitRepo.dir}/job-triggers/${job}"
+        def path = "${dir}/triggers.yaml"
+        Config.pipeline.sh """
+            mkdir -p "${dir}"
+        """
+        def yamlStr = YamlUtils.hideClassesAndDump([Trigger.class], triggers)
+        Config.pipeline.writeFile(file: path, text: yamlStr, encoding: "Utf8")
+    }
+
+    def removeJobTriggers(String job) {
+        def dir = "${gitRepo.dir}/job-triggers/${job}"
+        Config.pipeline.sh """
+            rm -rf "${dir}"
+        """
+    }
+
+    def save() {
+        if (gitRepo.hasChanges()) {
+            def closure = {
+                gitRepo.pull()
+                gitRepo.commitAndPush("update build versions")
+            }
+            if (Config.global.git.buildVersionsLockableResource) {
+                Config.pipeline.lock(Config.global.git.buildVersionsLockableResource, closure)
+            } else {
+                closure()
+            }
         }
     }
 }

@@ -37,8 +37,11 @@ class GitRepo implements Serializable {
             _branch = checkoutData?.GIT_BRANCH ?: Config.pipeline.sh(returnStdout: true, script: """
                 git rev-parse --abbrev-ref HEAD
             """)?.trim()
+            if (_branch?.startsWith("origin/")) {
+                _branch = _branch.substring("origin/".length())
+            }
         }
-        return _branch
+        return Utils.resultOrTest(_branch, "master")
     }
 
     String setBranch(String value) {
@@ -62,11 +65,12 @@ class GitRepo implements Serializable {
             git show-branch --sha1-name origin/${this.getBranch()} || :
         """)
         def matcher = originHash =~ /^\[([0-9a-f]+)\]/
-        String tipHash = matcher.hasGroup() ? matcher[0][1] : null
-        if (!tipHash) {
-            return false
+        String tipHash = matcher.hasGroup() && matcher.size() > 0 ? matcher[0][1] : null
+        def result = false
+        if (tipHash) {
+            result = hash.startsWith(tipHash)
         }
-        return hash.startsWith(tipHash)
+        return Utils.resultOrTest(result, true)
     }
 
     def checkout(String checkout) {
@@ -97,7 +101,7 @@ class GitRepo implements Serializable {
         Config.pipeline.sh """
             cd "${this.dir}"
             git tag -f "${tag}"
-            git push --tags
+            git push origin "refs/tags/${tag}"
         """
     }
 
@@ -146,22 +150,23 @@ class GitRepo implements Serializable {
         """
     }
 
-    def commitAndPush(commitMessage) {
-        Config.pipeline.sh(returnStdout: true, script: """
+    boolean hasChanges() {
+        def rc = Config.pipeline.sh(returnStatus: true, script: """
             cd "${this.dir}"
             git add --all
-            
-            # Only commit/push if there are changes
             git update-index -q --refresh
-            if git diff-index --quiet HEAD -- ; then
-              # No changes
-              echo "Build-versions file not changed, skipping"
-            else
-              # Changes
-              git commit -a -m "${commitMessage}"
-              git push
-            fi
+            git diff-index --quiet HEAD --
         """)
+        return rc != 0
+    }
+
+    def commitAndPush(commitMessage) {
+        Config.pipeline.sh """
+            cd "${this.dir}"
+            git add --all
+            git commit -m "${commitMessage}"
+            git push
+        """
     }
 
     def forcePush() {

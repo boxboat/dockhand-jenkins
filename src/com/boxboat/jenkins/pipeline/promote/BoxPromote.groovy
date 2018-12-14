@@ -2,7 +2,6 @@ package com.boxboat.jenkins.pipeline.promote
 
 import com.boxboat.jenkins.library.SemVer
 import com.boxboat.jenkins.library.Utils
-import com.boxboat.jenkins.library.buildVersions.GitBuildVersions
 import com.boxboat.jenkins.library.config.Config
 import com.boxboat.jenkins.library.config.PromoteConfig
 import com.boxboat.jenkins.library.docker.Registry
@@ -11,8 +10,9 @@ import com.boxboat.jenkins.pipeline.BoxBase
 
 class BoxPromote extends BoxBase<PromoteConfig> implements Serializable {
 
-    public String promotionKey
+    public String overrideTag
     public String registryKey
+
     protected SemVer baseSemVer
     protected Promotion promotion
     protected Registry promoteFromRegistry
@@ -38,43 +38,42 @@ class BoxPromote extends BoxBase<PromoteConfig> implements Serializable {
         if (!baseSemVer.isValid) {
             Config.pipeline.error "'config.baseVersion' is not a valid Semantic Version"
         }
-        if (!promotionKey) {
-            Config.pipeline.error "'promotionKey' must be set"
+        if (!config.promotionKey) {
+            Config.pipeline.error "'config.promotionKey' must be set"
         }
-        promotion = config.getPromotion(promotionKey)
+        promotion = config.getPromotion(config.promotionKey)
         if (!promotion.promoteToEvent.startsWith("tag/")) {
             Config.pipeline.error "'promoteToEvent' must start with 'tag/'"
         }
-        if (!event) {
-            event = promotion.event
-        }
+        emitEvents.add(promotion.promoteToEvent)
         if (registryKey) {
             promoteFromRegistry = Config.global.getRegistry(registryKey)
-        } else {
-            def registries = config.getEventRegistries(event)
-            if (registries.size() == 0) {
-                Config.pipeline.error "'registryKey' must be set"
+        } else if (!overrideTag) {
+            def registries = config.getEventRegistries(promotion.event)
+            if (registries.size() > 0) {
+                promoteFromRegistry = registries[0]
             }
-            promoteFromRegistry = registries[0]
+        }
+        if (!promoteFromRegistry) {
+            Config.pipeline.error "'registryKey' must be set"
         }
     }
 
     def promote() {
         def tagType = promotion.promoteToEvent.substring("tag/".length())
 
-        def buildVersions = new GitBuildVersions()
-        buildVersions.checkout(gitAccount)
+        def buildVersions = this.getBuildVersions()
 
         String gitCommitToTag
         String gitTagToTag
         config.images.each { image ->
             image.host = promoteFromRegistry.host
-            if (event.startsWith("image-tag/")) {
-                image.tag = event.substring("image-tag/".length())
+            if (overrideTag) {
+                image.tag = overrideTag
             } else {
-                def tag = buildVersions.getEventImageVersion(event, image)
+                def tag = buildVersions.getEventImageVersion(promotion.event, image)
                 if (!tag) {
-                    Config.pipeline.error "build-versions does not contain a version for image '${image.path}', event: ${event}"
+                    Config.pipeline.error "build-versions does not contain a version for image '${image.path}', event: ${promotion.event}"
                 }
                 image.tag = tag
             }
@@ -150,6 +149,8 @@ class BoxPromote extends BoxBase<PromoteConfig> implements Serializable {
         buildVersions.save()
 
         if (gitCommitToTag || gitTagToTag) {
+            // resetting will remove build-versions
+            _buildVersions = null
             if (gitCommitToTag) {
                 gitRepo.fetchAndCheckoutCommit(gitCommitToTag)
             } else if (gitTagToTag) {

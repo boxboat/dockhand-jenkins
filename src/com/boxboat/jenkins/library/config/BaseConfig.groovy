@@ -1,27 +1,19 @@
 package com.boxboat.jenkins.library.config
 
-import com.cloudbees.groovy.cps.NonCPS
-import java.lang.reflect.Modifier
-
+import com.boxboat.jenkins.library.yaml.YamlUtils
 @Grab('org.apache.commons:commons-lang3:3.8.1')
 import org.apache.commons.lang3.builder.EqualsBuilder
 
-@Grab('org.yaml:snakeyaml:1.23')
-import org.yaml.snakeyaml.Yaml
-import org.yaml.snakeyaml.constructor.CustomClassLoaderConstructor
-import org.yaml.snakeyaml.representer.Representer
-
+import java.lang.reflect.Modifier
 
 abstract class BaseConfig<T> implements Serializable, ICopyableConfig<T>, IMergeableConfig<T> {
 
     T newFromYaml(String yamlStr) {
-        Yaml yaml = new Yaml(new CustomClassLoaderConstructor(this.class, this.class.classLoader))
-        return (T) yaml.load(yamlStr)
+        return (T) YamlUtils.loadAs(yamlStr, this.class)
     }
 
     T newFromObject(Object obj) {
-        Yaml yaml = new Yaml(new GroovyRepresenter())
-        return newFromYaml(yaml.dump(obj))
+        return newFromYaml(YamlUtils.dump(obj))
     }
 
     T newDefault() {
@@ -54,13 +46,11 @@ abstract class BaseConfig<T> implements Serializable, ICopyableConfig<T>, IMerge
 
     @Override
     T copy() {
-        Yaml yaml = new Yaml(new GroovyRepresenter())
-        return newFromYaml(yaml.dump(this))
+        return newFromYaml(this.dumpYaml())
     }
 
     String dumpYaml() {
-        Yaml yaml = new Yaml(new GroovyRepresenter())
-        yaml.dump(this)
+        return YamlUtils.dump(this)
     }
 
     @Override
@@ -112,11 +102,3 @@ abstract class BaseConfig<T> implements Serializable, ICopyableConfig<T>, IMerge
 
 }
 
-// https://stackoverflow.com/a/35108062/1419658
-class GroovyRepresenter extends Representer implements Serializable {
-
-    GroovyRepresenter() {
-        this.multiRepresenters.put(GString.class, this.representers.get(String))
-    }
-
-}

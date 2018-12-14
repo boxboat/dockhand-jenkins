@@ -18,7 +18,7 @@ class GitConfig extends BaseConfig<GitConfig> implements Serializable {
 
     String getRemotePath(String url) {
         def matcher = url =~ remotePathRegex
-        return matcher.hasGroup() ? matcher[0][1] : null
+        return matcher.hasGroup() && matcher.size() > 0 ? matcher[0][1] : null
     }
 
     String getRemoteUrl(String path) {

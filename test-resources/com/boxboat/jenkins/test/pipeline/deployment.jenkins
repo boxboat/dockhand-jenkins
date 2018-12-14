@@ -5,10 +5,13 @@ import com.boxboat.jenkins.pipeline.deploy.*
 
 def execute() {
 
+    params.deploymentKey = "dev"
     def deploy = new BoxDeploy(
         config: [
-            deploymentKey: "dev",
-            images: ["test"],
+            images: [
+                "test/a",
+                "test/b",
+            ],
         ]
     )
 

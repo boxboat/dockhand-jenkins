@@ -15,6 +15,6 @@ class Deployment extends BaseConfig<Deployment> implements Serializable {
 
     List<Image> imageOverrides
 
-    Object trigger
+    Boolean trigger
 
 }
