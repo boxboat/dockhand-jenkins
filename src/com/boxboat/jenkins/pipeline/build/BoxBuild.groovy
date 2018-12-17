@@ -30,7 +30,7 @@ class BoxBuild extends BoxBase<BuildConfig> implements Serializable {
         // pull images
         config.pullImages.each { image ->
             Config.pipeline.sh """
-                docker pull "${image}"
+                docker pull "${image.getUrl()}"
             """
         }
     }
