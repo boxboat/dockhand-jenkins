@@ -1,11 +1,8 @@
 package com.boxboat.jenkins.library.docker
 
-@Grab('org.apache.commons:commons-lang3:3.7')
-import org.apache.commons.lang3.builder.EqualsBuilder
-import org.apache.commons.lang3.builder.HashCodeBuilder
-
 class ImageManifests implements Serializable {
     Map<String, List<ImageManifest>> manifests = [:]
+
     def addManifest(def manifest){
         if( manifest && manifest.name && manifest.updatedAt && manifest.digest ){
             ImageManifest imageManifest = new ImageManifest(manifest)
@@ -18,6 +15,7 @@ class ImageManifests implements Serializable {
             }
         }
     }
+
     def getCleanableTagsList(def retentionDays = 15){
         Date now = new Date()
         long nowSec = now.getTime()

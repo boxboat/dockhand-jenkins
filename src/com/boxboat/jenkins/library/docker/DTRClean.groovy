@@ -4,11 +4,13 @@ import com.boxboat.jenkins.library.config.Config
 import com.boxboat.jenkins.library.config.GlobalConfig
 import groovy.json.JsonSlurper
 
-class RegistryClean implements Serializable {
+class DTRClean implements Serializable {
+
     def registryAPIBase = '/api/v0'
     def retentionDays
     def dryRun
-    RegistryClean(dryRun = false, retentionDays = 15){
+
+    DTRClean(dryRun = false, retentionDays = 15){
           this.dryRun = dryRun
           this.retentionDays = retentionDays
     }
@@ -36,7 +38,6 @@ class RegistryClean implements Serializable {
         Config.pipeline.echo "Removing ${namespace}/${name}:${tag}"
         if (!dryRun) {
             // clean up tags
-            /**
             def requestURI = registry.getRegistryUrl() + registryAPIBase + "/repositories/${namespace}/${name}/tags/${tag}"
             Config.pipeline.httpRequest(
                 url: requestURI,
@@ -44,7 +45,6 @@ class RegistryClean implements Serializable {
                 httpMode: 'DELETE',
                 contentType: "APPLICATION_JSON"
             )
-            **/
         }
     }
 
