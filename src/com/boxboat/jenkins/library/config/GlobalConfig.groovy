@@ -1,20 +1,17 @@
 package com.boxboat.jenkins.library.config
 
-import com.boxboat.jenkins.library.vault.Vault
 import com.boxboat.jenkins.library.deployTarget.IDeployTarget
 import com.boxboat.jenkins.library.docker.Registry
 import com.boxboat.jenkins.library.environment.Environment
-import com.boxboat.jenkins.library.event.EventConfig
 import com.boxboat.jenkins.library.git.GitConfig
 import com.boxboat.jenkins.library.notification.INotifyTarget
+import com.boxboat.jenkins.library.vault.Vault
 
 class GlobalConfig extends BaseConfig<GlobalConfig> implements Serializable {
 
     Map<String, IDeployTarget> deployTargetMap
 
     Map<String, Environment> environmentMap
-
-    EventConfig event
 
     GitConfig git
 

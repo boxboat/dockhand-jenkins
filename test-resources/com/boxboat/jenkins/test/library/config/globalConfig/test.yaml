@@ -33,15 +33,16 @@ vaultMap:
     url: http://localhost:8200
 repo:
   common:
-    notifyTargetKeySuccess: default
-    notifyTargetKeyFailure: default
+    notifySuccessKeys:
+      - default
+    notifyFailureKeys:
+      - default
     vaultKey: default
     eventRegistryKeys:
       - event: commit/master
         registryKey: default
-      - event: tag/release
+      - eventRegex: tag/(.*)
         registryKey: default
-        notify: true
   promote:
     promotionMap:
       stage:

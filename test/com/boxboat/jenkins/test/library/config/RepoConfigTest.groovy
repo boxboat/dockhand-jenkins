@@ -69,7 +69,6 @@ class RepoConfigTest {
                                                 new EventRegistryKey(
                                                         event: "tag/.*",
                                                         registryKey: "default",
-                                                        notify: true,
                                                 ),
                                         ],
                                 ),

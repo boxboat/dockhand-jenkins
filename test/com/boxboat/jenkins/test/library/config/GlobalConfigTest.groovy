@@ -102,17 +102,20 @@ class GlobalConfigTest {
                                 ],
                                 repo: [
                                         common : new CommonConfig(
-                                                notifyTargetKeyFailure: "default",
-                                                notifyTargetKeySuccess: "default",
+                                                notifySuccessKeys: [
+                                                        "default"
+                                                ],
+                                                notifyFailureKeys: [
+                                                        "default"
+                                                ],
                                                 eventRegistryKeys: [
                                                         new EventRegistryKey(
                                                                 event: "commit/master",
                                                                 registryKey: "default",
                                                         ),
                                                         new EventRegistryKey(
-                                                                event: "tag/release",
+                                                                eventRegex: "tag/(.*)",
                                                                 registryKey: "default",
-                                                                notify: true,
                                                         ),
                                                 ],
                                                 vaultKey: "default"

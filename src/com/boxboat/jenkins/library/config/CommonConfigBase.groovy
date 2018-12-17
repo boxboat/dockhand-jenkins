@@ -13,11 +13,9 @@ class CommonConfigBase<T> extends BaseConfig<T> {
 
     List<Image> images
 
-    String notifyTargetKeySuccess
+    List<String> notifySuccessKeys
 
-    String notifyTargetKeyFailure
-
-    List<Trigger> triggers
+    List<String> notifyFailureKeys
 
     String vaultKey
 

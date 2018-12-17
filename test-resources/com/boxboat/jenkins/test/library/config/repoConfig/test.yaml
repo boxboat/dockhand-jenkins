@@ -13,7 +13,6 @@ common:
     registryKey: default
   - event: tag/.*
     registryKey: default
-    notify: true
 build:
   composeProfileMap:
     docker: ./build/docker
