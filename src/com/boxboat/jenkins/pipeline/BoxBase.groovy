@@ -23,13 +23,15 @@ abstract class BoxBase<T extends CommonConfigBase> implements Serializable {
     public String eventMatch
     public String overrideBranch
     public String overrideCommit
+    public String notifySuccessMessage = "Build Succeeded"
+    public String notifyFailureMessage = "Build Failed"
 
     protected GitBuildVersions _buildVersions
     protected initialConfig
     protected GitAccount gitAccount
     protected GitRepo gitRepo
-    protected INotifyTarget notifySuccess
-    protected INotifyTarget notifyFailure
+    protected List<INotifyTarget> notifySuccesses = []
+    protected List<INotifyTarget> notifyFailures = []
     protected emitEvents = []
 
     BoxBase(Map<String, Object> config = [:]) {
@@ -165,11 +167,11 @@ abstract class BoxBase<T extends CommonConfigBase> implements Serializable {
             }
         }
 
-        if (config.notifyTargetKeySuccess) {
-            notifySuccess = Config.global.getNotifyTarget(config.notifyTargetKeySuccess)
+        config.notifySuccessKeys.each { notifySuccessKey ->
+            notifySuccesses.add(Config.global.getNotifyTarget(notifySuccessKey))
         }
-        if (config.notifyTargetKeyFailure) {
-            notifyFailure = Config.global.getNotifyTarget(config.notifyTargetKeyFailure)
+        config.notifyFailureKeys.each { notifyFailureKey ->
+            notifyFailures.add(Config.global.getNotifyTarget(notifyFailureKey))
         }
     }
 
@@ -216,11 +218,15 @@ abstract class BoxBase<T extends CommonConfigBase> implements Serializable {
     }
 
     def success() {
-        notifySuccess?.postMessage("Build Succeeded", NotificationType.SUCCESS)
+        notifySuccesses.each { notifySuccess ->
+            notifySuccess.postMessage(notifySuccessMessage, NotificationType.SUCCESS)
+        }
     }
 
     def failure(Exception ex) {
-        notifyFailure?.postMessage("Build Failed", NotificationType.FAILURE)
+        notifyFailures.each { notifySuccess ->
+            notifySuccess.postMessage(notifyFailureMessage, NotificationType.FAILURE)
+        }
     }
 
     def cleanup() {

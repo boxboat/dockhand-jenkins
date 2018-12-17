@@ -8,8 +8,6 @@ class EventRegistryKey extends BaseConfig<EventRegistryKey> implements Serializa
 
     String eventRegex
 
-    Object notify
-
     String registryKey
 
 }
