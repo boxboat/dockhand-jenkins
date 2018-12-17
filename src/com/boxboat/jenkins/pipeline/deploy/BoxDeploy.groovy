@@ -52,8 +52,14 @@ class BoxDeploy extends BoxBase<DeployConfig> implements Serializable {
                         Config.pipeline.error "'triggerEvent' must be set for this deployment"
                     }
                     this.triggerEvent = Utils.cleanEvent(this.triggerEvent)
-                    this.eventMatcher = this.triggerEvent =~ deployment.eventRegex
-                    if (!eventMatcher.matches()) {
+                    Boolean matches = false
+                    def closure = {
+                        def matcher = this.triggerEvent =~ deployment.eventRegex
+                        matches = matcher.matches()
+                        this.eventMatch = matcher.hasGroup() && matcher.size() > 0 ? matcher[0][1] : null
+                    }
+                    closure()
+                    if (!matches) {
                         Config.pipeline.error "triggerEvent '${this.triggerEvent}' does not match deployment.eventRegex '${deployment.eventRegex}'"
                     }
                     deployment.event = this.triggerEvent

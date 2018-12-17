@@ -29,8 +29,13 @@ class CommonConfigBase<T> extends BaseConfig<T> {
                     registries.add(Config.global.getRegistry(eventRegistryKey.registryKey))
                 }
             } else if (eventRegistryKey.eventRegex) {
-                def matcher = event =~ eventRegistryKey.eventRegex
-                if (matcher.matches()) {
+                Boolean matches = false
+                def closure = {
+                    def matcher = event =~ eventRegistryKey.eventRegex
+                    matches = matcher.matches()
+                }
+                closure()
+                if (matches) {
                     registries.add(Config.global.getRegistry(eventRegistryKey.registryKey))
                 }
             }
