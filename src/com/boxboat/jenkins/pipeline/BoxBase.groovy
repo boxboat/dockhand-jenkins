@@ -12,7 +12,6 @@ import com.boxboat.jenkins.library.notification.NotificationType
 import com.boxboat.jenkins.library.trigger.Trigger
 
 import java.lang.reflect.Modifier
-import java.util.regex.Matcher
 
 abstract class BoxBase<T extends CommonConfigBase> implements Serializable {
 
@@ -21,7 +20,7 @@ abstract class BoxBase<T extends CommonConfigBase> implements Serializable {
     public Boolean trigger
     public String triggerEvent
     public String triggerImagePathsCsv
-    public Matcher eventMatcher
+    public String eventMatch
     public String overrideBranch
     public String overrideCommit
 
