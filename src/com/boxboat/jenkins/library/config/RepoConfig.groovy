@@ -10,4 +10,6 @@ class RepoConfig extends BaseConfig<RepoConfig> implements Serializable {
 
     PromoteConfig promote
 
+    CleanConfig clean
+
 }
