@@ -44,6 +44,12 @@ abstract class BaseConfig<T> implements Serializable, ICopyableConfig<T>, IMerge
         return (T) newT
     }
 
+    public Map asMap() {
+        this.class.declaredFields.findAll { !it.synthetic }.collectEntries {
+            [ (it.name):this."$it.name" ]
+        }
+    }
+
     @Override
     T copy() {
         return newFromYaml(this.dumpYaml())
@@ -101,4 +107,3 @@ abstract class BaseConfig<T> implements Serializable, ICopyableConfig<T>, IMerge
     }
 
 }
-

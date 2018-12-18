@@ -12,13 +12,13 @@ class ImageManifest implements Serializable {
         lastUpdated = Date.parse('yyyy-MM-dd', data.updatedAt.substring(0, 10))
     }
 
-    def ageInDays(long now){
-        def secsToDays = 86400000
+    Integer ageInDays(long now){
+        int secsToDays = 86400000
         long imageAge = lastUpdated.getTime()
         return (now - imageAge) / secsToDays
     }
 
-    def isCommitHash(){
-        return tag.matches(/(?i)^[0-9a-f]{12}$/)
+    Boolean isCommitHash(){
+        return tag.matches(/(?i)^build-[0-9a-f]{12}$/)
     }
 }

@@ -6,7 +6,7 @@ class ImageManifests implements Serializable {
     def addManifest(def manifest){
         if( manifest && manifest.name && manifest.updatedAt && manifest.digest ){
             ImageManifest imageManifest = new ImageManifest(manifest)
-            def digest = imageManifest.digest
+            String digest = imageManifest.digest
 
             if (manifests.containsKey(digest)) {
                 manifests.get(digest).add(imageManifest)
@@ -16,12 +16,12 @@ class ImageManifests implements Serializable {
         }
     }
 
-    def getCleanableTagsList(def retentionDays = 15){
+    List<String> getCleanableTagsList(def retentionDays = 15){
         Date now = new Date()
         long nowSec = now.getTime()
 
-        def keys = manifests.keySet()
-        def cleanableTagsList = []
+        Set keys = manifests.keySet()
+        List<String> cleanableTagsList = []
         for (key in keys) {
             List<ImageManifest> imageManifests = manifests[key]
             if (imageManifests.size() == 1) {

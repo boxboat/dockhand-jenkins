@@ -6,16 +6,11 @@ import groovy.json.JsonSlurper
 
 class DTRClean implements Serializable {
 
-    def registryAPIBase = '/api/v0'
-    def retentionDays
-    def dryRun
+    protected final String registryAPIBase = '/api/v0'
+    Boolean dryRun
+    Integer retentionDays
 
-    DTRClean(dryRun = false, retentionDays = 15){
-          this.dryRun = dryRun
-          this.retentionDays = retentionDays
-    }
-
-    def readRepositories(Registry registry){
+    String readRepositories(Registry registry){
         def requestURL = registry.getRegistryUrl() + registryAPIBase + '/repositories?pageSize=100000&count=false'
         return Config.pipeline.httpRequest(
                 url: requestURL,
@@ -24,7 +19,7 @@ class DTRClean implements Serializable {
                 contentType: "APPLICATION_JSON"
         ).getContent()
     }
-    def readRepositoryTags(Registry registry, def namespace, def name){
+    String readRepositoryTags(Registry registry, def namespace, def name){
         def requestURI = registry.getRegistryUrl() + registryAPIBase + "/repositories/${namespace}/${name}/tags?pageSize=10000&count=false&includeManifests=false"
         return Config.pipeline.httpRequest(
                 url: requestURI,
@@ -34,18 +29,20 @@ class DTRClean implements Serializable {
         ).getContent()
     }
 
-    def deleteTag(Registry registry, def namespace, def name, def tag){
+    Integer deleteTag(Registry registry, def namespace, def name, def tag){
         Config.pipeline.echo "Removing ${namespace}/${name}:${tag}"
+        int status = 200
         if (!dryRun) {
             // clean up tags
             def requestURI = registry.getRegistryUrl() + registryAPIBase + "/repositories/${namespace}/${name}/tags/${tag}"
-            Config.pipeline.httpRequest(
+            status = Config.pipeline.httpRequest(
                 url: requestURI,
                 authentication: registry.credential,
                 httpMode: 'DELETE',
                 contentType: "APPLICATION_JSON"
-            )
+            ).getStatus()
         }
+        return status
     }
 
     def cleanRegistry( def registryName = "default") {
@@ -55,6 +52,7 @@ class DTRClean implements Serializable {
         if (dryRun){
             Config.pipeline.echo "Dry Run"
         }
+        Config.pipeline.echo "RetentionDays: ${retentionDays}"
         def registryRepositories = json.parseText(readRepositories(registry))
 
         for (registryRepository in registryRepositories.repositories){
