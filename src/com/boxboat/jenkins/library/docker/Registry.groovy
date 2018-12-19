@@ -1,42 +1,22 @@
 package com.boxboat.jenkins.library.docker
 
-@Grab('org.apache.commons:commons-lang3:3.7')
-import org.apache.commons.lang3.builder.EqualsBuilder
-import org.apache.commons.lang3.builder.HashCodeBuilder
+import com.boxboat.jenkins.library.config.BaseConfig
+import com.boxboat.jenkins.library.config.Config
 
-class Registry implements Serializable {
+class Registry extends BaseConfig<Registry> implements Serializable {
 
-    String scheme = "https"
+    String scheme
 
-    String host = ""
+    String host
 
-    String credential = ""
+    String credential
 
     def getRegistryUrl() {
         return "${scheme}://${host}"
     }
 
-    @Override
-    boolean equals(Object o) {
-        if (!(o instanceof Registry)) {
-            return false
-        }
-        Registry m = (Registry) o
-
-        return new EqualsBuilder()
-                .append(this.scheme, m.scheme)
-                .append(this.host, m.host)
-                .append(this.credential, m.credential)
-                .isEquals()
-    }
-
-    @Override
-    int hashCode() {
-        return new HashCodeBuilder(17, 37)
-                .append(this.scheme)
-                .append(this.host)
-                .append(this.credential)
-                .toHashCode()
+    def withCredentials(closure) {
+        Config.pipeline.docker.withRegistry(getRegistryUrl(), credential, closure)
     }
 
 }

@@ -66,9 +66,7 @@ class BoxBuild extends BoxBase<BuildConfig> implements Serializable {
             }
 
             registries.each { registry ->
-                Config.pipeline.docker.withRegistry(
-                        registry.getRegistryUrl(),
-                        registry.credential) {
+                registry.withCredentials() {
                     config.images.each { Image image ->
                         tags.each { String tag ->
                             def newImage = image.copy()
