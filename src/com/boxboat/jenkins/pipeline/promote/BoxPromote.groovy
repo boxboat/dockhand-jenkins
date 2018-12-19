@@ -108,7 +108,7 @@ class BoxPromote extends BoxBase<PromoteConfig> implements Serializable {
         }
         if (!trigger) {
             Config.pipeline.timeout(time: 10, unit: 'MINUTES') {
-                Config.pipeline.input "Upgrade images to versin '${nextSemVer.toString()}'?"
+                Config.pipeline.input "Upgrade images to version '${nextSemVer.toString()}'?"
             }
         }
 
@@ -119,13 +119,17 @@ class BoxPromote extends BoxBase<PromoteConfig> implements Serializable {
             }
 
             config.images.each { image ->
-                image.pull()
+                promoteFromRegistry.withCredentials() {
+                    image.pull()
+                }
                 pushRegistries.each { pushRegistry ->
                     def newImage = image.copy()
                     newImage.host = pushRegistry.host
                     newImage.tag = nextSemVer.toString()
                     image.reTag(newImage)
-                    newImage.push()
+                    pushRegistry.withCredentials() {
+                        newImage.push()
+                    }
                 }
                 buildVersions.setEventImageVersion(pushEvent, image, nextSemVer.toString())
             }
