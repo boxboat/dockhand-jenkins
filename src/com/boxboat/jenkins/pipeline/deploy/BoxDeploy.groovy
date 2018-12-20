@@ -81,6 +81,9 @@ class BoxDeploy extends BoxBase<DeployConfig> implements Serializable {
         def triggers = []
         config.deploymentMap.keySet().toList().each { deploymentKey ->
             def deployment = config.deploymentMap[deploymentKey]
+            if (!deployment.trigger) {
+                return
+            }
             def params = [
                     [$class: 'StringParameterValue', name: 'deploymentKey', value: deploymentKey]
             ]
