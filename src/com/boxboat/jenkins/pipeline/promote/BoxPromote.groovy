@@ -39,6 +39,8 @@ class BoxPromote extends BoxBase<PromoteConfig> implements Serializable {
             Config.pipeline.error "'config.baseVersion' is not a valid Semantic Version"
         }
         if (!config.promotionKey) {
+            // abort, since pipeline may refresh without any parameters
+            Config.pipeline.currentBuild.result = 'ABORTED'
             Config.pipeline.error "'config.promotionKey' must be set"
         }
         promotion = config.getPromotion(config.promotionKey)

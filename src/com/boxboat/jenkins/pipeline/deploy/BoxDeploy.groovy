@@ -37,6 +37,8 @@ class BoxDeploy extends BoxBase<DeployConfig> implements Serializable {
         } else if (config.deploymentKey) {
             deployType = DeployType.Deployment
         } else {
+            // abort, since pipeline may refresh without any parameters
+            Config.pipeline.currentBuild.result = 'ABORTED'
             Config.pipeline.error "'deployTargetKey', 'environmentKey', or 'deploymentKey'  must be set"
         }
         //noinspection GroovyFallthrough
@@ -74,7 +76,7 @@ class BoxDeploy extends BoxBase<DeployConfig> implements Serializable {
 
     @Override
     List<Trigger> triggers() {
-        if (deployType != DeployType.Deployment) {
+        if (!config.images || !config.deploymentMap) {
             return []
         }
         String job = Config.pipeline.env.JOB_NAME
