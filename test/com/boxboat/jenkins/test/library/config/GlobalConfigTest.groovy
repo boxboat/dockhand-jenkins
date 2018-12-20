@@ -102,6 +102,7 @@ class GlobalConfigTest {
                                 ],
                                 repo: [
                                         common : new CommonConfig(
+                                                defaultBranch: "master",
                                                 notifySuccessKeys: [
                                                         "default"
                                                 ],

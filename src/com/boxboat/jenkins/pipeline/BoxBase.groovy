@@ -65,7 +65,6 @@ abstract class BoxBase<T extends CommonConfigBase> implements Serializable {
             Config.pipeline = closure.thisObject
             Config.pipeline.stage("Initialize") {
                 init()
-                writeTriggers()
             }
             closure()
             runTriggers()
@@ -166,6 +165,9 @@ abstract class BoxBase<T extends CommonConfigBase> implements Serializable {
                 this.config."$k" = Config.pipeline.params[k]
             }
         }
+
+        // write triggers
+        writeTriggers()
 
         config.notifySuccessKeys.each { notifySuccessKey ->
             notifySuccesses.add(Config.global.getNotifyTarget(notifySuccessKey))

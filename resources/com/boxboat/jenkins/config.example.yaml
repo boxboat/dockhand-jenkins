@@ -33,6 +33,7 @@ vaultMap:
     url: http://localhost:8200
 repo:
   common:
+    defaultBranch: master
     notifySuccessKeys:
       - default
     notifyFailureKeys:
