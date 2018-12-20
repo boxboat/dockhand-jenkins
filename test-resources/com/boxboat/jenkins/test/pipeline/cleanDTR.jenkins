@@ -1,0 +1,23 @@
+@Library('jenkins-shared-library@master')
+import com.boxboat.jenkins.pipeline.common.*
+import com.boxboat.jenkins.pipeline.common.clean.*
+
+
+def execute() {
+
+    def common = new BoxCommon()
+
+    node() {
+        common.wrap {
+            stage('DTR Clean'){
+                DTRCleanHelper.clean(
+                    retentionDays: 15,
+                    registryKeys: ['default']
+                )
+            }
+        }
+    }
+
+}
+
+return this
