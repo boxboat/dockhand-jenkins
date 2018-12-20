@@ -1,37 +1,43 @@
 package com.boxboat.jenkins.library.docker
 
 class ImageManifests implements Serializable {
+
     Map<String, List<ImageManifest>> manifests = [:]
 
-    def addManifest(def manifest){
-        if( manifest && manifest.name && manifest.updatedAt && manifest.digest ){
+    def addManifest(manifest) {
+        if (manifest && manifest.name && manifest.updatedAt && manifest.digest) {
             ImageManifest imageManifest = new ImageManifest(manifest)
             String digest = imageManifest.digest
 
-            if (manifests.containsKey(digest)) {
-                manifests.get(digest).add(imageManifest)
-            } else {
-                manifests.put(digest, [imageManifest])
+            if (!manifests[digest]) {
+                manifests[digest] = []
             }
+            manifests[digest].add(imageManifest)
         }
     }
 
-    List<String> getCleanableTagsList(def retentionDays = 15){
+    List<String> getCleanableTagsList(retentionDays) {
         Date now = new Date()
         long nowSec = now.getTime()
 
-        Set keys = manifests.keySet()
         List<String> cleanableTagsList = []
-        for (key in keys) {
-            List<ImageManifest> imageManifests = manifests[key]
-            if (imageManifests.size() == 1) {
-                // No other tags attached to that digest, check the tag name and age
-                def manifest = imageManifests[0]
-                if (manifest.isCommitHash() && manifest.ageInDays(nowSec) > 15) {
-                    cleanableTagsList.add(manifest.tag)
+        manifests.keySet().toList().each { key ->
+            def imageManifests = manifests[key]
+            def commitHashManifests = imageManifests.findAll {
+                manifest -> manifest.isCommitHash()
+            }
+
+            if (commitHashManifests.size() == imageManifests.size()) {
+                // all tags matching digest are commit hash tags
+                imageManifests.each { manifest ->
+                    if (manifest.ageInDays(nowSec) > retentionDays) {
+                        cleanableTagsList.add(manifest.tag)
+                    }
                 }
             }
         }
+
         return cleanableTagsList
     }
+
 }
