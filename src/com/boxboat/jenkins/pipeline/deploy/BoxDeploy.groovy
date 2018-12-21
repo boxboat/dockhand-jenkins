@@ -71,9 +71,9 @@ class BoxDeploy extends BoxBase<DeployConfig> implements Serializable {
                         Config.pipeline.error "triggerEvent '${this.triggerEvent}' does not match deployment.eventRegex '${deployment.eventRegex}'"
                     }
                     deployment.event = this.triggerEvent
-                    notifySuccessMessage += "\nevent: '${deployment.event}'"
-                    notifyFailureMessage += "\nevent: '${deployment.event}'"
                 }
+                notifySuccessMessage = "Deployment '${config.deploymentKey}' for event '${deployment.event}' succeeded"
+                notifyFailureMessage = "Deployment '${config.deploymentKey}' for event '${deployment.event}' failed"
             case DeployType.Environment:
                 environment = Config.global.getEnvironment(config.environmentKey)
                 config.deployTargetKey = environment.deployTargetKey
@@ -167,14 +167,14 @@ class BoxDeploy extends BoxBase<DeployConfig> implements Serializable {
             deployment.imageOverrides.each imageOverridesCl
             if (buildVersions.writeEventImageVersion(event, image, params.outFile, params.format)) {
                 def version = buildVersions.getEventImageVersion(event, image)
-                notifySuccessMessage += "\n${image.tag} version: ${version}"
+                notifySuccessMessage += "\n${image.path} version: ${version}"
                 return
             }
             String triedEvents = event
             if (eventFallback) {
                 if (buildVersions.writeEventImageVersion(event, image, params.outFile, params.format)) {
                     def version = buildVersions.getEventImageVersion(event, image)
-                    notifySuccessMessage += "\n${image.tag} version: ${version}"
+                    notifySuccessMessage += "\n${image.path} version: ${version}"
                     return
                 }
                 triedEvents = "[${event}, ${eventFallback}]"
