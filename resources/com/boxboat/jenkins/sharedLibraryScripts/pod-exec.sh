@@ -37,7 +37,8 @@ pod=$(kubectl ${namespace:+"--namespace=$namespace"} get pods \
     "--field-selector=status.phase=Running" \
     ${selector:+"--selector=$selector"} \
     --no-headers \
-    -o "custom-columns=:metadata.name")
+    -o "custom-columns=:metadata.name" \
+    | head -n 1)
 
 if [ -z "$pod" ]; then
     echo "No running pod in namespace '${namespace}' matching selector '${selector}' was found" >&2
