@@ -10,6 +10,7 @@ class KubeLogs implements Serializable {
         String outFile
         String namespace
         String labels
+        String container
     }
 
     static def poll(Map paramsMap) {
@@ -25,9 +26,10 @@ class KubeLogs implements Serializable {
 
         def namespaceArg = params.namespace ? "-n \"${params.namespace}\"" : ""
         def labelsArg = params.labels ? "-l \"${params.labels}\"" : ""
+        def containerArg = params.container ? "-c \"${params.container}\"" : ""
 
         return """
-            ${LibraryScript.run("pod-logs.sh")} -o "${params.outFile}" ${namespaceArg} ${labelsArg}
+            ${LibraryScript.run("pod-logs.sh")} -o "${params.outFile}" ${namespaceArg} ${labelsArg} ${containerArg}
         """.trim()
     }
 
