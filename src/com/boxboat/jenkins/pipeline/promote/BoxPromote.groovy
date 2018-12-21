@@ -28,6 +28,14 @@ class BoxPromote extends BoxBase<PromoteConfig> implements Serializable {
 
     def init() {
         super.init()
+        if (!config.promotionKey) {
+            // abort, since pipeline may refresh without any parameters
+            Config.pipeline.currentBuild.result = 'ABORTED'
+            Config.pipeline.error "'config.promotionKey' must be set"
+        }
+        promotion = config.getPromotion(config.promotionKey)
+        notifySuccessMessage = "Promotion '${config.promotionKey}' from '${promotion.event}' to '${promotion.promoteToEvent}' succeeded"
+        notifyFailureMessage = "Promotion '${config.promotionKey}' from '${promotion.event}' to '${promotion.promoteToEvent}' failed"
         if (!config.images || config.images.size() == 0) {
             Config.pipeline.error "'config.images' must be set"
         }
@@ -38,12 +46,6 @@ class BoxPromote extends BoxBase<PromoteConfig> implements Serializable {
         if (!baseSemVer.isValid) {
             Config.pipeline.error "'config.baseVersion' is not a valid Semantic Version"
         }
-        if (!config.promotionKey) {
-            // abort, since pipeline may refresh without any parameters
-            Config.pipeline.currentBuild.result = 'ABORTED'
-            Config.pipeline.error "'config.promotionKey' must be set"
-        }
-        promotion = config.getPromotion(config.promotionKey)
         if (!promotion.promoteToEvent.startsWith("tag/")) {
             Config.pipeline.error "'promoteToEvent' must start with 'tag/'"
         }
@@ -107,6 +109,7 @@ class BoxPromote extends BoxBase<PromoteConfig> implements Serializable {
 
         config.images.each { image ->
             Config.pipeline.echo "Promoting '${image.path}' from '${image.tag}' to '${nextSemVer.toString()}'"
+            notifySuccessMessage += "\n${image.path} promoted from '${image.tag}' to '${nextSemVer.toString()}'"
         }
         if (!trigger) {
             Config.pipeline.timeout(time: 10, unit: 'MINUTES') {

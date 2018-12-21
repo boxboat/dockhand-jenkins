@@ -221,7 +221,10 @@ abstract class BoxBase<T extends CommonConfigBase> implements Serializable {
     }
 
     def failure(Exception ex) {
-        notify(config.notifyFailureKeys, notifyFailureMessage, NotifyType.FAILURE)
+        if (Config.pipeline.currentBuild.result != 'ABORTED') {
+            notifyFailureMessage += "\n${ex.getMessage()}"
+            notify(config.notifyFailureKeys, notifyFailureMessage, NotifyType.FAILURE)
+        }
     }
 
     def cleanup() {
