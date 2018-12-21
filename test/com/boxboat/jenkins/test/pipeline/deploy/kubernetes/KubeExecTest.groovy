@@ -10,9 +10,9 @@ class KubeExecTest {
 
     @Test
     void testKubeExec() {
-        def kubeExec = KubeExec.execScript(namespace: "test-ns", labels: "a=b,c=d", command: ["cat", "test.yaml"])
+        def kubeExec = KubeExec.execScript(namespace: "test-ns", labels: "a=b,c=d", container: "nginx", command: ["cat", "test.yaml"])
         assertEquals(kubeExec.trim(), """
-            ./sharedLibraryScripts/pod-exec.sh -n "test-ns" -l "a=b,c=d" "cat" "test.yaml"
+            ./sharedLibraryScripts/pod-exec.sh -n "test-ns" -l "a=b,c=d" -c "nginx" "cat" "test.yaml"
         """.trim())
     }
 

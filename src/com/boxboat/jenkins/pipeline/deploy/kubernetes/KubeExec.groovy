@@ -9,6 +9,7 @@ class KubeExec implements Serializable {
     static class ExecParams extends BaseConfig<ExecParams> implements Serializable {
         String namespace
         String labels
+        String container
         List<String> command
     }
 
@@ -25,9 +26,10 @@ class KubeExec implements Serializable {
 
         def namespaceArg = params.namespace ? "-n \"${params.namespace}\"" : ""
         def labelsArg = params.labels ? "-l \"${params.labels}\"" : ""
+        def containerArg = params.container ? "-c \"${params.container}\"" : ""
 
         return """
-            ${LibraryScript.run("pod-exec.sh")} ${namespaceArg} ${labelsArg} "${params.command.join('" "')}"
+            ${LibraryScript.run("pod-exec.sh")} ${namespaceArg} ${labelsArg} ${containerArg} "${params.command.join('" "')}"
         """.trim()
     }
 
