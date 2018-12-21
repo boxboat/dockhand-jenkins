@@ -1,21 +1,21 @@
-package com.boxboat.jenkins.library.notification
+package com.boxboat.jenkins.library.notify
 
 import com.boxboat.jenkins.library.config.BaseConfig
 import com.boxboat.jenkins.library.config.Config
 import groovy.json.JsonBuilder
 
-class SlackNotifyTarget extends BaseConfig<SlackNotifyTarget> implements INotifyTarget, Serializable {
+class SlackWebHookNotifyTarget extends BaseConfig<SlackWebHookNotifyTarget> implements INotifyTarget, Serializable {
 
-    String credential = ""
+    String credential
 
     @Override
-    void postMessage(String message, NotificationType notificationType) {
+    void postMessage(String message, NotifyType notifyType) {
         String color = "#858585"
-        switch (notificationType) {
-            case NotificationType.FAILURE:
+        switch (notifyType) {
+            case NotifyType.FAILURE:
                 color = "#d50200"
                 break
-            case NotificationType.SUCCESS:
+            case NotifyType.SUCCESS:
                 color = "#36a64f"
                 break
         }
@@ -31,8 +31,6 @@ class SlackNotifyTarget extends BaseConfig<SlackNotifyTarget> implements INotify
                             ]
                     ]
             ]).toString()
-            Config.pipeline.sh 'echo "$SLACK_URL" | base64'
-            Config.pipeline.println jsonStr
             Config.pipeline.httpRequest(
                     url: Config.pipeline.env.SLACK_URL,
                     httpMode: 'POST',

@@ -1,5 +1,7 @@
 # Promote Config
 
+All keys from the [Common Config](common.md) are valid in addition to the keys documented here.
+
 ## baseVersion
 
 Base version to use when tagging promotions.  Patch versions will be automatically increased

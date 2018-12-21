@@ -7,8 +7,7 @@ import com.boxboat.jenkins.library.config.GlobalConfig
 import com.boxboat.jenkins.library.config.RepoConfig
 import com.boxboat.jenkins.library.git.GitAccount
 import com.boxboat.jenkins.library.git.GitRepo
-import com.boxboat.jenkins.library.notification.INotifyTarget
-import com.boxboat.jenkins.library.notification.NotificationType
+import com.boxboat.jenkins.library.notify.NotifyType
 import com.boxboat.jenkins.library.trigger.Trigger
 
 import java.lang.reflect.Modifier
@@ -30,8 +29,6 @@ abstract class BoxBase<T extends CommonConfigBase> implements Serializable {
     protected initialConfig
     protected GitAccount gitAccount
     protected GitRepo gitRepo
-    protected List<INotifyTarget> notifySuccesses = []
-    protected List<INotifyTarget> notifyFailures = []
     protected emitEvents = []
 
     BoxBase(Map<String, Object> config = [:]) {
@@ -168,12 +165,12 @@ abstract class BoxBase<T extends CommonConfigBase> implements Serializable {
 
         // write triggers
         writeTriggers()
+    }
 
-        config.notifySuccessKeys.each { notifySuccessKey ->
-            notifySuccesses.add(Config.global.getNotifyTarget(notifySuccessKey))
-        }
-        config.notifyFailureKeys.each { notifyFailureKey ->
-            notifyFailures.add(Config.global.getNotifyTarget(notifyFailureKey))
+    def notify(List<String> notifyKeys, String message, NotifyType notifyType) {
+        notifyKeys.each { notifyKey ->
+            def notifyTarget = Config.global.getNotifyTarget(notifyKey)
+            notifyTarget.postMessage(message, notifyType)
         }
     }
 
@@ -220,15 +217,11 @@ abstract class BoxBase<T extends CommonConfigBase> implements Serializable {
     }
 
     def success() {
-        notifySuccesses.each { notifySuccess ->
-            notifySuccess.postMessage(notifySuccessMessage, NotificationType.SUCCESS)
-        }
+        notify(config.notifySuccessKeys, notifySuccessMessage, NotifyType.SUCCESS)
     }
 
     def failure(Exception ex) {
-        notifyFailures.each { notifySuccess ->
-            notifySuccess.postMessage(notifyFailureMessage, NotificationType.FAILURE)
-        }
+        notify(config.notifyFailureKeys, notifyFailureMessage, NotifyType.FAILURE)
     }
 
     def cleanup() {

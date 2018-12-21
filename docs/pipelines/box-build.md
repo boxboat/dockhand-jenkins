@@ -1,5 +1,7 @@
 # BoxBuild
 
+All methods from [BoxCommon](box-common.md) are valid in addition to the methods documented here.
+
 ## Methods
 
 ### composeBuild(profile)
