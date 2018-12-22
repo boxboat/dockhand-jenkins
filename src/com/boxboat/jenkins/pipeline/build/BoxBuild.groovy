@@ -21,6 +21,8 @@ class BoxBuild extends BoxBase<BuildConfig> implements Serializable {
 
     def init() {
         super.init()
+        notifySuccessMessage = "Build for branch '${gitRepo.branch}' commit '${gitRepo.shortHash}' succeeded"
+        notifyFailureMessage = "Build for branch '${gitRepo.branch}' commit '${gitRepo.shortHash}' failed"
         // ensure tag is set
         config.images.each { image ->
             if (!image.tag) {

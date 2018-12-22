@@ -1,5 +1,7 @@
 # Deploy Config
 
+All keys from the [Common Config](common.md) are valid in addition to the keys documented here.
+
 ## deploymentKey
 
 Specify to deploy to a Deployment specified in `deploymentMap`.
@@ -36,7 +38,7 @@ deploy:
       trigger: true
     feature:
       environmentKey: dev
-      event: commit/feature-(.*)
+      eventRegex: commit/feature-(.*)
       trigger: true
     stage:
       environmentKey: dev

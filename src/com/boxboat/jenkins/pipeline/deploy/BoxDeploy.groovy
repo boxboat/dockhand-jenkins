@@ -32,10 +32,16 @@ class BoxDeploy extends BoxBase<DeployConfig> implements Serializable {
         super.init()
         if (config.deployTargetKey) {
             deployType = DeployType.DeployTarget
+            notifySuccessMessage = "Deployment to deploy target '${config.deployTargetKey}' succeeded"
+            notifyFailureMessage = "Deployment to deploy target '${config.deployTargetKey}' failed"
         } else if (config.environmentKey) {
             deployType = DeployType.Environment
+            notifySuccessMessage = "Deployment to environment '${config.environmentKey}' succeeded"
+            notifyFailureMessage = "Deployment to environment '${config.environmentKey}' failed"
         } else if (config.deploymentKey) {
             deployType = DeployType.Deployment
+            notifySuccessMessage = "Deployment '${config.deploymentKey}' succeeded"
+            notifyFailureMessage = "Deployment '${config.deploymentKey}' failed"
         } else {
             // abort, since pipeline may refresh without any parameters
             Config.pipeline.currentBuild.result = 'ABORTED'
@@ -66,6 +72,8 @@ class BoxDeploy extends BoxBase<DeployConfig> implements Serializable {
                     }
                     deployment.event = this.triggerEvent
                 }
+                notifySuccessMessage = "Deployment '${config.deploymentKey}' for event '${deployment.event}' succeeded"
+                notifyFailureMessage = "Deployment '${config.deploymentKey}' for event '${deployment.event}' failed"
             case DeployType.Environment:
                 environment = Config.global.getEnvironment(config.environmentKey)
                 config.deployTargetKey = environment.deployTargetKey
@@ -158,11 +166,15 @@ class BoxDeploy extends BoxBase<DeployConfig> implements Serializable {
             config.imageOverrides.each imageOverridesCl
             deployment.imageOverrides.each imageOverridesCl
             if (buildVersions.writeEventImageVersion(event, image, params.outFile, params.format)) {
+                def version = buildVersions.getEventImageVersion(event, image)
+                notifySuccessMessage += "\n${image.path} version: ${version}"
                 return
             }
             String triedEvents = event
             if (eventFallback) {
                 if (buildVersions.writeEventImageVersion(event, image, params.outFile, params.format)) {
+                    def version = buildVersions.getEventImageVersion(event, image)
+                    notifySuccessMessage += "\n${image.path} version: ${version}"
                     return
                 }
                 triedEvents = "[${event}, ${eventFallback}]"

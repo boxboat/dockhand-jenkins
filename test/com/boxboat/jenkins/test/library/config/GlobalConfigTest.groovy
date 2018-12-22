@@ -1,5 +1,6 @@
 package com.boxboat.jenkins.test.library.config
 
+
 import com.boxboat.jenkins.library.vault.Vault
 import com.boxboat.jenkins.library.config.CommonConfig
 import com.boxboat.jenkins.library.config.DeployConfig
@@ -11,7 +12,7 @@ import com.boxboat.jenkins.library.docker.Registry
 import com.boxboat.jenkins.library.environment.Environment
 import com.boxboat.jenkins.library.event.EventRegistryKey
 import com.boxboat.jenkins.library.git.GitConfig
-import com.boxboat.jenkins.library.notification.SlackNotifyTarget
+import com.boxboat.jenkins.library.notify.SlackWebHookNotifyTarget
 import com.boxboat.jenkins.library.promote.Promotion
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -80,7 +81,7 @@ class GlobalConfigTest {
                                         remoteUrlReplace: 'git@github.com/{{ path }}.git',
                                 ),
                                 notifyTargetMap: [
-                                        default: new SlackNotifyTarget(
+                                        default: new SlackWebHookNotifyTarget(
                                                 credential: "slack-webhook-url",
                                         ),
                                 ],

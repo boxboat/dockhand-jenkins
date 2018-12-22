@@ -1,5 +1,7 @@
 # Global Config
 
+All keys from the [Common Config](common.md) are valid in addition to the keys documented here.
+
 ## deployTargetMap
 
 Map of deployment targets.  Supported deployment target types are:
@@ -50,13 +52,20 @@ git:
 
 Map of notification targets.  Supported notification target types are:
 
-- `com.boxboat.jenkins.library.notification.SlackNotifyTarget`
-
+- `com.boxboat.jenkins.library.notify.SlackWebHookNotifyTarget`
+  - For use with the [Slack Incoming Webhooks App](https://boxboat.slack.com/apps/A0F7XDUAZ-incoming-webhooks?next_id=0)
+  - Jenkins Credential referenced in `credential` is a Secret Text credential with the full webhook URL
+- `com.boxboat.jenkins.library.notify.SlackJenkinsAppNotifyTarget`
+  - For use with the [Slack Jenkns CI App](https://boxboat.slack.com/apps/A0F7VRFKN-jenkins-ci?next_id=0)
+  - Use `channel` to override channel
 ```yaml
 notifyTargetMap:
-  default: !!com.boxboat.jenkins.library.notification.SlackNotifyTarget
-    # secret text credential contains full Slack Webhook URL
+  default: !!com.boxboat.jenkins.library.notify.SlackWebHookNotifyTarget
     credential: slack-webhook-url
+  jenkins-success: !!com.boxboat.jenkins.library.notify.SlackJenkinsAppNotifyTarget
+    channel: "#jenkins-success"
+  jenkins-failure: !!com.boxboat.jenkins.library.notify.SlackJenkinsAppNotifyTarget
+    channel: "#jenkins-failure"
 ```
 
 ## registryMap
