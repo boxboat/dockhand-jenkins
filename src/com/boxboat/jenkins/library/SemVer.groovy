@@ -1,5 +1,7 @@
 package com.boxboat.jenkins.library
 
+import com.cloudbees.groovy.cps.NonCPS
+
 class SemVer implements Comparable<SemVer>, Serializable {
 
     boolean isValid
@@ -79,6 +81,7 @@ class SemVer implements Comparable<SemVer>, Serializable {
     }
 
     @Override
+    @NonCPS
     int compareTo(SemVer semver) {
         if (this.isValid && semver.isValid) {
             if (this.major == semver.major && this.minor == semver.minor && this.patch == semver.patch) {
