@@ -1,5 +1,7 @@
 # dockhand
 
+[![Build Status](https://travis-ci.org/boxboat/dockhand.svg?branch=master)](https://travis-ci.org/boxboat/dockhand)
+
 `dockhand` is an upstream [Jenkins Shared Library](https://jenkins.io/doc/book/pipeline/shared-libraries/) to Build, Promote, and Deploy Docker images. 
 
 ## Getting Started

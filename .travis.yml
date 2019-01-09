@@ -1,0 +1,15 @@
+language: java
+install: ./gradlew assemble
+
+jdk:
+  - openjdk8
+
+branches:
+  only:
+    - master
+
+script:
+  - ./gradlew build
+
+notifications:
+  email: false
