@@ -5,7 +5,9 @@ import com.boxboat.jenkins.pipeline.common.clean.*
 
 def execute() {
 
-    def common = new BoxCommon()
+    def common = new BoxCommon(
+        globalConfigPath: "com/boxboat/jenkins/config.example.yaml",
+    )
 
     node() {
         common.wrap {

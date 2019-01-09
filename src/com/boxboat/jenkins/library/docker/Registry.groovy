@@ -11,6 +11,15 @@ class Registry extends BaseConfig<Registry> implements Serializable {
 
     String credential
 
+    String imageUrlReplace
+
+    def getRegistryImageUrl(String path, String tag = "latest") {
+        if (!imageUrlReplace || !path) {
+            return ""
+        }
+        return imageUrlReplace.replaceFirst(/(?i)\{\{\s+path\s+\}\}/, path).replaceFirst(/(?i)\{\{\s+tag\s+\}\}/, tag)
+    }
+
     def getRegistryUrl() {
         return "${scheme}://${host}"
     }

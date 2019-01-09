@@ -18,6 +18,8 @@ class BoxDeploy extends BoxBase<DeployConfig> implements Serializable {
     protected IDeployTarget deployTarget
     protected Environment environment
     protected Deployment deployment
+    protected String deployLink = "<link>"
+    protected String imageSummary
 
     BoxDeploy(Map config = [:]) {
         super(config)
@@ -47,6 +49,7 @@ class BoxDeploy extends BoxBase<DeployConfig> implements Serializable {
             Config.pipeline.currentBuild.result = 'ABORTED'
             Config.pipeline.error "'deployTargetKey', 'environmentKey', or 'deploymentKey'  must be set"
         }
+
         //noinspection GroovyFallthrough
         switch (deployType) {
             case DeployType.Deployment:
@@ -74,12 +77,24 @@ class BoxDeploy extends BoxBase<DeployConfig> implements Serializable {
                 }
                 notifySuccessMessage = "Deployment '${config.deploymentKey}' for event '${deployment.event}' succeeded"
                 notifyFailureMessage = "Deployment '${config.deploymentKey}' for event '${deployment.event}' failed"
+                buildDescription = "${config.deploymentKey}"
             case DeployType.Environment:
                 environment = Config.global.getEnvironment(config.environmentKey)
                 config.deployTargetKey = environment.deployTargetKey
+                if (!buildDescription) {
+                    buildDescription = "${config.environmentKey}"
+                }
             case DeployType.DeployTarget:
                 deployTarget = Config.global.getDeployTarget(config.deployTargetKey)
+                if (!buildDescription) {
+                    buildDescription = "${config.deployTargetKey}"
+                } else {
+                    buildDescription += " (${config.deployTargetKey})"
+                }
         }
+
+        //<environment> - <branch name> - <last 12 commit hash> - Auto triggered || Triggered by user
+        buildDescription += " - ${gitRepo.branch} - ${gitRepo.shortHash} - ${buildUser}"
     }
 
     @Override
@@ -154,6 +169,7 @@ class BoxDeploy extends BoxBase<DeployConfig> implements Serializable {
         Config.pipeline.sh """
             rm -f "${params.outFile}"
         """
+        imageSummary = "Images"
         config.images.each { Image image ->
             def event = deployment.event
             def eventFallback = deployment.eventFallback
@@ -166,15 +182,21 @@ class BoxDeploy extends BoxBase<DeployConfig> implements Serializable {
             config.imageOverrides.each imageOverridesCl
             deployment.imageOverrides.each imageOverridesCl
             if (buildVersions.writeEventImageVersion(event, image, params.outFile, params.format)) {
-                def version = buildVersions.getEventImageVersion(event, image)
-                notifySuccessMessage += "\n${image.path} version: ${version}"
+                image.tag = buildVersions.getEventImageVersion(event, image)
+                notifySuccessMessage += "\n${image.path} version: ${image.tag}"
+                config.getEventRegistries(event).each { registry ->
+                    imageSummary += "\n${formatImageSummary(registry, image)}"
+                }
                 return
             }
             String triedEvents = event
             if (eventFallback) {
-                if (buildVersions.writeEventImageVersion(event, image, params.outFile, params.format)) {
-                    def version = buildVersions.getEventImageVersion(event, image)
-                    notifySuccessMessage += "\n${image.path} version: ${version}"
+                if (buildVersions.writeEventImageVersion(eventFallback, image, params.outFile, params.format)) {
+                    image.tag = buildVersions.getEventImageVersion(eventFallback, image)
+                    notifySuccessMessage += "\n${image.path} version: ${image.tag}"
+                    config.getEventRegistries(eventFallback).each { registry ->
+                        imageSummary += "\n${formatImageSummary(registry, image)}"
+                    }
                     return
                 }
                 triedEvents = "[${event}, ${eventFallback}]"
@@ -189,6 +211,30 @@ class BoxDeploy extends BoxBase<DeployConfig> implements Serializable {
 
     def withCredentials(closure) {
         deployTarget.withCredentials(closure)
+    }
+
+    def summary() {
+        pipelineSummaryMessage = ""
+        if (config.deploymentKey) {
+            pipelineSummaryMessage += "Deployment: ${config.deploymentKey}\n"
+        }
+        if (config.environmentKey) {
+            pipelineSummaryMessage += "Environment: ${config.environmentKey}\n"
+        }
+        if (config.deployTargetKey) {
+            pipelineSummaryMessage += "Deploy Target: ${config.deployTargetKey}\n"
+        }
+        pipelineSummaryMessage += """Deployment URL: ${deployLink}
+
+Built from ${gitRepo.branch}: ${gitRepo.shortHash}
+Branch: ${gitRepo.branchUrl}
+Commit: ${gitRepo.commitUrl}
+
+${imageSummary}
+
+${buildUser}
+        """
+        super.summary()
     }
 
 }
