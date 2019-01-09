@@ -10,6 +10,8 @@ import com.boxboat.jenkins.pipeline.BoxBase
 
 class BoxBuild extends BoxBase<BuildConfig> implements Serializable {
 
+    protected String imageSummary
+
     BoxBuild(Map config = [:]) {
         super(config)
     }
@@ -21,8 +23,11 @@ class BoxBuild extends BoxBase<BuildConfig> implements Serializable {
 
     def init() {
         super.init()
-        notifySuccessMessage = "Build for branch '${gitRepo.branch}' commit '${gitRepo.shortHash}' succeeded"
-        notifyFailureMessage = "Build for branch '${gitRepo.branch}' commit '${gitRepo.shortHash}' failed"
+        String notifyMessage = "Build for branch '${gitRepo.branch}' commit '${gitRepo.shortHash}'"
+        notifySuccessMessage = "${notifyMessage} succeeded"
+        notifyFailureMessage = "${notifyMessage} failed"
+        buildDescription = "${gitRepo.branch} - ${gitRepo.shortHash} - ${buildUser}"
+
         // ensure tag is set
         config.images.each { image ->
             if (!image.tag) {
@@ -67,6 +72,7 @@ class BoxBuild extends BoxBase<BuildConfig> implements Serializable {
                 tags.add(eventTag)
             }
 
+            imageSummary = "Images"
             registries.each { registry ->
                 registry.withCredentials() {
                     config.images.each { Image image ->
@@ -76,12 +82,14 @@ class BoxBuild extends BoxBase<BuildConfig> implements Serializable {
                             newImage.tag = tag
                             image.reTag(newImage)
                             newImage.push()
+                            imageSummary += "\n${formatImageSummary(registry, newImage)}"
                         }
                     }
                 }
             }
 
             if (isBranchTip) {
+                Config.pipeline.echo "isBranchTip: ${event}"
                 emitEvents.add(event)
                 def buildVersions = this.getBuildVersions()
                 config.images.each { image ->
@@ -91,6 +99,28 @@ class BoxBuild extends BoxBase<BuildConfig> implements Serializable {
             }
         }
 
+    }
+
+    def summary(){
+        String triggeredBuilds = ""
+
+
+        if (emitBuilds) {
+            for (build in emitBuilds) {
+                triggeredBuilds += "\n${build}"
+            }
+            triggeredBuilds += "\n"
+        }
+        pipelineSummaryMessage = """
+Build for branch '${gitRepo.branch}' commit '${gitRepo.shortHash}'
+Branch: ${gitRepo.branchUrl}
+Commit: ${gitRepo.commitUrl}
+
+${imageSummary}
+${triggeredBuilds}
+${buildUser}
+        """
+        super.summary()
     }
 
     protected composeCleanup() {

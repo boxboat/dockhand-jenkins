@@ -16,6 +16,8 @@ git:
   email: jenkins@boxboat.com
   remotePathRegex: github\.com/(.*)\.git$
   remoteUrlReplace: git@github.com/{{ path }}.git
+  branchUrlReplace: https://github.com/boxboat/{{ path }}/tree/{{ branch }}
+  commitUrlReplace: https://github.com/boxboat/{{ path }}/commit/{{ hash }}
 notifyTargetMap:
   default: !!com.boxboat.jenkins.library.notify.SlackWebHookNotifyTarget
     credential: slack-webhook-url
@@ -24,6 +26,7 @@ registryMap:
     scheme: https
     host: dtr.boxboat.com
     credential: registry
+    imageUrlReplace: https://dtr.boxboat.com/repositories/{{ path }}/{{ tag }}/linux/amd64/layers
 vaultMap:
   default:
     kvVersion: 1

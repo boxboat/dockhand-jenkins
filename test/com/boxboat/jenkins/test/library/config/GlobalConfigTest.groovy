@@ -79,6 +79,8 @@ class GlobalConfigTest {
                                         email: "jenkins@boxboat.com",
                                         remotePathRegex: "github\\.com/(.*)\\.git\$",
                                         remoteUrlReplace: 'git@github.com/{{ path }}.git',
+                                        branchUrlReplace: "https://github.com/boxboat/{{ path }}/tree/{{ branch }}",
+                                        commitUrlReplace: "https://github.com/boxboat/{{ path }}/commit/{{ hash }}",
                                 ),
                                 notifyTargetMap: [
                                         default: new SlackWebHookNotifyTarget(
@@ -90,6 +92,7 @@ class GlobalConfigTest {
                                                 scheme: "https",
                                                 host: "dtr.boxboat.com",
                                                 credential: "registry",
+                                                imageUrlReplace: "https://dtr.boxboat.com/repositories/{{ path }}/{{ tag }}/linux/amd64/layers",
                                         ),
                                 ],
                                 vaultMap: [

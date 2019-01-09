@@ -5,7 +5,9 @@ import com.boxboat.jenkins.pipeline.deploy.*
 def execute() {
 
     params.deployTargetKey = "dev01"
-    def deploy = new BoxDeploy()
+    def deploy = new BoxDeploy(
+        globalConfigPath: "com/boxboat/jenkins/config.example.yaml",
+    )
 
     node() {
         deploy.wrap {

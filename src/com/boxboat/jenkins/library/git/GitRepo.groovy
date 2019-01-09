@@ -20,10 +20,10 @@ class GitRepo implements Serializable {
     }
 
     String getHash() {
-        return Config.pipeline.sh(returnStdout: true, script: """
+        return Utils.resultOrTest(Config.pipeline.sh(returnStdout: true, script: """
             cd "${this.dir}"
             git show -s --format=%H
-        """)?.trim()
+        """)?.trim(), "0123456789abcdef0123456789abcdef")
     }
 
     String getShortHash() {
@@ -58,6 +58,14 @@ class GitRepo implements Serializable {
 
     String getRemotePath() {
         return Config.global.git.getRemotePath(getRemoteUrl())
+    }
+
+    String getCommitUrl() {
+        return Config.global.git.getCommitUrl(getRemotePath(), getHash())
+    }
+
+    String getBranchUrl() {
+        return Config.global.git.getBranchUrl(getRemotePath(), getBranch())
     }
 
     boolean isBranchTip() {
@@ -117,11 +125,12 @@ class GitRepo implements Serializable {
         """
     }
 
+    // Requires 'Checkout over SSH' setting in Jenkins
     def fetchAndCheckoutBranch(String branch) {
         Config.pipeline.sh """
             cd "${this.dir}"
             git fetch origin "+refs/heads/${branch}:refs/remotes/origin/${branch}" --no-tags
-            git checkout -B "${branch}" --track "origin/${branch}"
+            git checkout -B "${branch}" "origin/${branch}"
         """
         setBranch(branch)
     }

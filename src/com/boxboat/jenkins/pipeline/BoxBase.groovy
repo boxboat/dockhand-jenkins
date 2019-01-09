@@ -9,6 +9,8 @@ import com.boxboat.jenkins.library.git.GitAccount
 import com.boxboat.jenkins.library.git.GitRepo
 import com.boxboat.jenkins.library.notify.NotifyType
 import com.boxboat.jenkins.library.trigger.Trigger
+import com.boxboat.jenkins.library.docker.Image
+import com.boxboat.jenkins.library.docker.Registry
 
 import java.lang.reflect.Modifier
 
@@ -16,20 +18,26 @@ abstract class BoxBase<T extends CommonConfigBase> implements Serializable {
 
     public T config
 
+    public String globalConfigPath = "com/boxboat/jenkins/config.yaml"
     public Boolean trigger
     public String triggerEvent
     public String triggerImagePathsCsv
+    public String buildUser = "Auto triggered"
     public String eventMatch
     public String overrideBranch
     public String overrideCommit
+    public String buildDescription = ""
     public String notifySuccessMessage = "Build Succeeded"
     public String notifyFailureMessage = "Build Failed"
+    public String pipelineSummaryMessage = "Build Succeeded"
 
+    protected String failureSummary
     protected GitBuildVersions _buildVersions
     protected initialConfig
     protected GitAccount gitAccount
     protected GitRepo gitRepo
     protected emitEvents = []
+    protected emitBuilds = []
 
     BoxBase(Map<String, Object> config = [:]) {
         config.keySet().toList().each { k ->
@@ -62,23 +70,34 @@ abstract class BoxBase<T extends CommonConfigBase> implements Serializable {
             Config.pipeline = closure.thisObject
             Config.pipeline.stage("Initialize") {
                 init()
+                setDescription()
             }
             closure()
-            runTriggers()
-            success()
+            Config.pipeline.stage("Summary"){
+                runTriggers()
+                success()
+                summary()
+            }
         } catch (Exception ex) {
-            failure(ex)
+            if (config) {
+                failure(ex)
+                Config.pipeline.stage("Summary"){
+                    summary()
+                }
+            }
             throw ex
         } finally {
-            Config.pipeline.stage("Cleanup") {
-                cleanup()
+            if (config) {
+                Config.pipeline.stage("Cleanup") {
+                    cleanup()
+                }
             }
         }
     }
 
     def init() {
         // load the global config
-        String configYaml = Config.pipeline.libraryResource('com/boxboat/jenkins/config.yaml')
+        String configYaml = Config.pipeline.libraryResource(globalConfigPath)
         def globalConfig = new GlobalConfig().newFromYaml(configYaml)
         Config.global = new GlobalConfig().newDefault()
         Config.global.merge(globalConfig)
@@ -119,6 +138,12 @@ abstract class BoxBase<T extends CommonConfigBase> implements Serializable {
             gitRepo.resetToHash(overrideCommit)
         }
         Config.pipeline.env.GIT_COMMIT_SHORT_HASH = gitRepo.shortHash
+
+        Config.pipeline.currentBuild?.rawBuild?.getCauses()?.reverseEach { cause ->
+            if (cause.getClass().getSimpleName() == "UserIdCause") {
+                buildUser = "started by ${cause.getUserName()}"
+            }
+        }
 
         // create directory for shared library
         Config.pipeline.sh """
@@ -167,6 +192,12 @@ abstract class BoxBase<T extends CommonConfigBase> implements Serializable {
         writeTriggers()
     }
 
+    def setDescription(){
+        if (buildDescription){
+            Config.pipeline.currentBuild.description = buildDescription
+        }
+    }
+
     def notify(List<String> notifyKeys, String message, NotifyType notifyType) {
         notifyKeys.each { notifyKey ->
             def notifyTarget = Config.global.getNotifyTarget(notifyKey)
@@ -199,7 +230,11 @@ abstract class BoxBase<T extends CommonConfigBase> implements Serializable {
                         [$class: 'StringParameterValue', name: 'triggerEvent', value: trigger.event],
                         [$class: 'StringParameterValue', name: 'triggerImagePathsCsv', value: trigger.imagePaths.join(",")]
                 ]
+                // Cannot get build number if wait:false
+                //   https://issues.jenkins-ci.org/browse/JENKINS-41466
                 Config.pipeline.build(job: "/${trigger.job}", parameters: trigger.params, wait: false)
+                String jobInfo = "Triggered job: ${trigger.job}, with parameters: ${trigger.params}"
+                emitBuilds.add(jobInfo)
             }
         }
     }
@@ -220,11 +255,26 @@ abstract class BoxBase<T extends CommonConfigBase> implements Serializable {
         notify(config.notifySuccessKeys, notifySuccessMessage, NotifyType.SUCCESS)
     }
 
+    def summary() {
+        pipelineSummaryMessage = (failureSummary) ? "${failureSummary}\n\n${pipelineSummaryMessage}" : pipelineSummaryMessage
+        Config.pipeline.echo pipelineSummaryMessage
+    }
+
     def failure(Exception ex) {
+        failureSummary = "Run Aborted."
         if (Config.pipeline.currentBuild.result != 'ABORTED') {
             notifyFailureMessage += "\n${ex.getMessage()}"
             notify(config.notifyFailureKeys, notifyFailureMessage, NotifyType.FAILURE)
+            failureSummary = "Error: ${ex}"
         }
+    }
+
+    String formatImageSummary(Registry registry, Image image) {
+        String imageName = "${image.path}:${image.tag ?: "latest"}"
+        String url = registry.getRegistryImageUrl(image.path, image.tag)
+        imageName = String.format('%-60s',imageName)
+
+        return "${imageName} ${url}"
     }
 
     def cleanup() {

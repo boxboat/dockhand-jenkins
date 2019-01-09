@@ -46,6 +46,14 @@ git:
   # string to convert a friendly path to a git remote
   # {{ path }} is replaced with the git path
   remoteUrlReplace: git@github.com/{{ path }}.git
+  # string to display a Git branch URL
+  # {{ path }} is replaced with the git path
+  # {{ branch }} is replaced with the git branch
+  branchUrlReplace: https://github.com/boxboat/{{ path }}/tree/{{ branch }}
+  # string to display a Git commit URL
+  # {{ path }} is replaced with the git path
+  # {{ hash }} is replaced with the git commit hash
+  commitUrlReplace: https://github.com/boxboat/{{ path }}/commit/{{ hash }}
 ```
 
 ## notifyTargetMap
@@ -78,6 +86,10 @@ registryMap:
     scheme: https
     host: dtr.boxboat.com
     credential: registry
+    # string to display a registry image URL
+    # {{ path }} is replaced with the image path
+    # {{ tag }} is replaced with the image tag
+    imageUrlReplace: https://dtr.boxboat.com/repositories/{{ path }}/{{ tag }}/linux/amd64/layers
 ```
 
 ## vaultMap

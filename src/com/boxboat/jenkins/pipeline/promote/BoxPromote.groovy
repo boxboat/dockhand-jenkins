@@ -13,6 +13,7 @@ class BoxPromote extends BoxBase<PromoteConfig> implements Serializable {
     public String overrideTag
     public String registryKey
 
+    protected String imageSummary
     protected SemVer baseSemVer
     protected Promotion promotion
     protected Registry promoteFromRegistry
@@ -34,8 +35,12 @@ class BoxPromote extends BoxBase<PromoteConfig> implements Serializable {
             Config.pipeline.error "'config.promotionKey' must be set"
         }
         promotion = config.getPromotion(config.promotionKey)
-        notifySuccessMessage = "Promotion '${config.promotionKey}' from '${promotion.event}' to '${promotion.promoteToEvent}' succeeded"
-        notifyFailureMessage = "Promotion '${config.promotionKey}' from '${promotion.event}' to '${promotion.promoteToEvent}' failed"
+        String messageBase = "Promotion '${config.promotionKey}' from '${promotion.event}' to '${promotion.promoteToEvent}'"
+        notifySuccessMessage =  "${messageBase} succeeded"
+        notifyFailureMessage = "${messageBase} failed"
+
+        buildDescription = "${config.promotionKey} - ${promotion.event} - ${promotion.promoteToEvent} - ${buildUser}"
+
         if (!config.images || config.images.size() == 0) {
             Config.pipeline.error "'config.images' must be set"
         }
@@ -106,7 +111,7 @@ class BoxPromote extends BoxBase<PromoteConfig> implements Serializable {
             }
             nextSemVer.incrementPreRelease(tagType)
         }
-
+        imageSummary = "Images"
         config.images.each { image ->
             Config.pipeline.echo "Promoting '${image.path}' from '${image.tag}' to '${nextSemVer.toString()}'"
             notifySuccessMessage += "\n${image.path} promoted from '${image.tag}' to '${nextSemVer.toString()}'"
@@ -127,6 +132,10 @@ class BoxPromote extends BoxBase<PromoteConfig> implements Serializable {
                 promoteFromRegistry.withCredentials() {
                     image.pull()
                 }
+
+                imageSummary += "\n${image.path} promoted"
+                imageSummary += "\n\tfrom ${formatImageSummary(promoteFromRegistry, image)}"
+
                 pushRegistries.each { pushRegistry ->
                     def newImage = image.copy()
                     newImage.host = pushRegistry.host
@@ -135,6 +144,8 @@ class BoxPromote extends BoxBase<PromoteConfig> implements Serializable {
                     pushRegistry.withCredentials() {
                         newImage.push()
                     }
+
+                    imageSummary += "\n\tto   ${formatImageSummary(pushRegistry, newImage)}"
                 }
                 buildVersions.setEventImageVersion(pushEvent, image, nextSemVer.toString())
             }
@@ -170,4 +181,15 @@ class BoxPromote extends BoxBase<PromoteConfig> implements Serializable {
 
     }
 
+    def summary(){
+        pipelineSummaryMessage = """
+Promoted '${config.promotionKey}' from '${promotion.event}' to '${promotion.promoteToEvent}'
+Commit: ${gitRepo.commitUrl}
+
+${imageSummary}
+
+${buildUser}
+        """
+        super.summary()
+    }
 }

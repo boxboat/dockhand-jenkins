@@ -6,6 +6,7 @@ def execute() {
 
     params.promotionKey = "stage"
     def promote = new BoxPromote(
+        globalConfigPath: "com/boxboat/jenkins/config.example.yaml",
         config: [
             baseVersion: "0.1.0",
             images: [
