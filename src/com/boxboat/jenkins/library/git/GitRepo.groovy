@@ -158,7 +158,7 @@ class GitRepo implements Serializable {
             git stash
             git pull
             if git stash show > /dev/null 2>&1; then
-                git stash pop
+                git stash pop || grep -lr '<<<<<<<' . | xargs git checkout --theirs
             fi
         """
     }
