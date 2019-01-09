@@ -10,7 +10,7 @@ import com.boxboat.jenkins.pipeline.BoxBase
 
 class BoxPromote extends BoxBase<PromoteConfig> implements Serializable {
 
-    public String overrideTag
+    public String overrideEvent
     public String registryKey
 
     protected String imageSummary
@@ -35,8 +35,11 @@ class BoxPromote extends BoxBase<PromoteConfig> implements Serializable {
             Config.pipeline.error "'config.promotionKey' must be set"
         }
         promotion = config.getPromotion(config.promotionKey)
+        if (overrideEvent) {
+            promotion.event = overrideEvent
+        }
         String messageBase = "Promotion '${config.promotionKey}' from '${promotion.event}' to '${promotion.promoteToEvent}'"
-        notifySuccessMessage =  "${messageBase} succeeded"
+        notifySuccessMessage = "${messageBase} succeeded"
         notifyFailureMessage = "${messageBase} failed"
 
         buildDescription = "${config.promotionKey} - ${promotion.event} - ${promotion.promoteToEvent} - ${buildUser}"
@@ -57,7 +60,7 @@ class BoxPromote extends BoxBase<PromoteConfig> implements Serializable {
         emitEvents.add(promotion.promoteToEvent)
         if (registryKey) {
             promoteFromRegistry = Config.global.getRegistry(registryKey)
-        } else if (!overrideTag) {
+        } else if (!Utils.isImageTagEvent(promotion.event)) {
             def registries = config.getEventRegistries(promotion.event)
             if (registries.size() > 0) {
                 promoteFromRegistry = registries[0]
@@ -77,8 +80,8 @@ class BoxPromote extends BoxBase<PromoteConfig> implements Serializable {
         String gitTagToTag
         config.images.each { image ->
             image.host = promoteFromRegistry.host
-            if (overrideTag) {
-                image.tag = overrideTag
+            if (Utils.isImageTagEvent(promotion.event)) {
+                image.tag = Utils.imageTagFromEvent(promotion.event)
             } else {
                 def tag = buildVersions.getEventImageVersion(promotion.event, image)
                 if (!tag) {
@@ -181,7 +184,7 @@ class BoxPromote extends BoxBase<PromoteConfig> implements Serializable {
 
     }
 
-    def summary(){
+    def summary() {
         pipelineSummaryMessage = """
 Promoted '${config.promotionKey}' from '${promotion.event}' to '${promotion.promoteToEvent}'
 Commit: ${gitRepo.commitUrl}

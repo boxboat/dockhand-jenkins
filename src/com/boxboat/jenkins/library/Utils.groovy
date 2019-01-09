@@ -77,6 +77,17 @@ class Utils implements Serializable {
         return null
     }
 
+    static boolean isImageTagEvent(String event) {
+        return event.toLowerCase().startsWith("imagetag/")
+    }
+
+    static String imageTagFromEvent(String event) {
+        if (isImageTagEvent(event)) {
+            return event.substring("imagetag/".length())
+        }
+        return null
+    }
+
     static resultOrTest(result, test) {
         if (Config.pipeline.env.GRADLE_TEST_ENV == "true") {
             return test
