@@ -60,7 +60,11 @@ class BoxPromote extends BoxBase<PromoteConfig> implements Serializable {
         emitEvents.add(promotion.promoteToEvent)
         if (registryKey) {
             promoteFromRegistry = Config.global.getRegistry(registryKey)
-        } else if (!Utils.isImageTagEvent(promotion.event)) {
+        } else if (Utils.isImageTagEvent(promotion.event)) {
+            if (Config.global.registryMap.size() == 1) {
+                promoteFromRegistry = Config.global.getRegistry(Config.global.registryMap.keySet().toList().first())
+            }
+        } else {
             def registries = config.getEventRegistries(promotion.event)
             if (registries.size() > 0) {
                 promoteFromRegistry = registries[0]
