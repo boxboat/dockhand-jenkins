@@ -12,6 +12,22 @@ class HelmDeploy implements Serializable {
 
     Map<String, Object> options = [:]
 
+    /**
+     * Update `helm dependency build` based on requirements.lock
+     */
+    public dependencyBuild() {
+        Config.pipeline.sh dependencyBuildScript()
+    }
+
+    public dependencyBuildScript() {
+        return """
+            helm_current_dir=\$(pwd)
+            cd "${directory}"
+            helm dependency build
+            cd "\$helm_current_dir"
+        """
+    }
+
     public install(Map<String, Object> additionalOptions = [:]) {
         Config.pipeline.sh installScript(additionalOptions)
     }
