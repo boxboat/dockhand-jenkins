@@ -23,6 +23,7 @@ class BoxDeploy extends BoxBase<DeployConfig> implements Serializable {
 
     BoxDeploy(Map config = [:]) {
         super(config)
+        setPropertiesFromMap(config)
     }
 
     @Override
@@ -30,6 +31,7 @@ class BoxDeploy extends BoxBase<DeployConfig> implements Serializable {
         return "deploy"
     }
 
+    @Override
     def init() {
         super.init()
         if (config.deployTargetKey) {

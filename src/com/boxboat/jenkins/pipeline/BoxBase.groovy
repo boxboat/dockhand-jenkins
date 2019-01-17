@@ -34,12 +34,16 @@ abstract class BoxBase<T extends CommonConfigBase> implements Serializable {
     protected String failureSummary
     protected GitBuildVersions _buildVersions
     protected initialConfig
-    protected GitAccount gitAccount
+    protected GitAccount gitAccount = new GitAccount()
     protected GitRepo gitRepo
     protected emitEvents = []
     protected emitBuilds = []
 
-    BoxBase(Map<String, Object> config = [:]) {
+    BoxBase(Map config = [:]) {
+        setPropertiesFromMap(config)
+    }
+
+    protected setPropertiesFromMap(Map<String, Object> config) {
         config.keySet().toList().each { k ->
             def v = config[k]
             switch (k) {
@@ -58,7 +62,6 @@ abstract class BoxBase<T extends CommonConfigBase> implements Serializable {
                     }
             }
         }
-        gitAccount = new GitAccount()
     }
 
     protected String configKey() {
@@ -73,7 +76,7 @@ abstract class BoxBase<T extends CommonConfigBase> implements Serializable {
                 setDescription()
             }
             closure()
-            Config.pipeline.stage("Summary"){
+            Config.pipeline.stage("Summary") {
                 runTriggers()
                 success()
                 summary()
@@ -81,7 +84,7 @@ abstract class BoxBase<T extends CommonConfigBase> implements Serializable {
         } catch (Exception ex) {
             if (config) {
                 failure(ex)
-                Config.pipeline.stage("Summary"){
+                Config.pipeline.stage("Summary") {
                     summary()
                 }
             }
@@ -192,8 +195,8 @@ abstract class BoxBase<T extends CommonConfigBase> implements Serializable {
         writeTriggers()
     }
 
-    def setDescription(){
-        if (buildDescription){
+    def setDescription() {
+        if (buildDescription) {
             Config.pipeline.currentBuild.description = buildDescription
         }
     }
@@ -272,7 +275,7 @@ abstract class BoxBase<T extends CommonConfigBase> implements Serializable {
     String formatImageSummary(Registry registry, Image image) {
         String imageName = "${image.path}:${image.tag ?: "latest"}"
         String url = registry.getRegistryImageUrl(image.path, image.tag)
-        imageName = String.format('%-60s',imageName)
+        imageName = String.format('%-60s', imageName)
 
         return "${imageName} ${url}"
     }
