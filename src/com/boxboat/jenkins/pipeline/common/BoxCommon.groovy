@@ -7,6 +7,7 @@ class BoxCommon extends BoxBase<CommonConfig> implements Serializable {
 
     BoxCommon(Map config = [:]) {
         super(config)
+        setPropertiesFromMap(config)
     }
 
     @Override

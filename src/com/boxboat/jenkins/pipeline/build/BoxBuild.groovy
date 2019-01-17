@@ -14,6 +14,7 @@ class BoxBuild extends BoxBase<BuildConfig> implements Serializable {
 
     BoxBuild(Map config = [:]) {
         super(config)
+        setPropertiesFromMap(config)
     }
 
     @Override
@@ -21,6 +22,7 @@ class BoxBuild extends BoxBase<BuildConfig> implements Serializable {
         return "build"
     }
 
+    @Override
     def init() {
         super.init()
         String notifyMessage = "Build for branch '${gitRepo.branch}' commit '${gitRepo.shortHash}'"

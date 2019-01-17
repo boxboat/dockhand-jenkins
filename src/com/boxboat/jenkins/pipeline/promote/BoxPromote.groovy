@@ -20,6 +20,7 @@ class BoxPromote extends BoxBase<PromoteConfig> implements Serializable {
 
     BoxPromote(Map config = [:]) {
         super(config)
+        setPropertiesFromMap(config)
     }
 
     @Override
@@ -27,6 +28,7 @@ class BoxPromote extends BoxBase<PromoteConfig> implements Serializable {
         return "promote"
     }
 
+    @Override
     def init() {
         super.init()
         if (!config.promotionKey) {
