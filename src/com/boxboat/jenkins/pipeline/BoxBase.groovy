@@ -11,6 +11,7 @@ import com.boxboat.jenkins.library.notify.NotifyType
 import com.boxboat.jenkins.library.trigger.Trigger
 import com.boxboat.jenkins.library.docker.Image
 import com.boxboat.jenkins.library.docker.Registry
+import com.cloudbees.groovy.cps.NonCPS
 
 import java.lang.reflect.Modifier
 
@@ -43,9 +44,9 @@ abstract class BoxBase<T extends CommonConfigBase> implements Serializable {
         setPropertiesFromMap(config)
     }
 
+    @NonCPS
     protected setPropertiesFromMap(Map<String, Object> config) {
-        config.keySet().toList().each { k ->
-            def v = config[k]
+        config.each { k, v ->
             switch (k) {
                 case "pipeline":
                     Config.pipeline = v
