@@ -183,7 +183,13 @@ class BoxDeploy extends BoxBase<DeployConfig> implements Serializable {
             }
             config.imageOverrides.each imageOverridesCl
             deployment.imageOverrides.each imageOverridesCl
-            if (buildVersions.writeEventImageVersion(event, image, params.outFile, params.format)) {
+            if (Utils.isImageTagEvent(event)) {
+                image.tag = Utils.imageTagFromEvent(event)
+                buildVersions.writeImageVersion(image.tag, image, params.outFile, params.format)
+                notifySuccessMessage += "\n${image.path} version: ${image.tag}"
+                imageSummary += "\n${image.path}:${image.tag}"
+                return
+            } else if (buildVersions.writeEventImageVersion(event, image, params.outFile, params.format)) {
                 image.tag = buildVersions.getEventImageVersion(event, image)
                 notifySuccessMessage += "\n${image.path} version: ${image.tag}"
                 config.getEventRegistries(event).each { registry ->
@@ -193,7 +199,13 @@ class BoxDeploy extends BoxBase<DeployConfig> implements Serializable {
             }
             String triedEvents = event
             if (eventFallback) {
-                if (buildVersions.writeEventImageVersion(eventFallback, image, params.outFile, params.format)) {
+                if (Utils.isImageTagEvent(eventFallback)) {
+                    image.tag = Utils.imageTagFromEvent(eventFallback)
+                    buildVersions.writeImageVersion(image.tag, image, params.outFile, params.format)
+                    notifySuccessMessage += "\n${image.path} version: ${image.tag}"
+                    imageSummary += "\n${image.path}:${image.tag}"
+                    return
+                } else if (buildVersions.writeEventImageVersion(eventFallback, image, params.outFile, params.format)) {
                     image.tag = buildVersions.getEventImageVersion(eventFallback, image)
                     notifySuccessMessage += "\n${image.path} version: ${image.tag}"
                     config.getEventRegistries(eventFallback).each { registry ->
