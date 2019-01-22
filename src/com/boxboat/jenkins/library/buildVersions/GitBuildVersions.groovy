@@ -68,6 +68,18 @@ class GitBuildVersions implements Serializable {
         return Utils.resultOrTest(rc == 0, true)
     }
 
+    def writeImageVersion(String version, Image image, String outFile, String format) {
+        if (format != "yaml" && format != "env") {
+            throw new Exception("invalid format: '${format}'")
+        }
+
+        def key = "image_tag_${Utils.alphaNumericUnderscoreLower(image.path)}"
+        def divider = format == "yaml" ? ": " : "="
+        Config.pipeline.sh """
+            echo "${key}${divider}\\"${version}\\"" >> "$outFile"
+        """
+    }
+
     def setRepoEventVersion(String gitRemotePath, String event, SemVer semVer) {
         def dir = "${gitRepo.dir}/repo-versions/${gitRemotePath}"
         def path = "${dir}/${Utils.alphaNumericDashLower(event)}.txt"
