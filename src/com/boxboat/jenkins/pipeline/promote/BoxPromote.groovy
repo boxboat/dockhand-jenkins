@@ -167,6 +167,7 @@ class BoxPromote extends BoxBase<PromoteConfig> implements Serializable {
                 if (v.promoteToEvent?.startsWith("tag/")) {
                     def currentSemVer = buildVersions.getRepoEventVersion(gitRepo.getRemotePath(), v.promoteToEvent)
                     if (nextSemVer > currentSemVer) {
+                        emitEvents.add(v.promoteToEvent)
                         promoteClosure(v.promoteToEvent)
                     }
                 }
