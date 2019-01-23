@@ -46,7 +46,7 @@ abstract class BaseConfig<T> implements Serializable, ICopyableConfig<T>, IMerge
 
     public Map asMap() {
         this.class.declaredFields.findAll { !it.synthetic }.collectEntries {
-            [ (it.name):this."$it.name" ]
+            [(it.name): this."$it.name"]
         }
     }
 

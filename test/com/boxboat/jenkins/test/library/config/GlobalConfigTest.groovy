@@ -1,6 +1,6 @@
 package com.boxboat.jenkins.test.library.config
 
-
+import com.boxboat.jenkins.library.notify.SlackJenkinsAppNotifyTarget
 import com.boxboat.jenkins.library.vault.Vault
 import com.boxboat.jenkins.library.config.CommonConfig
 import com.boxboat.jenkins.library.config.DeployConfig
@@ -107,11 +107,39 @@ class GlobalConfigTest {
                                 repo: [
                                         common : new CommonConfig(
                                                 defaultBranch: "master",
-                                                notifySuccessKeys: [
-                                                        "default"
-                                                ],
-                                                notifyFailureKeys: [
-                                                        "default"
+                                                notify: [
+                                                        "targetMap"     : [
+                                                                "jenkins": new SlackJenkinsAppNotifyTarget(
+                                                                        channel: "#jenkins"
+                                                                ),
+                                                        ],
+                                                        "successKeys"   : [
+                                                                "default",
+                                                                "jenkins",
+                                                        ],
+                                                        successTargets  : [
+                                                                new SlackJenkinsAppNotifyTarget(
+                                                                        channel: "#jenkins-success"
+                                                                ),
+                                                        ],
+                                                        "failureKeys"   : [
+                                                                "default",
+                                                                "jenkins",
+                                                        ],
+                                                        "failureTargets": [
+                                                                new SlackJenkinsAppNotifyTarget(
+                                                                        channel: "#jenkins-failure"
+                                                                ),
+                                                        ],
+                                                        "infoKeys"      : [
+                                                                "default",
+                                                                "jenkins",
+                                                        ],
+                                                        "infoTargets"   : [
+                                                                new SlackJenkinsAppNotifyTarget(
+                                                                        channel: "#jenkins-info"
+                                                                ),
+                                                        ],
                                                 ],
                                                 eventRegistryKeys: [
                                                         new EventRegistryKey(

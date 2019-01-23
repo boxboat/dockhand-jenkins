@@ -39,14 +39,6 @@ class GlobalConfig extends BaseConfig<GlobalConfig> implements Serializable {
         return environment
     }
 
-    INotifyTarget getNotifyTarget(String key) {
-        def provider = notifyTargetMap.get(key)
-        if (!provider) {
-            throw new Exception("notifyTargetMap entry '${key}' does not exist in config file")
-        }
-        return provider
-    }
-
     Registry getRegistry(String key) {
         def registry = registryMap.get(key)
         if (!registry) {
