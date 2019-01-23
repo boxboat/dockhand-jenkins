@@ -37,10 +37,28 @@ vaultMap:
 repo:
   common:
     defaultBranch: master
-    notifySuccessKeys:
-      - default
-    notifyFailureKeys:
-      - default
+    notify:
+      targetMap:
+        jenkins: !!com.boxboat.jenkins.library.notify.SlackJenkinsAppNotifyTarget
+          channel: "#jenkins"
+      successKeys:
+        - default
+        - jenkins
+      successTargets:
+        - !!com.boxboat.jenkins.library.notify.SlackJenkinsAppNotifyTarget
+          channel: "#jenkins-success"
+      failureKeys:
+        - default
+        - jenkins
+      failureTargets:
+        - !!com.boxboat.jenkins.library.notify.SlackJenkinsAppNotifyTarget
+          channel: "#jenkins-failure"
+      infoKeys:
+        - default
+        - jenkins
+      infoTargets:
+        - !!com.boxboat.jenkins.library.notify.SlackJenkinsAppNotifyTarget
+          channel: "#jenkins-info"
     vaultKey: default
     eventRegistryKeys:
       - event: commit/master

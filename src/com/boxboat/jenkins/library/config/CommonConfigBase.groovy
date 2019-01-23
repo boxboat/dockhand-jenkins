@@ -3,7 +3,7 @@ package com.boxboat.jenkins.library.config
 import com.boxboat.jenkins.library.docker.Image
 import com.boxboat.jenkins.library.docker.Registry
 import com.boxboat.jenkins.library.event.EventRegistryKey
-import com.boxboat.jenkins.library.trigger.Trigger
+import com.boxboat.jenkins.library.notify.NotifyConfig
 
 class CommonConfigBase<T> extends BaseConfig<T> {
 
@@ -13,9 +13,7 @@ class CommonConfigBase<T> extends BaseConfig<T> {
 
     List<Image> images
 
-    List<String> notifySuccessKeys
-
-    List<String> notifyFailureKeys
+    NotifyConfig notify
 
     String vaultKey
 

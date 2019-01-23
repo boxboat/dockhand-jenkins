@@ -7,6 +7,7 @@ import com.boxboat.jenkins.library.config.GlobalConfig
 import com.boxboat.jenkins.library.config.RepoConfig
 import com.boxboat.jenkins.library.git.GitAccount
 import com.boxboat.jenkins.library.git.GitRepo
+import com.boxboat.jenkins.library.notify.INotifyTarget
 import com.boxboat.jenkins.library.notify.NotifyType
 import com.boxboat.jenkins.library.trigger.Trigger
 import com.boxboat.jenkins.library.docker.Image
@@ -85,9 +86,6 @@ abstract class BoxBase<T extends CommonConfigBase> implements Serializable {
         } catch (Exception ex) {
             if (config) {
                 failure(ex)
-                Config.pipeline.stage("Summary") {
-                    summary()
-                }
             }
             throw ex
         } finally {
@@ -202,11 +200,23 @@ abstract class BoxBase<T extends CommonConfigBase> implements Serializable {
         }
     }
 
-    def notify(List<String> notifyKeys, String message, NotifyType notifyType) {
-        notifyKeys.each { notifyKey ->
-            def notifyTarget = Config.global.getNotifyTarget(notifyKey)
+    @SuppressWarnings("GrMethodMayBeStatic")
+    protected notify(List<INotifyTarget> notifyTargets, String message, NotifyType notifyType) {
+        notifyTargets.each { notifyTarget ->
             notifyTarget.postMessage(message, notifyType)
         }
+    }
+
+    def notifySuccess(String message) {
+        notify(config.notify.successTargets(), message, NotifyType.SUCCESS)
+    }
+
+    def notifyFailure(String message) {
+        notify(config.notify.failureTargets(), message, NotifyType.FAILURE)
+    }
+
+    def notifyInfo(String message) {
+        notify(config.notify.infoTargets(), message, NotifyType.INFO)
     }
 
     def writeTriggers() {
@@ -256,7 +266,7 @@ abstract class BoxBase<T extends CommonConfigBase> implements Serializable {
     }
 
     def success() {
-        notify(config.notifySuccessKeys, notifySuccessMessage, NotifyType.SUCCESS)
+        notifySuccess(notifySuccessMessage)
     }
 
     def summary() {
@@ -268,7 +278,7 @@ abstract class BoxBase<T extends CommonConfigBase> implements Serializable {
         failureSummary = "Run Aborted."
         if (Config.pipeline.currentBuild.result != 'ABORTED') {
             notifyFailureMessage += "\n${ex.getMessage()}"
-            notify(config.notifyFailureKeys, notifyFailureMessage, NotifyType.FAILURE)
+            notifyFailure(notifyFailureMessage)
             failureSummary = "Error: ${ex}"
         }
     }

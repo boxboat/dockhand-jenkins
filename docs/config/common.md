@@ -37,24 +37,42 @@ common:
     - test/b
 ```
 
-## notifySuccessKeys
+## notify
 
-Notify targets to send success notifications to
+Notification settings.  Keys are references to targets defined in `targetMap` or the global `notifyTargetMap`.
+Supported notification target types are:
 
-```yaml
-common:
-  notifySuccessKeys:
-    - slack-success
-```
-
-## notifyFailureKeys
-
-Notify targets to send failure notifications to
+- `com.boxboat.jenkins.library.notify.SlackWebHookNotifyTarget`
+  - For use with the [Slack Incoming Webhooks App](https://boxboat.slack.com/apps/A0F7XDUAZ-incoming-webhooks?next_id=0)
+  - Jenkins Credential referenced in `credential` is a Secret Text credential with the full webhook URL
+- `com.boxboat.jenkins.library.notify.SlackJenkinsAppNotifyTarget`
+  - For use with the [Slack Jenkns CI App](https://boxboat.slack.com/apps/A0F7VRFKN-jenkins-ci?next_id=0)
+  - Use `channel` to override channel
 
 ```yaml
 common:
-  notifyFailureKeys:
-    - slack-failure
+  notify:
+    targetMap:
+      jenkins: !!com.boxboat.jenkins.library.notify.SlackJenkinsAppNotifyTarget
+        channel: "#jenkins"
+    successKeys:
+      - default
+      - jenkins
+    successTargets:
+      - !!com.boxboat.jenkins.library.notify.SlackJenkinsAppNotifyTarget
+        channel: "#jenkins-success"
+    failureKeys:
+      - default
+      - jenkins
+    failureTargets:
+      - !!com.boxboat.jenkins.library.notify.SlackJenkinsAppNotifyTarget
+        channel: "#jenkins-failure"
+    infoKeys:
+      - default
+      - jenkins
+    infoTargets:
+      - !!com.boxboat.jenkins.library.notify.SlackJenkinsAppNotifyTarget
+        channel: "#jenkins-info"
 ```
 
 ## vaultKey
