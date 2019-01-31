@@ -11,7 +11,7 @@ import com.boxboat.jenkins.library.notify.INotifyTarget
 import com.boxboat.jenkins.library.notify.NotifyType
 import com.boxboat.jenkins.library.trigger.Trigger
 import com.boxboat.jenkins.library.docker.Image
-import com.boxboat.jenkins.library.docker.Registry
+import com.boxboat.jenkins.library.registry.Registry
 import com.cloudbees.groovy.cps.NonCPS
 
 import java.lang.reflect.Modifier

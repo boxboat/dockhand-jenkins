@@ -6,7 +6,7 @@ import com.boxboat.jenkins.library.config.Config
 
 class KubePod implements Serializable {
 
-    static class PollParams extends BaseConfig<PollParams> implements Serializable {
+    static class PollParams extends BaseConfig implements Serializable {
         String outFile
         String namespace
         String labels
@@ -33,7 +33,7 @@ class KubePod implements Serializable {
         """.trim()
     }
 
-    static class ExecParams extends BaseConfig<ExecParams> implements Serializable {
+    static class ExecParams extends BaseConfig implements Serializable {
         String namespace
         String labels
         String container

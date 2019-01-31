@@ -1,9 +1,9 @@
-package com.boxboat.jenkins.library.docker
+package com.boxboat.jenkins.library.registry
 
 import com.boxboat.jenkins.library.config.BaseConfig
 import com.boxboat.jenkins.library.config.Config
 
-class Registry extends BaseConfig<Registry> implements Serializable {
+class Registry extends BaseConfig implements Serializable {
 
     String scheme
 

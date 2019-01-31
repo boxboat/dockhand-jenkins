@@ -1,13 +1,13 @@
 package com.boxboat.jenkins.library.config
 
 import com.boxboat.jenkins.library.deployTarget.IDeployTarget
-import com.boxboat.jenkins.library.docker.Registry
+import com.boxboat.jenkins.library.registry.Registry
 import com.boxboat.jenkins.library.environment.Environment
 import com.boxboat.jenkins.library.git.GitConfig
 import com.boxboat.jenkins.library.notify.INotifyTarget
 import com.boxboat.jenkins.library.vault.Vault
 
-class GlobalConfig extends BaseConfig<GlobalConfig> implements Serializable {
+class GlobalConfig extends BaseConfig implements Serializable {
 
     Map<String, IDeployTarget> deployTargetMap
 

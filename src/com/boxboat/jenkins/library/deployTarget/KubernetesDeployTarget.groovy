@@ -3,7 +3,7 @@ package com.boxboat.jenkins.library.deployTarget
 import com.boxboat.jenkins.library.config.BaseConfig
 import com.boxboat.jenkins.library.config.Config
 
-class KubernetesDeployTarget extends BaseConfig<KubernetesDeployTarget> implements IDeployTarget, Serializable {
+class KubernetesDeployTarget extends BaseConfig implements IDeployTarget, Serializable {
 
     String caCertificate
 

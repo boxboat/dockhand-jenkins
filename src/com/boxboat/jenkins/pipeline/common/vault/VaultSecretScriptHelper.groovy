@@ -13,7 +13,7 @@ class VaultSecretScriptHelper implements Serializable {
         return Config.<CommonConfigBase>castRepo()
     }
 
-    static class ReplaceParams extends BaseConfig<ReplaceParams> implements Serializable {
+    static class ReplaceParams extends BaseConfig implements Serializable {
         String vaultKey
         Map<String, String> env
         List<String> globs
@@ -48,7 +48,7 @@ class VaultSecretScriptHelper implements Serializable {
         }
     }
 
-    static class FileParams extends BaseConfig<FileParams> implements Serializable {
+    static class FileParams extends BaseConfig implements Serializable {
         Boolean base64
         String format
         String outFile

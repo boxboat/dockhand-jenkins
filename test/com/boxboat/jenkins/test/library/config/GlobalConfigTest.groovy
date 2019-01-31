@@ -8,7 +8,7 @@ import com.boxboat.jenkins.library.config.GlobalConfig
 import com.boxboat.jenkins.library.config.PromoteConfig
 import com.boxboat.jenkins.library.deploy.Deployment
 import com.boxboat.jenkins.library.deployTarget.KubernetesDeployTarget
-import com.boxboat.jenkins.library.docker.Registry
+import com.boxboat.jenkins.library.registry.Registry
 import com.boxboat.jenkins.library.environment.Environment
 import com.boxboat.jenkins.library.event.EventRegistryKey
 import com.boxboat.jenkins.library.git.GitConfig

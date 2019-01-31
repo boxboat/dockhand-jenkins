@@ -4,7 +4,7 @@ import com.boxboat.jenkins.library.config.BaseConfig
 import com.boxboat.jenkins.library.config.Config
 import groovy.json.JsonBuilder
 
-class SlackWebHookNotifyTarget extends BaseConfig<SlackWebHookNotifyTarget> implements INotifyTarget, Serializable {
+class SlackWebHookNotifyTarget extends BaseConfig implements INotifyTarget, Serializable {
 
     String credential
 

@@ -2,6 +2,7 @@ package com.boxboat.jenkins.library.docker
 
 import com.boxboat.jenkins.library.Utils
 import com.boxboat.jenkins.library.config.Config
+import com.boxboat.jenkins.library.registry.Registry
 import groovy.json.JsonSlurper
 
 class DTRClean implements Serializable {

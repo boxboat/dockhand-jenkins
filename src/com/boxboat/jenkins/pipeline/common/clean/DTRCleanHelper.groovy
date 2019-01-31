@@ -6,7 +6,7 @@ import com.boxboat.jenkins.library.docker.DTRClean
 
 class DTRCleanHelper implements Serializable {
 
-    static class DTRCleanParams extends BaseConfig<DTRCleanParams> implements Serializable {
+    static class DTRCleanParams extends BaseConfig implements Serializable {
         boolean dryRun = false
         int retentionDays = 15
         List<String> registryKeys

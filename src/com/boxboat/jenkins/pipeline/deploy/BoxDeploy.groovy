@@ -148,7 +148,7 @@ class BoxDeploy extends BoxBase<DeployConfig> implements Serializable {
         return triggers
     }
 
-    static class ImageTagsParams extends BaseConfig<ImageTagsParams> implements Serializable {
+    static class ImageTagsParams extends BaseConfig implements Serializable {
         String format
         String outFile
         List<String> yamlPath

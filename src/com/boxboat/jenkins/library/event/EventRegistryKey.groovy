@@ -2,7 +2,7 @@ package com.boxboat.jenkins.library.event
 
 import com.boxboat.jenkins.library.config.BaseConfig
 
-class EventRegistryKey extends BaseConfig<EventRegistryKey> implements Serializable {
+class EventRegistryKey extends BaseConfig implements Serializable {
 
     String event
 

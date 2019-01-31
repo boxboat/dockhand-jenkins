@@ -6,17 +6,17 @@ import org.apache.commons.lang3.builder.EqualsBuilder
 
 import java.lang.reflect.Modifier
 
-abstract class BaseConfig<T> implements Serializable, ICopyableConfig<T>, IMergeableConfig<T> {
+abstract class BaseConfig implements Serializable, ICopyableConfig, IMergeableConfig {
 
-    T newFromYaml(String yamlStr) {
-        return (T) YamlUtils.loadAs(yamlStr, this.class)
+    def newFromYaml(String yamlStr) {
+        return YamlUtils.loadAs(yamlStr, this.class)
     }
 
-    T newFromObject(Object obj) {
+    def newFromObject(Object obj) {
         return newFromYaml(YamlUtils.dump(obj))
     }
 
-    T newDefault() {
+    def newDefault() {
         def newT = this.class.newInstance()
         this.class.metaClass.properties.each { property ->
             def name = property.name
@@ -41,17 +41,11 @@ abstract class BaseConfig<T> implements Serializable, ICopyableConfig<T>, IMerge
                 }
             }
         }
-        return (T) newT
-    }
-
-    public Map asMap() {
-        this.class.declaredFields.findAll { !it.synthetic }.collectEntries {
-            [(it.name): this."$it.name"]
-        }
+        return newT
     }
 
     @Override
-    T copy() {
+    def copy() {
         return newFromYaml(this.dumpYaml())
     }
 
@@ -60,7 +54,7 @@ abstract class BaseConfig<T> implements Serializable, ICopyableConfig<T>, IMerge
     }
 
     @Override
-    void merge(T other) {
+    void merge(other) {
         if (other == null) {
             return
         }
@@ -90,10 +84,9 @@ abstract class BaseConfig<T> implements Serializable, ICopyableConfig<T>, IMerge
 
     @Override
     boolean equals(Object o) {
-        if (!(o instanceof T)) {
+        if (o.class != this.class) {
             return false
         }
-        T m = (T) o
 
         def equalsBuilder = new EqualsBuilder()
         this.properties.keySet().toList().each { k ->
@@ -101,7 +94,7 @@ abstract class BaseConfig<T> implements Serializable, ICopyableConfig<T>, IMerge
             if (k == "class") {
                 return
             }
-            equalsBuilder.append(v, m."$k")
+            equalsBuilder.append(v, o."$k")
         }
         return equalsBuilder.equals
     }

@@ -1,7 +1,7 @@
 package com.boxboat.jenkins.library.config
 
-interface ICopyableConfig<T> {
+interface ICopyableConfig {
 
-    T copy()
+    def copy()
 
 }

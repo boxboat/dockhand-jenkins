@@ -1,11 +1,11 @@
 package com.boxboat.jenkins.library.config
 
 import com.boxboat.jenkins.library.docker.Image
-import com.boxboat.jenkins.library.docker.Registry
+import com.boxboat.jenkins.library.registry.Registry
 import com.boxboat.jenkins.library.event.EventRegistryKey
 import com.boxboat.jenkins.library.notify.NotifyConfig
 
-class CommonConfigBase<T> extends BaseConfig<T> {
+class CommonConfigBase extends BaseConfig {
 
     String defaultBranch
 

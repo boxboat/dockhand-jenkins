@@ -3,7 +3,7 @@ package com.boxboat.jenkins.library.notify
 import com.boxboat.jenkins.library.config.BaseConfig
 import com.boxboat.jenkins.library.config.Config
 
-class NotifyConfig extends BaseConfig<NotifyConfig> implements Serializable {
+class NotifyConfig extends BaseConfig implements Serializable {
 
     Map<String, INotifyTarget> targetMap
 

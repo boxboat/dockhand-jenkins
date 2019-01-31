@@ -5,7 +5,7 @@ import com.boxboat.jenkins.library.config.Config
 
 import java.lang.reflect.Modifier
 
-class Image extends BaseConfig<Image> implements Serializable {
+class Image extends BaseConfig implements Serializable {
 
     String event
 

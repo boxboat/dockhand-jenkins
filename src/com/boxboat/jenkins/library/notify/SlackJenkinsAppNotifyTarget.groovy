@@ -3,7 +3,7 @@ package com.boxboat.jenkins.library.notify
 import com.boxboat.jenkins.library.config.BaseConfig
 import com.boxboat.jenkins.library.config.Config
 
-class SlackJenkinsAppNotifyTarget extends BaseConfig<SlackJenkinsAppNotifyTarget> implements INotifyTarget, Serializable {
+class SlackJenkinsAppNotifyTarget extends BaseConfig implements INotifyTarget, Serializable {
 
     String channel
 

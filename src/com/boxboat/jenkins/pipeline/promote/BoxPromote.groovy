@@ -4,7 +4,7 @@ import com.boxboat.jenkins.library.SemVer
 import com.boxboat.jenkins.library.Utils
 import com.boxboat.jenkins.library.config.Config
 import com.boxboat.jenkins.library.config.PromoteConfig
-import com.boxboat.jenkins.library.docker.Registry
+import com.boxboat.jenkins.library.registry.Registry
 import com.boxboat.jenkins.library.promote.Promotion
 import com.boxboat.jenkins.pipeline.BoxBase
 

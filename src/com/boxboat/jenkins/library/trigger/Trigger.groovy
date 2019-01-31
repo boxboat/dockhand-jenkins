@@ -6,7 +6,7 @@ import org.apache.commons.lang.builder.HashCodeBuilder
 @Grab('org.apache.commons:commons-lang3:3.8.1')
 import org.apache.commons.lang3.builder.EqualsBuilder
 
-class Trigger extends BaseConfig<Trigger> implements Serializable {
+class Trigger extends BaseConfig implements Serializable {
 
     String job
 

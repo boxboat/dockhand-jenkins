@@ -1,7 +1,7 @@
 package com.boxboat.jenkins.library.config
 
-interface IMergeableConfig<T> {
+interface IMergeableConfig {
 
-    void merge(T other)
+    void merge(other)
 
 }
