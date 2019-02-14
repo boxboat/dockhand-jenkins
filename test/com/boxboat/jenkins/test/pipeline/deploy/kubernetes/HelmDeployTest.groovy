@@ -32,6 +32,10 @@ class HelmDeployTest {
             helm upgrade -f "values1.yaml" -f "values3.yaml" --install "test" "."
             cd "\$helm_current_dir"
         """.trim())
+        def deleteScript = helmDeploy.deleteScript()
+        assertEquals(deleteScript.trim(),"""
+            helm delete "test" --purge
+        """.trim())
     }
 
 }
