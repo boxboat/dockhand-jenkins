@@ -13,6 +13,19 @@ class HelmDeploy implements Serializable {
     Map<String, Object> options = [:]
 
     /**
+     * Delete helm deployment
+     */
+    public delete() {
+        Config.pipeline.sh deleteScript()
+    }
+
+    public deleteScript() {
+        return """
+            helm delete ${name} --purge
+        """
+    }
+
+    /**
      * Update `helm dependency build` based on requirements.lock
      */
     public dependencyBuild() {
