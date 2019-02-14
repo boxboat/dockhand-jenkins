@@ -21,7 +21,7 @@ class HelmDeploy implements Serializable {
 
     public deleteScript() {
         return """
-            helm delete ${name} --purge
+            helm delete "${name}" --purge
         """
     }
 
