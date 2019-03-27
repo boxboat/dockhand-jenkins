@@ -5,11 +5,19 @@ deployTargetMap:
   prod01: !!com.boxboat.jenkins.library.deployTarget.KubernetesDeployTarget
     contextName: boxboat
     credential: kubeconfig-prod
+  prod02: !!com.boxboat.jenkins.library.deployTarget.KubernetesDeployTarget
+    contextName: boxboat
+    credential: kubeconfig-prod-02
 environmentMap:
   dev:
+    name: dev
     deployTargetKey: dev01
   prod:
+    name: prod-a
     deployTargetKey: prod01
+    replicaEnvironments:
+      - name: prod-b
+        deployTargetKey: prod02
 git:
   buildVersionsUrl: git@github.com/boxboat/build-versions.git
   credential: git

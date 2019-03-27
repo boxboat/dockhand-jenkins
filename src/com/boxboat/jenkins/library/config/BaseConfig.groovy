@@ -96,12 +96,13 @@ abstract class BaseConfig<T> implements Serializable, ICopyableConfig<T>, IMerge
         T m = (T) o
 
         def equalsBuilder = new EqualsBuilder()
-        this.properties.keySet().toList().each { k ->
-            def v = this.properties[k]
-            if (k == "class") {
+        this.class.metaClass.properties.each { property ->
+            def name = property.name
+            if (name != "class"
+                    && !Modifier.isStatic(property.getModifiers())) {
                 return
             }
-            equalsBuilder.append(v, m."$k")
+            equalsBuilder.append(m."${name}", o."${name}")
         }
         return equalsBuilder.equals
     }

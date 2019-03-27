@@ -4,10 +4,12 @@ import com.boxboat.jenkins.library.Utils
 import com.boxboat.jenkins.library.config.BaseConfig
 import com.boxboat.jenkins.library.config.Config
 import com.boxboat.jenkins.library.config.DeployConfig
+
 import com.boxboat.jenkins.library.deploy.DeployType
 import com.boxboat.jenkins.library.deploy.Deployment
 import com.boxboat.jenkins.library.deployTarget.IDeployTarget
 import com.boxboat.jenkins.library.docker.Image
+import com.boxboat.jenkins.library.environment.BaseEnvironment
 import com.boxboat.jenkins.library.environment.Environment
 import com.boxboat.jenkins.library.trigger.Trigger
 import com.boxboat.jenkins.pipeline.BoxBase
@@ -82,16 +84,32 @@ class BoxDeploy extends BoxBase<DeployConfig> implements Serializable {
                 buildDescription = "${config.deploymentKey}"
             case DeployType.Environment:
                 environment = Config.global.getEnvironment(config.environmentKey)
-                config.deployTargetKey = environment.deployTargetKey
+                if (environment.deployTargetKey) {
+                    config.deployTargetKey = environment.deployTargetKey
+                }
+                if (environment.replicaEnvironments) {
+                    config.replicaEnvironments = environment.replicaEnvironments
+                }
                 if (!buildDescription) {
                     buildDescription = "${config.environmentKey}"
                 }
             case DeployType.DeployTarget:
-                deployTarget = Config.global.getDeployTarget(config.deployTargetKey)
-                if (!buildDescription) {
-                    buildDescription = "${config.deployTargetKey}"
-                } else {
-                    buildDescription += " (${config.deployTargetKey})"
+                if (config.deployTargetKey) {
+                    deployTarget = Config.global.getDeployTarget(config.deployTargetKey)
+                    if (!buildDescription) {
+                        buildDescription = "${config.deployTargetKey}"
+                    } else {
+                        buildDescription += " (${config.deployTargetKey})"
+                    }
+                }
+                if (config.replicaEnvironments) {
+                    config.replicaEnvironments.each { deploy ->
+                        if (!buildDescription) {
+                            buildDescription = "${deploy.deployTargetKey}"
+                        } else {
+                            buildDescription += " (${deploy.deployTargetKey})"
+                        }
+                    }
                 }
         }
 
@@ -223,6 +241,14 @@ class BoxDeploy extends BoxBase<DeployConfig> implements Serializable {
         }
     }
 
+    List<BaseEnvironment> allEnvironments() {
+        return environment.allEnvironments()
+    }
+
+    List<BaseEnvironment> replicaEnvironments() {
+        return environment.replicaEnvironments
+    }
+
     def withCredentials(closure) {
         deployTarget.withCredentials(closure)
     }
@@ -237,6 +263,13 @@ class BoxDeploy extends BoxBase<DeployConfig> implements Serializable {
         }
         if (config.deployTargetKey) {
             pipelineSummaryMessage += "Deploy Target: ${config.deployTargetKey}\n"
+        }
+        if (config.replicaEnvironments) {
+            pipelineSummaryMessage += "Replica Environment Targets:"
+            config.replicaEnvironments.each { dt ->
+                pipelineSummaryMessage += " [name: ${dt.name} deployTargetKey: ${dt.deployTargetKey}]"
+            }
+            pipelineSummaryMessage += "\n"
         }
         pipelineSummaryMessage += """Deployment URL: ${deployLink}
 
