@@ -1,0 +1,45 @@
+@Library('jenkins-shared-library@master')
+import com.boxboat.jenkins.pipeline.common.vault.*
+import com.boxboat.jenkins.pipeline.deploy.*
+import com.boxboat.jenkins.library.environment.*
+
+def execute() {
+
+    params.deploymentKey = "prod"
+    def deploy = new BoxDeploy(
+        globalConfigPath: "com/boxboat/jenkins/config.example.yaml",
+        config: [
+            images: [
+                "test/a",
+                "test/b",
+            ],
+        ]
+    )
+
+    node() {
+        deploy.wrap {
+            stage('Deploy'){
+                deploy.writeImageTags(
+                    outFile: "image-tags.yaml",
+                    yamlPath: ["global"],
+                )
+                VaultSecretScriptHelper.file(
+                    base64: true,
+                    format: "env",
+                    outFile: "env-vars.yaml",
+                    vaultPaths: ["secret/test"],
+                    yamlPath: ["global", "envVarsFileContent"],
+                )
+                def replicas = deploy.allEnvironments()
+                for (int i = 0; i < replicas.size(); i++) {
+                    replicas[i].withCredentials() {
+                        sh "helm upgrade --install test --values values-${replicas[i].name}.yaml ."
+                    }
+                }
+            }
+        }
+    }
+
+}
+
+return this

@@ -7,8 +7,10 @@ import com.boxboat.jenkins.library.config.DeployConfig
 import com.boxboat.jenkins.library.config.GlobalConfig
 import com.boxboat.jenkins.library.config.PromoteConfig
 import com.boxboat.jenkins.library.deploy.Deployment
+
 import com.boxboat.jenkins.library.deployTarget.KubernetesDeployTarget
 import com.boxboat.jenkins.library.docker.Registry
+import com.boxboat.jenkins.library.environment.BaseEnvironment
 import com.boxboat.jenkins.library.environment.Environment
 import com.boxboat.jenkins.library.event.EventRegistryKey
 import com.boxboat.jenkins.library.git.GitConfig
@@ -64,13 +66,25 @@ class GlobalConfigTest {
                                                 contextName: "boxboat",
                                                 credential: "kubeconfig-prod",
                                         ),
+                                        "prod02": new KubernetesDeployTarget(
+                                                contextName: "boxboat",
+                                                credential: "kubeconfig-prod-02",
+                                        ),
                                 ],
                                 environmentMap: [
                                         "dev" : new Environment(
+                                                name: "dev",
                                                 deployTargetKey: "dev01",
                                         ),
                                         "prod": new Environment(
+                                                name: "prod-a",
                                                 deployTargetKey: "prod01",
+                                                replicaEnvironments: [
+                                                     new BaseEnvironment(
+                                                         name: "prod-b",
+                                                         deployTargetKey: "prod02"
+                                                     )
+                                                ]
                                         ),
                                 ],
                                 git: new GitConfig(
