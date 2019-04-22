@@ -1,5 +1,6 @@
 package com.boxboat.jenkins.library.config
 
+import com.boxboat.jenkins.library.aws.AwsProfile
 import com.boxboat.jenkins.library.deployTarget.IDeployTarget
 import com.boxboat.jenkins.library.docker.Registry
 import com.boxboat.jenkins.library.environment.Environment
@@ -22,6 +23,8 @@ class GlobalConfig extends BaseConfig<GlobalConfig> implements Serializable {
     RepoConfig repo
 
     Map<String, Vault> vaultMap
+
+    Map<String, AwsProfile> awsProfileMap
 
     IDeployTarget getDeployTarget(String key) {
         def deployTarget = deployTargetMap.get(key)
@@ -53,6 +56,14 @@ class GlobalConfig extends BaseConfig<GlobalConfig> implements Serializable {
             throw new Exception("vaultKey entry '${key}' does not exist in config file")
         }
         return vault
+    }
+
+    AwsProfile getAwsProfile(String key) {
+        def awsProfile = awsProfileMap.get(key)
+        if (!awsProfile) {
+            throw new Exception("awsProfileKey entry '${key}' does not exist in config file")
+        }
+        return awsProfile
     }
 
 }
