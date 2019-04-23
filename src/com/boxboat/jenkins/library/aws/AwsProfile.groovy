@@ -10,16 +10,16 @@ class AwsProfile extends BaseConfig<AwsProfile> implements Serializable {
 
     String accessKeyIdCredential
 
-    String secretKeyCredential
+    String secretAccessKeyCredential
 
 
     def withCredentials(Closure closure) {
         List<Object> credentials = []
         if (accessKeyIdCredential) {
-            credentials.add(Config.pipeline.string(credentialsId: accessKeyIdCredential, variable: 'AWS_ACCESS_KEY',))
+            credentials.add(Config.pipeline.string(credentialsId: accessKeyIdCredential, variable: 'AWS_ACCESS_KEY_ID',))
         }
-        if (secretKeyCredential) {
-            credentials.add(Config.pipeline.string(credentialsId: secretKeyCredential, variable: 'AWS_SECRET_KEY',))
+        if (secretAccessKeyCredential) {
+            credentials.add(Config.pipeline.string(credentialsId: secretAccessKeyCredential, variable: 'AWS_SECRET_ACCESS_KEY',))
         }
         Config.pipeline.withCredentials(credentials) {
             closure()

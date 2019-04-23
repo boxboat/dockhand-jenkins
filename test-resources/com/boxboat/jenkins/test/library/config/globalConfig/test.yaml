@@ -46,7 +46,7 @@ awsProfileMap:
   default:
     region: us-east-1
     accessKeyIdCredential: aws-access-key-id
-    secretKeyCredential: aws-secret-key
+    secretAccessKeyCredential: aws-secret-access-key
 repo:
   common:
     defaultBranch: master

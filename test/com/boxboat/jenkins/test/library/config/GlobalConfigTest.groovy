@@ -123,7 +123,7 @@ class GlobalConfigTest {
                                         "default": new AwsProfile(
                                                 region: "us-east-1",
                                                 accessKeyIdCredential: "aws-access-key-id",
-                                                secretKeyCredential: "aws-secret-key",
+                                                secretAccessKeyCredential: "aws-secret-access-key",
                                         ),
                                 ],
                                 repo: [
