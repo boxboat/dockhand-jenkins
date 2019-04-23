@@ -31,7 +31,7 @@ class DockcmdGetSecrets implements Serializable {
         return """
             dockcmd_current_dir=\$(pwd)
             cd "${directory}"
-            dockcmd aws get-secrets --region ${region} ${optionsString(combinedOptions)} ${files.join('" "')}
+            dockcmd aws get-secrets --region "${region}" ${optionsString(combinedOptions)} ${files.join('" "')}
             cd "\$dockcmd_current_dir"
         """
 
@@ -52,7 +52,7 @@ class DockcmdGetSecrets implements Serializable {
         return """
             dockcmd_current_dir=\$(pwd)
             cd "${directory}"
-            dockcmd vault get-secrets --vault-addr ${vaultUrl} ${optionsString(combinedOptions)}  ${files.join('" "')}
+            dockcmd vault get-secrets --vault-addr "${vaultUrl}" ${optionsString(combinedOptions)}  ${files.join('" "')}
             cd "\$dockcmd_current_dir"
         """
 
