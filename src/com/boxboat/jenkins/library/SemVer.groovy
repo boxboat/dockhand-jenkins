@@ -74,6 +74,7 @@ class SemVer implements Comparable<SemVer>, Serializable {
         }
         preReleaseNumber++
         preRelease = "${preReleaseType}${preReleaseNumber}"
+        isPreRelease = true
     }
 
     SemVer copy() {
