@@ -186,18 +186,16 @@ abstract class BoxBase<T extends CommonConfigBase> implements Serializable {
         """
 
         // merge config from jenkins.yaml if exists
-        def configFile = Config.pipeline.sh(returnStdout: true, script: """
-            set +x
-            for f in "jenkins.yml" "jenkins.yaml"; do
-                if [ -f "\$f" ]; then
-                    echo  "\$f"
-                    break
-                fi
-            done
-        """)?.trim()
+        String configFile = null
+        if (Config.pipeline.fileExists("jenkins.yaml")) {
+            configFile = "jenkins.yaml"
+        } else if (Config.pipeline.fileExists("jenkins.yml")) {
+            configFile = "jenkins.yml"
+        }
         if (configFile) {
             String configFileContents = Config.pipeline.readFile(configFile)
             def configFileObj = new RepoConfig().newFromYaml(configFileContents)
+            def configKey = configKey()
             if (configKey != "common") {
                 config.merge(configFileObj.common)
             }
