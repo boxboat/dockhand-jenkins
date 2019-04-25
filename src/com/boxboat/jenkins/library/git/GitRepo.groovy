@@ -3,21 +3,10 @@ package com.boxboat.jenkins.library.git
 import com.boxboat.jenkins.library.Utils
 import com.boxboat.jenkins.library.config.Config
 
-import java.nio.file.Paths
-
 class GitRepo implements Serializable {
 
     public checkoutData = [:]
-    public relativeDir
-
-    protected String dir
-
-    public String getDir() {
-        if (!dir) {
-            dir = Paths.get(Config.pipeline.env.WORKSPACE, relativeDir).toAbsolutePath().toString()
-        }
-        return dir
-    }
+    public dir
 
     String getHash() {
         return Utils.resultOrTest(Config.pipeline.sh(returnStdout: true, script: """
@@ -86,12 +75,14 @@ class GitRepo implements Serializable {
     }
 
     def checkout(String checkout) {
-        Config.pipeline.sh """
-            cd "${this.dir}"
-            git checkout "${checkout}"
-            git reset --hard
-            git clean -fd
-        """
+        // git clean must be executed inside Config.pipeline.dir block
+        Config.pipeline.dir(dir) {
+            Config.pipeline.sh """
+                git checkout "${checkout}"
+                git reset --hard
+                git clean -ffd
+            """
+        }
     }
 
     boolean currentBranchContainsCommit(String commit) {
@@ -102,11 +93,13 @@ class GitRepo implements Serializable {
     }
 
     def resetToHash(String commitHash) {
-        Config.pipeline.sh """
-            cd "${this.dir}"
-            git reset --hard "${commitHash}"
-            git clean -fd
-        """
+        // git clean must be executed inside Config.pipeline.dir block
+        Config.pipeline.dir(dir) {
+            Config.pipeline.sh """
+                git reset --hard "${commitHash}"
+                git clean -ffd
+            """
+        }
     }
 
     def tagAndPush(String tag) {
@@ -118,11 +111,13 @@ class GitRepo implements Serializable {
     }
 
     def resetAndClean() {
-        Config.pipeline.sh """
-            cd "${this.dir}"
-            git reset --hard
-            git clean -fd
-        """
+        // git clean must be executed inside Config.pipeline.dir block
+        Config.pipeline.dir(dir) {
+            Config.pipeline.sh """
+                git reset --hard
+                git clean -ffd
+            """
+        }
     }
 
     // Requires 'Checkout over SSH' setting in Jenkins

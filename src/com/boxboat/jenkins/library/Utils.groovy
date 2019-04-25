@@ -2,6 +2,8 @@ package com.boxboat.jenkins.library
 
 import com.boxboat.jenkins.library.config.Config
 
+import java.nio.file.Paths
+
 class Utils implements Serializable {
 
     static String cleanEvent(String event) {
@@ -93,6 +95,10 @@ class Utils implements Serializable {
             return test
         }
         return result
+    }
+
+    static String toAbsolutePath(String relativePath) {
+        return Paths.get(Config.pipeline.pwd(), relativePath).normalize().toAbsolutePath().toString()
     }
 
 }

@@ -1,5 +1,6 @@
 package com.boxboat.jenkins.pipeline
 
+import com.boxboat.jenkins.library.Utils
 import com.boxboat.jenkins.library.buildVersions.GitBuildVersions
 import com.boxboat.jenkins.library.config.CommonConfigBase
 import com.boxboat.jenkins.library.config.Config
@@ -25,6 +26,7 @@ abstract class BoxBase<T extends CommonConfigBase> implements Serializable {
     public String triggerEvent
     public String triggerImagePathsCsv
     public String buildUser = "Auto triggered"
+    public String dir
     public String eventMatch
     public String overrideBranch
     public String overrideCommit
@@ -70,34 +72,59 @@ abstract class BoxBase<T extends CommonConfigBase> implements Serializable {
         return "common"
     }
 
+    def wrapDir(Closure closure) {
+        if (dir) {
+            return Config.pipeline.dir(dir) {
+                closure()
+            }
+        }
+        return closure()
+    }
+
     def wrap(Closure closure) {
         try {
             Config.pipeline = closure.thisObject
-            Config.pipeline.stage("Initialize") {
-                init()
-                setDescription()
-            }
-            closure()
-            Config.pipeline.stage("Summary") {
-                runTriggers()
-                success()
-                summary()
+            Config.pipeline.stage("Checkout") {
+                checkoutScm()
             }
         } catch (Exception ex) {
             if (config) {
                 failure(ex)
             }
             throw ex
-        } finally {
-            if (config) {
-                Config.pipeline.stage("Cleanup") {
-                    cleanup()
+        }
+        wrapDir {
+            try {
+                Config.pipeline = closure.thisObject
+                Config.pipeline.stage("Init") {
+                    init()
+                    setDescription()
+                }
+                closure()
+                Config.pipeline.stage("Summary") {
+                    runTriggers()
+                    success()
+                    summary()
+                }
+            } catch (Exception ex) {
+                if (config) {
+                    failure(ex)
+                }
+                throw ex
+            } finally {
+                if (config) {
+                    Config.pipeline.stage("Cleanup") {
+                        cleanup()
+                    }
                 }
             }
         }
     }
 
-    def init() {
+    def checkoutScm() {
+        // set the scm directory
+        Config.scmDir = Utils.toAbsolutePath(".")
+
         // load the global config
         String configYaml = Config.pipeline.libraryResource(globalConfigPath)
         def globalConfig = new GlobalConfig().newFromYaml(configYaml)
@@ -146,6 +173,11 @@ abstract class BoxBase<T extends CommonConfigBase> implements Serializable {
                 buildUser = "started by ${cause.getUserName()}"
             }
         }
+    }
+
+    def init() {
+        // set the base directory
+        Config.baseDir = Utils.toAbsolutePath(".")
 
         // create directory for shared library
         Config.pipeline.sh """
@@ -154,18 +186,16 @@ abstract class BoxBase<T extends CommonConfigBase> implements Serializable {
         """
 
         // merge config from jenkins.yaml if exists
-        def configFile = Config.pipeline.sh(returnStdout: true, script: """
-            set +x
-            for f in "jenkins.yml" "jenkins.yaml"; do
-                if [ -f "\$f" ]; then
-                    echo  "\$f"
-                    break
-                fi
-            done
-        """)?.trim()
+        String configFile = null
+        if (Config.pipeline.fileExists("jenkins.yaml")) {
+            configFile = "jenkins.yaml"
+        } else if (Config.pipeline.fileExists("jenkins.yml")) {
+            configFile = "jenkins.yml"
+        }
         if (configFile) {
             String configFileContents = Config.pipeline.readFile(configFile)
             def configFileObj = new RepoConfig().newFromYaml(configFileContents)
+            def configKey = configKey()
             if (configKey != "common") {
                 config.merge(configFileObj.common)
             }

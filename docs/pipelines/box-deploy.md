@@ -1,6 +1,6 @@
 # BoxDeploy
 
-All methods from [BoxCommon](box-common.md) are valid in addition to the methods documented here.
+All properties and methods from [BoxCommon](box-common.md) are valid in addition to the properties and methods documented here.
 
 ## Methods
 

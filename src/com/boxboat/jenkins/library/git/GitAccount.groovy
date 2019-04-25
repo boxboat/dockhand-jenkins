@@ -1,5 +1,6 @@
 package com.boxboat.jenkins.library.git
 
+import com.boxboat.jenkins.library.Utils
 import com.boxboat.jenkins.library.config.Config
 
 class GitAccount implements Serializable {
@@ -43,11 +44,11 @@ class GitAccount implements Serializable {
             exit 0
         """
         def checkoutData = Config.pipeline.checkout Config.pipeline.scm
-        return new GitRepo(relativeDir: ".", checkoutData: checkoutData)
+        return new GitRepo(dir: Utils.toAbsolutePath("."), checkoutData: checkoutData)
     }
 
     // Checkout Remote Repository into a targetDir
-    def checkoutRepository(remoteUrl, targetDir, depth = 0) {
+    def checkoutRepository(String remoteUrl, String targetDir, int depth = 0) {
         _ensureInitialized()
         def depthStr = ""
         if (depth > 0) {
@@ -60,7 +61,7 @@ class GitAccount implements Serializable {
             git clone ${depthStr} "${remoteUrl}" .
         """
 
-        return new GitRepo(relativeDir: targetDir)
+        return new GitRepo(dir: Utils.toAbsolutePath(targetDir))
     }
 
 }
