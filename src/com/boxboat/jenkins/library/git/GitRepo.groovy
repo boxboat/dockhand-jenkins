@@ -75,12 +75,14 @@ class GitRepo implements Serializable {
     }
 
     def checkout(String checkout) {
-        Config.pipeline.sh """
-            cd "${this.dir}"
-            git checkout "${checkout}"
-            git reset --hard
-            git clean -fd
-        """
+        // git clean must be executed inside Config.pipeline.dir block
+        Config.pipeline.dir(dir) {
+            Config.pipeline.sh """
+                git checkout "${checkout}"
+                git reset --hard
+                git clean -ffd
+            """
+        }
     }
 
     boolean currentBranchContainsCommit(String commit) {
@@ -91,11 +93,13 @@ class GitRepo implements Serializable {
     }
 
     def resetToHash(String commitHash) {
-        Config.pipeline.sh """
-            cd "${this.dir}"
-            git reset --hard "${commitHash}"
-            git clean -fd
-        """
+        // git clean must be executed inside Config.pipeline.dir block
+        Config.pipeline.dir(dir) {
+            Config.pipeline.sh """
+                git reset --hard "${commitHash}"
+                git clean -ffd
+            """
+        }
     }
 
     def tagAndPush(String tag) {
@@ -107,11 +111,13 @@ class GitRepo implements Serializable {
     }
 
     def resetAndClean() {
-        Config.pipeline.sh """
-            cd "${this.dir}"
-            git reset --hard
-            git clean -fd
-        """
+        // git clean must be executed inside Config.pipeline.dir block
+        Config.pipeline.dir(dir) {
+            Config.pipeline.sh """
+                git reset --hard
+                git clean -ffd
+            """
+        }
     }
 
     // Requires 'Checkout over SSH' setting in Jenkins
