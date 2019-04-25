@@ -2,6 +2,10 @@ package com.boxboat.jenkins.library.config
 
 class Config implements Serializable {
 
+    static String baseDir = "./"
+
+    static String scmDir = "./"
+
     static GlobalConfig global
 
     static CommonConfigBase repo

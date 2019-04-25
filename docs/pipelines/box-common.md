@@ -2,6 +2,12 @@
 
 Base class for pipelines
 
+## Properties
+
+### dir
+
+Directory to change into after checking out from SCM
+
 ## Methods
 
 ### wrap()
@@ -18,7 +24,9 @@ Sends success notifications upon build success and failure notifications upon bu
 @Library('jenkins-shared-library@master')
 import com.boxboat.jenkins.pipeline.common.*
 
-def common = new BoxCommon()
+def common = new BoxCommon(
+  dir: "./test"
+)
 
 node() {
   common.wrap {

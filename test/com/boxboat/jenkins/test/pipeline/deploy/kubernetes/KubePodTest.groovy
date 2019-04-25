@@ -10,17 +10,17 @@ class KubePodTest {
     @Test
     void testKubeLogs() {
         def kubeLogs = KubePod.pollScript(outFile: "out.log", namespace: "test-ns", container: "nginx", labels: "a=b,c=d")
-        assertEquals(kubeLogs.trim(), """
-            ./sharedLibraryScripts/pod-logs.sh -o "out.log" -n "test-ns" -l "a=b,c=d" -c "nginx"
-        """.trim())
+        assertEquals("""
+            ${System.getProperty('java.io.tmpdir')}/sharedLibraryScripts/pod-logs.sh -o "out.log" -n "test-ns" -l "a=b,c=d" -c "nginx"
+        """.trim(), kubeLogs.trim())
     }
 
     @Test
     void testKubeExec() {
         def kubeExec = KubePod.execScript(namespace: "test-ns", labels: "a=b,c=d", container: "nginx", command: ["cat", "test.yaml"])
-        assertEquals(kubeExec.trim(), """
-            ./sharedLibraryScripts/pod-exec.sh -n "test-ns" -l "a=b,c=d" -c "nginx" "cat" "test.yaml"
-        """.trim())
+        assertEquals("""
+            ${System.getProperty('java.io.tmpdir')}/sharedLibraryScripts/pod-exec.sh -n "test-ns" -l "a=b,c=d" -c "nginx" "cat" "test.yaml"
+        """.trim(), kubeExec.trim())
     }
 
 }

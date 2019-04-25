@@ -3,21 +3,10 @@ package com.boxboat.jenkins.library.git
 import com.boxboat.jenkins.library.Utils
 import com.boxboat.jenkins.library.config.Config
 
-import java.nio.file.Paths
-
 class GitRepo implements Serializable {
 
     public checkoutData = [:]
-    public relativeDir
-
-    protected String dir
-
-    public String getDir() {
-        if (!dir) {
-            dir = Paths.get(Config.pipeline.env.WORKSPACE, relativeDir).toAbsolutePath().toString()
-        }
-        return dir
-    }
+    public dir
 
     String getHash() {
         return Utils.resultOrTest(Config.pipeline.sh(returnStdout: true, script: """

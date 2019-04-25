@@ -14,6 +14,9 @@ abstract class PipelineBase extends BasePipelineTest {
         helper.registerAllowedMethod('fileExists', [String.class], { fileName ->
             return false
         })
+        helper.registerAllowedMethod('pwd', [], {
+            return System.getProperty('java.io.tmpdir')
+        })
         helper.registerAllowedMethod('error', [String.class], { error ->
             throw new Exception(error)
         })

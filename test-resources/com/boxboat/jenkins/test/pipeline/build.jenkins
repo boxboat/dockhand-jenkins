@@ -5,6 +5,7 @@ import com.boxboat.jenkins.pipeline.build.*
 def execute() {
 
     def build = new BoxBuild(
+        dir: "./test",
         globalConfigPath: "com/boxboat/jenkins/config.example.yaml",
         config: [
             composeProfileMap: [
