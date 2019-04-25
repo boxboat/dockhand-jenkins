@@ -96,7 +96,7 @@ abstract class BoxBase<T extends CommonConfigBase> implements Serializable {
         wrapDir {
             try {
                 Config.pipeline = closure.thisObject
-                Config.pipeline.stage("Init") {
+                Config.pipeline.stage("Initialize") {
                     init()
                     setDescription()
                 }

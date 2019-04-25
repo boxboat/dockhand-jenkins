@@ -6,6 +6,10 @@ class PromoteConfig extends CommonConfigBase<PromoteConfig> implements Serializa
 
     String baseVersion
 
+    Boolean gitTagDisable
+
+    String gitTagPrefix
+
     String promotionKey
 
     Map<String, Promotion> promotionMap
