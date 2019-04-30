@@ -1,5 +1,6 @@
 @Library('jenkins-shared-library@master')
 import com.boxboat.jenkins.pipeline.common.vault.*
+import com.boxboat.jenkins.pipeline.common.dockcmd.*
 import com.boxboat.jenkins.pipeline.deploy.*
 
 
@@ -30,6 +31,36 @@ def execute() {
                     vaultPaths: ["secret/test"],
                     yamlPath: ["global", "envVarsFileContent"],
                 )
+                def dockcmdVault = new DockcmdGetSecrets(
+                    vaultKey: "default",
+                    options: [
+                        "input-file": "secret-values-template.yaml",
+                        "output-file": "secret-values.yaml",
+                        "set": [
+                            "Deployment=dev",
+                            "Foo=bar",
+                        ]
+                    ],
+                )
+
+                dockcmdVault.parseVaultSecrets()
+
+                def dockcmdAws = new DockcmdGetSecrets(
+                    awsProfileKey: "default",
+                    files: [
+                        "secret-values-*.yaml",
+                    ],
+                    options: [
+                        "edit-in-place": true,
+                        "set": [
+                            "Deployment=dev",
+                            "Foo=bar",
+                        ]
+                    ],
+                )
+
+                dockcmdAws.parseAwsSecrets()
+
                 deploy.withCredentials() {
                     sh "helm upgrade --install test ."
                 }

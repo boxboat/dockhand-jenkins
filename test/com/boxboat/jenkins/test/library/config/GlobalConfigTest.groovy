@@ -1,5 +1,6 @@
 package com.boxboat.jenkins.test.library.config
 
+import com.boxboat.jenkins.library.aws.AwsProfile
 import com.boxboat.jenkins.library.notify.SlackJenkinsAppNotifyTarget
 import com.boxboat.jenkins.library.vault.Vault
 import com.boxboat.jenkins.library.config.CommonConfig
@@ -116,6 +117,13 @@ class GlobalConfigTest {
                                                 secretIdCredential: "vault-secret-id",
                                                 tokenCredential: "vault-token",
                                                 url: "http://localhost:8200",
+                                        ),
+                                ],
+                                awsProfileMap: [
+                                        "default": new AwsProfile(
+                                                region: "us-east-1",
+                                                accessKeyIdCredential: "aws-access-key-id",
+                                                secretAccessKeyCredential: "aws-secret-access-key",
                                         ),
                                 ],
                                 repo: [
