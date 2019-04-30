@@ -35,17 +35,17 @@ Stores the git configuration.
 ```yaml
 git:
   # repository where build versions are written to
-  buildVersionsUrl: git@github.com/boxboat/build-versions.git
+  buildVersionsUrl: git@github.com:boxboat/build-versions.git
   # SSH key credential for git service account
   credential: git
   # email that Jenkins commits as
   email: jenkins@boxboat.com
   # regex to convert a git remote to friendly path
   # first capture group is the friendly path
-  remotePathRegex: github\.com/(.*)\.git$
+  remotePathRegex: github\.com[:\/]boxboat\/(.*)\.git$
   # string to convert a friendly path to a git remote
   # {{ path }} is replaced with the git path
-  remoteUrlReplace: git@github.com/{{ path }}.git
+  remoteUrlReplace: git@github.com:boxboat/{{ path }}.git
   # string to display a Git branch URL
   # {{ path }} is replaced with the git path
   # {{ branch }} is replaced with the git branch

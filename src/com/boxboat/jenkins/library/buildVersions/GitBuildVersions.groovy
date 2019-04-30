@@ -80,18 +80,20 @@ class GitBuildVersions implements Serializable {
         """
     }
 
-    def setRepoEventVersion(String gitRemotePath, String event, SemVer semVer) {
+    def setRepoEventVersion(String gitRemotePath, String gitTagPrefix, String event, SemVer semVer) {
+        def eventWithPrefix = gitTagPrefix ? "${gitTagPrefix}${event}" : event
         def dir = "${gitRepo.dir}/repo-versions/${gitRemotePath}"
-        def path = "${dir}/${Utils.alphaNumericDashLower(event)}.txt"
+        def path = "${dir}/${Utils.alphaNumericDashLower(eventWithPrefix)}.txt"
         Config.pipeline.sh """
             mkdir -p "${dir}"
             echo '${semVer.toString()}' > "${path}"
         """
     }
 
-    SemVer getRepoEventVersion(String gitRemotePath, String event) {
+    SemVer getRepoEventVersion(String gitRemotePath, String gitTagPrefix, String event) {
+        def eventWithPrefix = gitTagPrefix ? "${gitTagPrefix}${event}" : event
         def dir = "${gitRepo.dir}/repo-versions/${gitRemotePath}"
-        def path = "${dir}/${Utils.alphaNumericDashLower(event)}.txt"
+        def path = "${dir}/${Utils.alphaNumericDashLower(eventWithPrefix)}.txt"
         String version = Config.pipeline.sh(returnStdout: true, script: """
             if [ -f "${path}" ]; then
                 cat "${path}"

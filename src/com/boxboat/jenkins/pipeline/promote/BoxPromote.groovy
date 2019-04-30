@@ -106,14 +106,14 @@ class BoxPromote extends BoxBase<PromoteConfig> implements Serializable {
             }
         }
 
-        def nextSemVer = buildVersions.getRepoEventVersion(gitRepo.getRemotePath(), promotion.promoteToEvent)
+        def nextSemVer = buildVersions.getRepoEventVersion(gitRepo.getRemotePath(), config.gitTagPrefix, promotion.promoteToEvent)
         if (nextSemVer == null || !nextSemVer.isValid) {
             nextSemVer = baseSemVer.copy()
         } else if (tagType == "release") {
             nextSemVer.patch++
         }
         if (tagType != "release") {
-            def releaseSemVer = buildVersions.getRepoEventVersion(gitRepo.getRemotePath(), "tag/release")
+            def releaseSemVer = buildVersions.getRepoEventVersion(gitRepo.getRemotePath(), config.gitTagPrefix, "tag/release")
             if (releaseSemVer != null && releaseSemVer.isValid && releaseSemVer >= nextSemVer) {
                 nextSemVer = releaseSemVer.copy()
                 nextSemVer.patch++
@@ -137,6 +137,11 @@ class BoxPromote extends BoxBase<PromoteConfig> implements Serializable {
                 Config.pipeline.error "'config.eventRegistryKeys' must specify a registry for event '${pushEvent}'"
             }
 
+            def refTag = "tag-${Utils.alphaNumericDashLower(pushEvent.substring("tag/".length()))}"
+            if (refTag == "tag-release") {
+                refTag = "latest"
+            }
+
             config.images.each { image ->
                 promoteFromRegistry.withCredentials() {
                     image.pull()
@@ -146,26 +151,31 @@ class BoxPromote extends BoxBase<PromoteConfig> implements Serializable {
                 imageSummary += "\n\tfrom ${formatImageSummary(promoteFromRegistry, image)}"
 
                 pushRegistries.each { pushRegistry ->
-                    def newImage = image.copy()
-                    newImage.host = pushRegistry.host
-                    newImage.tag = nextSemVer.toString()
-                    image.reTag(newImage)
+                    def newImageSemVer = image.copy()
+                    newImageSemVer.host = pushRegistry.host
+                    newImageSemVer.tag = nextSemVer.toString()
+                    def newImageRef = image.copy()
+                    newImageRef.tag = refTag
+                    image.reTag(newImageSemVer)
+                    image.reTag(newImageRef)
                     pushRegistry.withCredentials() {
-                        newImage.push()
+                        newImageSemVer.push()
+                        newImageRef.push()
                     }
 
-                    imageSummary += "\n\tto   ${formatImageSummary(pushRegistry, newImage)}"
+                    imageSummary += "\n\tto   ${formatImageSummary(pushRegistry, newImageSemVer)}"
+                    imageSummary += "\n\t     ${formatImageSummary(pushRegistry, newImageRef)}"
                 }
                 buildVersions.setEventImageVersion(pushEvent, image, nextSemVer.toString())
             }
-            buildVersions.setRepoEventVersion(gitRepo.getRemotePath(), pushEvent, nextSemVer)
+            buildVersions.setRepoEventVersion(gitRepo.getRemotePath(), config.gitTagPrefix, pushEvent, nextSemVer)
         }
 
         if (tagType == "release") {
             config.promotionMap.keySet().toList().each { k ->
                 def v = config.promotionMap[k]
                 if (v.promoteToEvent?.startsWith("tag/")) {
-                    def currentSemVer = buildVersions.getRepoEventVersion(gitRepo.getRemotePath(), v.promoteToEvent)
+                    def currentSemVer = buildVersions.getRepoEventVersion(gitRepo.getRemotePath(), config.gitTagPrefix, v.promoteToEvent)
                     if (nextSemVer > currentSemVer) {
                         emitEvents.add(v.promoteToEvent)
                         promoteClosure(v.promoteToEvent)
@@ -178,15 +188,22 @@ class BoxPromote extends BoxBase<PromoteConfig> implements Serializable {
 
         buildVersions.save()
 
-        if (gitCommitToTag || gitTagToTag) {
+        if (!config.gitTagDisable && (gitCommitToTag || gitTagToTag)) {
             // resetting will remove build-versions
             _buildVersions = null
             if (gitCommitToTag) {
                 gitRepo.fetchAndCheckoutCommit(gitCommitToTag)
             } else if (gitTagToTag) {
+                if (config.gitTagPrefix) {
+                    gitTagToTag = "${config.gitTagPrefix}${gitTagToTag}"
+                }
                 gitRepo.fetchAndCheckoutTag(gitTagToTag)
             }
-            gitRepo.tagAndPush(nextSemVer.toString())
+            def gitTag = nextSemVer.toString()
+            if (config.gitTagPrefix) {
+                gitTag = "${config.gitTagPrefix}${gitTag}"
+            }
+            gitRepo.tagAndPush(gitTag)
         }
 
     }

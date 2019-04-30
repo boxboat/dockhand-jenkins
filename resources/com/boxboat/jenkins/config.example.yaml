@@ -19,11 +19,11 @@ environmentMap:
       - name: prod-b
         deployTargetKey: prod02
 git:
-  buildVersionsUrl: git@github.com/boxboat/build-versions.git
+  buildVersionsUrl: git@github.com:boxboat/build-versions.git
   credential: git
   email: jenkins@boxboat.com
-  remotePathRegex: github\.com/(.*)\.git$
-  remoteUrlReplace: git@github.com/{{ path }}.git
+  remotePathRegex: github\.com[:\/]boxboat\/(.*)\.git$
+  remoteUrlReplace: git@github.com:boxboat/{{ path }}.git
   branchUrlReplace: https://github.com/boxboat/{{ path }}/tree/{{ branch }}
   commitUrlReplace: https://github.com/boxboat/{{ path }}/commit/{{ hash }}
 notifyTargetMap:
