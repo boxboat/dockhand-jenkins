@@ -66,7 +66,6 @@ class BoxDeploy extends BoxBase<DeployConfig> implements Serializable {
                     if (!this.triggerEvent) {
                         Config.pipeline.error "'triggerEvent' must be set for this deployment"
                     }
-                    this.triggerEvent = Utils.cleanEvent(this.triggerEvent)
                     Boolean matches = false
                     def closure = {
                         def matcher = this.triggerEvent =~ deployment.eventRegex
