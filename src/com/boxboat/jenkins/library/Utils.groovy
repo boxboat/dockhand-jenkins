@@ -6,17 +6,6 @@ import java.nio.file.Paths
 
 class Utils implements Serializable {
 
-    static String cleanEvent(String event) {
-        if (event == null) {
-            return null
-        }
-        def eventSplit = event.split("/", 2)
-        if (eventSplit.size() > 1) {
-            eventSplit[1] = cleanTag(eventSplit[1])
-        }
-        return eventSplit.join("/")
-    }
-
     static String cleanTag(String tag) {
         if (tag == null) {
             return null

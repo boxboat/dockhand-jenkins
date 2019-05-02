@@ -60,8 +60,8 @@ class BoxBuild extends BoxBase<BuildConfig> implements Serializable {
     }
 
     def push() {
-        def branch = gitRepo.branch?.toLowerCase()
-        def event = Utils.cleanEvent("commit/${branch}")
+        def branch = gitRepo.getBranch()
+        def event = "commit/${branch}"
         def eventTag = Utils.cleanTag(event)
         Config.pipeline.echo branch
         def buildTag = "build-${gitRepo.shortHash}"
@@ -69,7 +69,7 @@ class BoxBuild extends BoxBase<BuildConfig> implements Serializable {
 
         if (registries) {
             def isBranchTip = gitRepo.isBranchTip()
-            def tags = [buildTag]
+            def tags = [buildTag.toString()]
             if (isBranchTip) {
                 tags.add(eventTag)
             }
