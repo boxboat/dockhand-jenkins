@@ -30,7 +30,7 @@ import com.boxboat.jenkins.pipeline.promote.*
 def promotions = ["", "stage", "prod"]
 properties([
   parameters([
-    choice(name: 'promotionKey', choices: deployments, description: 'Promotion', defaultValue: '')
+    choice(name: 'promotionKey', choices: promotions, description: 'Promotion', defaultValue: '')
   ])
 ])
 

@@ -46,7 +46,7 @@ properties([
   ])
 ])
 
-def build = new BoxDeploy()
+def deploy = new BoxDeploy()
 
 node() {
   deploy.wrap {
