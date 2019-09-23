@@ -64,7 +64,7 @@ class GitRepo implements Serializable {
             cd "${this.dir}"
             git show-ref --hash=${shortHashLength} -s ${tag}  || :
         """)?.trim()
-        return Utils.resultOrTest(result, "0123456789abcdef0123456789abcdef")
+        return Utils.resultOrTest(result, "0123456789abcdef0123456789abcdef".substring(shortHashLength))
     }
 
     boolean isBranchTip() {

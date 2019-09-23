@@ -109,7 +109,7 @@ class BoxPromote extends BoxBase<PromoteConfig> implements Serializable {
         }
 
         def currSemVer = buildVersions.getRepoEventVersion(gitRepo.getRemotePath(), config.gitTagPrefix, promotion.promoteToEvent)
-        def nextSemVer = buildVersions.getRepoEventVersion(gitRepo.getRemotePath(), config.gitTagPrefix, promotion.promoteToEvent)
+        def nextSemVer = currSemVer?.copy()
         if (nextSemVer == null || !nextSemVer.isValid) {
             nextSemVer = baseSemVer.copy()
         } else if (tagType == "release") {
@@ -124,9 +124,18 @@ class BoxPromote extends BoxBase<PromoteConfig> implements Serializable {
             nextSemVer.incrementPreRelease(tagType)
         }
 
-        if (!config.gitTagDisable && (gitCommitToTag || gitTagToTag)) {
-            if (gitRepo.getTagReferenceHash(currSemVer.toString()) == gitCommitToTag ||
-                    gitRepo.getTagReferenceHash(currSemVer.toString()) == gitRepo.getTagReferenceHash(gitTagToTag)) {
+        if (currSemVer != null && !config.gitTagDisable && (gitCommitToTag || gitTagToTag)) {
+            def fullGitTagToTag = gitTagToTag
+            if (config.gitTagPrefix && gitTagToTag) {
+                fullGitTagToTag = "${config.gitTagPrefix}${gitTagToTag}"
+            }
+            def fullSemVer = currSemVer.toString()
+            if (config.gitTagPrefix) {
+                fullSemVer = "${config.gitTagPrefix}${fullSemVer}"
+            }
+
+            if (gitRepo.getTagReferenceHash(fullSemVer) == gitCommitToTag ||
+                    gitRepo.getTagReferenceHash(fullSemVer) == gitRepo.getTagReferenceHash(fullGitTagToTag)) {
                 versionChange = false
                 Config.pipeline.echo "No version changes detected"
             }
