@@ -8,6 +8,8 @@ class GitRepo implements Serializable {
     public checkoutData = [:]
     public dir
 
+    private shortHashLength = 12
+
     String getHash() {
         return Utils.resultOrTest(Config.pipeline.sh(returnStdout: true, script: """
             cd "${this.dir}"
@@ -16,7 +18,7 @@ class GitRepo implements Serializable {
     }
 
     String getShortHash() {
-        return getHash()?.substring(0, 12)
+        return getHash()?.substring(0, shortHashLength)
     }
 
     String _branch
@@ -55,6 +57,14 @@ class GitRepo implements Serializable {
 
     String getBranchUrl() {
         return Config.global.git.getBranchUrl(getRemotePath(), getBranch())
+    }
+
+    String getTagReferenceHash(String tag) {
+        def result = Config.pipeline.sh(returnStdout: true, script: """
+            cd "${this.dir}"
+            git show-ref --hash=${shortHashLength} -s ${tag}  || :
+        """)?.trim()
+        return Utils.resultOrTest(result, "0123456789abcdef0123456789abcdef".substring(shortHashLength))
     }
 
     boolean isBranchTip() {
