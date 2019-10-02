@@ -178,7 +178,7 @@ class DTRClean implements Serializable {
 
             def imageManifests = new ImageManifests()
             registryRepositoryTags.each { registryRepositoryTag ->
-                imageManifests.addManifest(registryRepositoryTag)
+                imageManifests.addDtrManifest(registryRepositoryTag)
             }
             imageManifests.getCleanableTagsList().each { tag ->
                 deleteTag(registry, namespace, name, tag)

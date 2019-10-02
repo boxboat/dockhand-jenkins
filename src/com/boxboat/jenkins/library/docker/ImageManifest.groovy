@@ -6,10 +6,10 @@ class ImageManifest implements Serializable {
     Date lastUpdated
     String digest
 
-    ImageManifest(data) {
-        tag = data.name
-        digest = data.digest
-        lastUpdated = Date.parse('yyyy-MM-dd', data.updatedAt.substring(0, 10))
+    ImageManifest(String tag, String digest, Date lastUpdated) {
+        this.tag = tag
+        this.digest = digest
+        this.lastUpdated = lastUpdated
     }
 
     int ageInDays(long now) {

@@ -1,12 +1,26 @@
 package com.boxboat.jenkins.library.docker
 
+import com.boxboat.jenkins.library.config.Config
+
 class ImageManifests implements Serializable {
 
     Map<String, List<ImageManifest>> manifests = [:]
 
-    def addManifest(manifest) {
-        if (manifest && manifest.name && manifest.updatedAt && manifest.digest) {
-            ImageManifest imageManifest = new ImageManifest(manifest)
+    def addDtrManifest(manifest) {
+        if (DtrImageManifest.isValid(manifest)) {
+            ImageManifest imageManifest = new DtrImageManifest(manifest)
+            String digest = imageManifest.digest
+
+            if (!manifests[digest]) {
+                manifests[digest] = []
+            }
+            manifests[digest].add(imageManifest)
+        }
+    }
+
+    def addHarborManifest(manifest) {
+        if (HarborImageManifest.isValid(manifest)) {
+            ImageManifest imageManifest = new HarborImageManifest(manifest)
             String digest = imageManifest.digest
 
             if (!manifests[digest]) {
