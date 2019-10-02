@@ -2,7 +2,6 @@ package com.boxboat.jenkins.library.docker
 
 import com.boxboat.jenkins.library.Utils
 import com.boxboat.jenkins.library.config.Config
-import groovy.json.JsonSlurper
 
 class HarborRegistryClean implements Serializable {
 
@@ -12,61 +11,90 @@ class HarborRegistryClean implements Serializable {
     int retentionDays
     List<String> registryKeys
 
-    List<Object> readRepositories(Registry registry) {
-        def requestURL = registry.getRegistryUrl() + registryAPIBase + '/projects?page_size=100'
+    private int projectPageSize = 100
+    private int repositoryPageSize = 100
+
+    List<Object> requestProjects(Registry registry, int page) {
+        def requestURL = registry.getRegistryUrl() + registryAPIBase + "/projects?page_size=${projectPageSize}&page=${page}"
         def result = Config.pipeline.httpRequest(
                 url: requestURL,
                 authentication: registry.credential,
                 httpMode: 'GET',
                 contentType: "APPLICATION_JSON"
         )?.getContent()
+        def projects = []
+        if (result && result.toString() != "null") {
+            projects = Config.pipeline.readJSON(text: result.toString())
+        }
+        if (projects.size() < projectPageSize) {
+            return projects
+        } else {
+            projects.addAll(requestProjects(registry, page + 1))
+            return projects
+        }
+    }
 
-        def projects = Config.pipeline.readJSON(text: result.toString())
+    List<Object> requestRepositories(Registry registry, int projectId, int page) {
+        def requestURL = registry.getRegistryUrl() + registryAPIBase + "/repositories?project_id=${projectId}&=${repositoryPageSize}&page=${page}"
+        def result = Config.pipeline.httpRequest(
+                url: requestURL,
+                authentication: registry.credential,
+                httpMode: 'GET',
+                contentType: "APPLICATION_JSON"
+        )?.getContent()
+        def repositories = []
+        if (result && result.toString() != "null") {
+            repositories =  Config.pipeline.readJSON(text: result.toString())
+        }
+        if (repositories.size() < repositoryPageSize){
+            return repositories
+        }
+        else {
+            repositories.addAll(requestRepositories(registry, projectId, page + 1))
+            return repositories
+        }
+    }
+
+    List<Object> readRepositories(Registry registry) {
+
+        def projects = requestProjects(registry, 1)
+        Config.pipeline.echo "projects: ${projects}"
 
         def repositories = []
 
         projects.each { project ->
-            requestURL = registry.getRegistryUrl() + registryAPIBase + "/repositories?project_id=${project.project_id}&page_size=100"
-            result = Config.pipeline.httpRequest(
-                    url: requestURL,
-                    authentication: registry.credential,
-                    httpMode: 'GET',
-                    contentType: "APPLICATION_JSON"
-            )?.getContent()
-            def repo = Config.pipeline.readJSON(text: result.toString())
-            repo.each { imageRepo ->
-                repositories.add(imageRepo)
+            def projectRepos = requestRepositories(registry, project.project_id, 1)
+            projectRepos.each { repo ->
+                repositories.add(repo)
             }
         }
-        return repositories
 
-//        return Utils.resultOrTest(repositories,
-//                [
-//                        {
-//                            "project_id" : "1" ,
-//                            "owner_id" : "3" ,
-//                            "name" : "test1" ,
-//                            "creation_time" : "2019-01-01T16:00:00Z" ,
-//                            "update_time" : "2019-01-01T16:00:00Z" ,
-//                            "repo_count" : 1 ,
-//                            "chart_count" : 0 ,
-//                            "metadata" : {
-//                            "public" : "true"
-//                        }
-//                        },
-//                        {
-//                            "project_id" : "2" ,
-//                            "owner_id" : "3" ,
-//                            "name" : "test2" ,
-//                            "creation_time" : "2019-01-01T16:00:00Z" ,
-//                            "update_time" : "2019-01-01T16:00:00Z" ,
-//                            "repo_count" : 3 ,
-//                            "chart_count" : 0 ,
-//                            "metadata" : {
-//                            "public" : "true"
-//                        }
-//                        }
-//                ])
+        return Utils.resultOrTest(repositories,
+            [
+                [
+                    "id" : "1",
+                    "project_id" : "1",
+                    "name" : "test1",
+                    "description" : "",
+                    "creation_time" : "2019-01-01T16:00:00Z",
+                    "update_time" : "2019-01-01T16:00:00Z",
+                    "labels" : [],
+                    "tags_count" : "1",
+                    "star_count" : "0",
+                ],
+                [
+                    "id" : "2",
+                    "project_id" : "2",
+                    "name" : "test2",
+                    "description" : "",
+                    "creation_time" : "2019-01-01T16:00:00Z",
+                    "update_time" : "2019-01-01T16:00:00Z",
+                    "labels" : [],
+                    "tags_count" : "1",
+                    "star_count" : "0",
+                ],
+            ]
+        )
     }
 
     String readRepositoryTags(Registry registry, String name) {
@@ -77,75 +105,202 @@ class HarborRegistryClean implements Serializable {
                 httpMode: 'GET',
                 contentType: "APPLICATION_JSON"
         )?.getContent()
-        return result
-//        return Utils.resultOrTest(result, """
-//            [
-//              {
-//                "name": "commit-test",
-//                "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-//                "author": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
-//                "updatedAt": "2018-12-01T00:00:00.000Z",
-//                "createdAt": "2018-12-01T00:00:00.000Z",
-//                "hashMismatch": false,
-//                "inNotary": false,
-//                "manifest": {
-//                  "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-//                  "mediaType": "application/vnd.docker.distribution.manifest.v2+json",
-//                  "configMediaType": "application/vnd.docker.container.image.v1+json",
-//                  "size": 100,
-//                  "createdAt": "2018-12-01T00:00:00.000Z"
-//                }
-//              },
-//              {
-//                "name": "build-aaaaaaaaaaaa",
-//                "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-//                "author": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
-//                "updatedAt": "2018-12-01T00:00:00.000Z",
-//                "createdAt": "2018-12-01T00:00:00.000Z",
-//                "hashMismatch": false,
-//                "inNotary": false,
-//                "manifest": {
-//                  "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-//                  "mediaType": "application/vnd.docker.distribution.manifest.v2+json",
-//                  "configMediaType": "application/vnd.docker.container.image.v1+json",
-//                  "size": 100,
-//                  "createdAt": "2018-12-01T00:00:00.000Z"
-//                }
-//              },
-//              {
-//                "name": "build-bbbbbbbbbbbb",
-//                "digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
-//                "author": "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
-//                "updatedAt": "2018-12-01T00:00:00.000Z",
-//                "createdAt": "2018-12-01T00:00:00.000Z",
-//                "hashMismatch": false,
-//                "inNotary": false,
-//                "manifest": {
-//                  "digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
-//                  "mediaType": "application/vnd.docker.distribution.manifest.v2+json",
-//                  "configMediaType": "application/vnd.docker.container.image.v1+json",
-//                  "size": 100,
-//                  "createdAt": "2018-12-01T00:00:00.000Z"
-//                }
-//              },
-//              {
-//                "name": "build-cccccccccccc",
-//                "digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
-//                "author": "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
-//                "updatedAt": "2018-12-01T00:00:00.000Z",
-//                "createdAt": "2018-12-01T00:00:00.000Z",
-//                "hashMismatch": false,
-//                "inNotary": false,
-//                "manifest": {
-//                  "digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
-//                  "mediaType": "application/vnd.docker.distribution.manifest.v2+json",
-//                  "configMediaType": "application/vnd.docker.container.image.v1+json",
-//                  "size": 100,
-//                  "createdAt": "2018-12-01T00:00:00.000Z"
-//                }
-//              }
-//            ]
-//        """)
+        return Utils.resultOrTest(result, """
+            [
+              {
+                "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                "name": "build-aaaaaaaaaaaa",
+                "size": 232664445,
+                "architecture": "amd64",
+                "os": "linux",
+                "os.version": "",
+                "docker_version": "18.06.1-ce",
+                "author": "",
+                "created": "2019-09-09T19:41:11.917513133Z",
+                "config": {
+                  "labels": []
+                },
+                "signature": null,
+                "scan_overview": {
+                  "image_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                  "scan_status": "finished",
+                  "job_id": 407,
+                  "severity": 5,
+                  "components": {
+                    "total": 111,
+                    "summary": [
+                      {
+                        "severity": 1,
+                        "count": 76
+                      },
+                      {
+                        "severity": 5,
+                        "count": 12
+                      },
+                      {
+                        "severity": 4,
+                        "count": 17
+                      },
+                      {
+                        "severity": 3,
+                        "count": 6
+                      }
+                    ]
+                  },
+                  "details_key": "9250d0e8bf02011810a2fcc85ee87567fde1e0f09fe3548a138ee20e9196a034",
+                  "creation_time": "2019-09-10T00:00:02.706191Z",
+                  "update_time": "2019-10-02T00:00:04.812058Z"
+                },
+                "labels": [],
+                "push_time": "2019-09-20T12:25:36.423777Z",
+                "pull_time": "0001-01-01T00:00:00Z"
+              },
+              {
+                "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                "name": "commit-test",
+                "size": 232664445,
+                "architecture": "amd64",
+                "os": "linux",
+                "os.version": "",
+                "docker_version": "18.06.1-ce",
+                "author": "",
+                "created": "2019-09-09T19:41:11.917513133Z",
+                "config": {
+                  "labels": []
+                },
+                "signature": null,
+                "scan_overview": {
+                  "image_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                  "scan_status": "finished",
+                  "job_id": 407,
+                  "severity": 5,
+                  "components": {
+                    "total": 111,
+                    "summary": [
+                      {
+                        "severity": 1,
+                        "count": 76
+                      },
+                      {
+                        "severity": 5,
+                        "count": 12
+                      },
+                      {
+                        "severity": 4,
+                        "count": 17
+                      },
+                      {
+                        "severity": 3,
+                        "count": 6
+                      }
+                    ]
+                  },
+                  "details_key": "9250d0e8bf02011810a2fcc85ee87567fde1e0f09fe3548a138ee20e9196a034",
+                  "creation_time": "2019-09-10T00:00:02.706191Z",
+                  "update_time": "2019-10-02T00:00:04.812058Z"
+                },
+                "labels": [],
+                "push_time": "2019-09-20T12:25:36.423777Z",
+                "pull_time": "0001-01-01T00:00:00Z"
+              },
+              {
+                "digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                "name": "commit-bbbbbbbbbbbb",
+                "size": 232664445,
+                "architecture": "amd64",
+                "os": "linux",
+                "os.version": "",
+                "docker_version": "18.06.1-ce",
+                "author": "",
+                "created": "2019-09-09T19:41:11.917513133Z",
+                "config": {
+                  "labels": []
+                },
+                "signature": null,
+                "scan_overview": {
+                  "image_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                  "scan_status": "finished",
+                  "job_id": 407,
+                  "severity": 5,
+                  "components": {
+                    "total": 111,
+                    "summary": [
+                      {
+                        "severity": 1,
+                        "count": 76
+                      },
+                      {
+                        "severity": 5,
+                        "count": 12
+                      },
+                      {
+                        "severity": 4,
+                        "count": 17
+                      },
+                      {
+                        "severity": 3,
+                        "count": 6
+                      }
+                    ]
+                  },
+                  "details_key": "9250d0e8bf02011810a2fcc85ee87567fde1e0f09fe3548a138ee20e9196a034",
+                  "creation_time": "2019-09-10T00:00:02.706191Z",
+                  "update_time": "2019-10-02T00:00:04.812058Z"
+                },
+                "labels": [],
+                "push_time": "2019-09-20T12:25:36.423777Z",
+                "pull_time": "0001-01-01T00:00:00Z"
+              },
+              {
+                "digest": "sha256:c",
+                "name": "commit-cccccccccccc",
+                "size": 232664445,
+                "architecture": "amd64",
+                "os": "linux",
+                "os.version": "",
+                "docker_version": "18.06.1-ce",
+                "author": "",
+                "created": "2019-09-09T19:41:11.917513133Z",
+                "config": {
+                  "labels": []
+                },
+                "signature": null,
+                "scan_overview": {
+                  "image_digest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+                  "scan_status": "finished",
+                  "job_id": 407,
+                  "severity": 5,
+                  "components": {
+                    "total": 111,
+                    "summary": [
+                      {
+                        "severity": 1,
+                        "count": 76
+                      },
+                      {
+                        "severity": 5,
+                        "count": 12
+                      },
+                      {
+                        "severity": 4,
+                        "count": 17
+                      },
+                      {
+                        "severity": 3,
+                        "count": 6
+                      }
+                    ]
+                  },
+                  "details_key": "9250d0e8bf02011810a2fcc85ee87567fde1e0f09fe3548a138ee20e9196a034",
+                  "creation_time": "2019-09-10T00:00:02.706191Z",
+                  "update_time": "2019-10-02T00:00:04.812058Z"
+                },
+                "labels": [],
+                "push_time": "2019-09-20T12:25:36.423777Z",
+                "pull_time": "0001-01-01T00:00:00Z"
+              }
+            ]
+        """)
     }
 
     int deleteTag(Registry registry, String name, String tag) {
