@@ -97,7 +97,7 @@ class HarborRegistryClean implements Serializable {
         )
     }
 
-    String readRepositoryTags(Registry registry, String name) {
+    List<Object> readRepositoryTags(Registry registry, String name) {
         def requestURI = registry.getRegistryUrl() + registryAPIBase + "/repositories/${name}/tags"
         def result = Config.pipeline.httpRequest(
                 url: requestURI,
@@ -105,9 +105,12 @@ class HarborRegistryClean implements Serializable {
                 httpMode: 'GET',
                 contentType: "APPLICATION_JSON"
         )?.getContent()
-        return Utils.resultOrTest(result, """
-            [
-              {
+        def tags = []
+        if (result && result != "null") {
+            tags = Config.pipeline.readJSON(text: result.toString())
+        }
+        return Utils.resultOrTest(tags, [
+              [
                 "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
                 "name": "build-aaaaaaaaaaaa",
                 "size": 232664445,
@@ -117,45 +120,45 @@ class HarborRegistryClean implements Serializable {
                 "docker_version": "18.06.1-ce",
                 "author": "",
                 "created": "2019-09-09T19:41:11.917513133Z",
-                "config": {
+                "config": [
                   "labels": []
-                },
+                ],
                 "signature": null,
-                "scan_overview": {
+                "scan_overview": [
                   "image_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
                   "scan_status": "finished",
                   "job_id": 407,
                   "severity": 5,
-                  "components": {
+                  "components": [
                     "total": 111,
                     "summary": [
-                      {
+                      [
                         "severity": 1,
                         "count": 76
-                      },
-                      {
+                      ],
+                      [
                         "severity": 5,
                         "count": 12
-                      },
-                      {
+                      ],
+                      [
                         "severity": 4,
                         "count": 17
-                      },
-                      {
+                      ],
+                      [
                         "severity": 3,
                         "count": 6
-                      }
+                      ]
                     ]
-                  },
+                  ],
                   "details_key": "9250d0e8bf02011810a2fcc85ee87567fde1e0f09fe3548a138ee20e9196a034",
                   "creation_time": "2019-09-10T00:00:02.706191Z",
                   "update_time": "2019-10-02T00:00:04.812058Z"
-                },
+                ],
                 "labels": [],
                 "push_time": "2019-09-20T12:25:36.423777Z",
                 "pull_time": "0001-01-01T00:00:00Z"
-              },
-              {
+              ],
+              [
                 "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
                 "name": "commit-test",
                 "size": 232664445,
@@ -165,45 +168,45 @@ class HarborRegistryClean implements Serializable {
                 "docker_version": "18.06.1-ce",
                 "author": "",
                 "created": "2019-09-09T19:41:11.917513133Z",
-                "config": {
+                "config": [
                   "labels": []
-                },
+                ],
                 "signature": null,
-                "scan_overview": {
+                "scan_overview": [
                   "image_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
                   "scan_status": "finished",
                   "job_id": 407,
                   "severity": 5,
-                  "components": {
+                  "components": [
                     "total": 111,
                     "summary": [
-                      {
+                      [
                         "severity": 1,
                         "count": 76
-                      },
-                      {
+                      ],
+                      [
                         "severity": 5,
                         "count": 12
-                      },
-                      {
+                      ],
+                      [
                         "severity": 4,
                         "count": 17
-                      },
-                      {
+                      ],
+                      [
                         "severity": 3,
                         "count": 6
-                      }
+                      ]
                     ]
-                  },
+                  ],
                   "details_key": "9250d0e8bf02011810a2fcc85ee87567fde1e0f09fe3548a138ee20e9196a034",
                   "creation_time": "2019-09-10T00:00:02.706191Z",
                   "update_time": "2019-10-02T00:00:04.812058Z"
-                },
+                ],
                 "labels": [],
                 "push_time": "2019-09-20T12:25:36.423777Z",
                 "pull_time": "0001-01-01T00:00:00Z"
-              },
-              {
+              ],
+              [
                 "digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
                 "name": "commit-bbbbbbbbbbbb",
                 "size": 232664445,
@@ -213,46 +216,46 @@ class HarborRegistryClean implements Serializable {
                 "docker_version": "18.06.1-ce",
                 "author": "",
                 "created": "2019-09-09T19:41:11.917513133Z",
-                "config": {
+                "config": [
                   "labels": []
-                },
+                ],
                 "signature": null,
-                "scan_overview": {
+                "scan_overview": [
                   "image_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
                   "scan_status": "finished",
                   "job_id": 407,
                   "severity": 5,
-                  "components": {
+                  "components": [
                     "total": 111,
                     "summary": [
-                      {
+                      [
                         "severity": 1,
                         "count": 76
-                      },
-                      {
+                      ],
+                      [
                         "severity": 5,
                         "count": 12
-                      },
-                      {
+                      ],
+                      [
                         "severity": 4,
                         "count": 17
-                      },
-                      {
+                      ],
+                      [
                         "severity": 3,
                         "count": 6
-                      }
+                      ]
                     ]
-                  },
+                  ],
                   "details_key": "9250d0e8bf02011810a2fcc85ee87567fde1e0f09fe3548a138ee20e9196a034",
                   "creation_time": "2019-09-10T00:00:02.706191Z",
                   "update_time": "2019-10-02T00:00:04.812058Z"
-                },
+                ],
                 "labels": [],
                 "push_time": "2019-09-20T12:25:36.423777Z",
                 "pull_time": "0001-01-01T00:00:00Z"
-              },
-              {
-                "digest": "sha256:c",
+              ],
+              [
+                "digest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
                 "name": "commit-cccccccccccc",
                 "size": 232664445,
                 "architecture": "amd64",
@@ -261,46 +264,45 @@ class HarborRegistryClean implements Serializable {
                 "docker_version": "18.06.1-ce",
                 "author": "",
                 "created": "2019-09-09T19:41:11.917513133Z",
-                "config": {
+                "config": [
                   "labels": []
-                },
+                ],
                 "signature": null,
-                "scan_overview": {
+                "scan_overview": [
                   "image_digest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
                   "scan_status": "finished",
                   "job_id": 407,
                   "severity": 5,
-                  "components": {
+                  "components": [
                     "total": 111,
                     "summary": [
-                      {
+                      [
                         "severity": 1,
                         "count": 76
-                      },
-                      {
+                      ],
+                      [
                         "severity": 5,
                         "count": 12
-                      },
-                      {
+                      ],
+                      [
                         "severity": 4,
                         "count": 17
-                      },
-                      {
+                      ],
+                      [
                         "severity": 3,
                         "count": 6
-                      }
+                      ]
                     ]
-                  },
+                  ],
                   "details_key": "9250d0e8bf02011810a2fcc85ee87567fde1e0f09fe3548a138ee20e9196a034",
                   "creation_time": "2019-09-10T00:00:02.706191Z",
                   "update_time": "2019-10-02T00:00:04.812058Z"
-                },
+                ],
                 "labels": [],
                 "push_time": "2019-09-20T12:25:36.423777Z",
                 "pull_time": "0001-01-01T00:00:00Z"
-              }
-            ]
-        """)
+              ]
+            ])
     }
 
     int deleteTag(Registry registry, String name, String tag) {
@@ -341,7 +343,7 @@ class HarborRegistryClean implements Serializable {
 
                 Config.pipeline.echo "Reading ${name}"
 
-                def registryRepositoryTags = Config.pipeline.readJSON(text: readRepositoryTags(registry, name))
+                def registryRepositoryTags =readRepositoryTags(registry, name)
 
                 def imageManifests = new ImageManifests()
                 registryRepositoryTags.each { registryRepositoryTag ->
