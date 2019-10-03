@@ -2,7 +2,6 @@ package com.boxboat.jenkins.library.docker
 
 import com.boxboat.jenkins.library.Utils
 import com.boxboat.jenkins.library.config.Config
-import groovy.json.JsonSlurper
 
 class DTRClean implements Serializable {
 
@@ -12,7 +11,7 @@ class DTRClean implements Serializable {
     int retentionDays
     List<String> registryKeys
 
-    String readRepositories(Registry registry) {
+    Map<String, Object> readRepositories(Registry registry) {
         def requestURL = registry.getRegistryUrl() + registryAPIBase + '/repositories?pageSize=100000&count=false'
         def result = Config.pipeline.httpRequest(
                 url: requestURL,
@@ -21,10 +20,14 @@ class DTRClean implements Serializable {
                 contentType: "APPLICATION_JSON"
         )?.getContent()
 
-        return Utils.resultOrTest(result, """
-            {
+        def repositories = []
+        if (result && result != "null") {
+            repositories = Config.pipeline.readJSON(text: result.toString())
+        }
+
+        return Utils.resultOrTest(repositories, [
                 "repositories": [
-                    {
+                    [
                       "id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
                       "namespace": "apps",
                       "namespaceType": "organization",
@@ -37,8 +40,8 @@ class DTRClean implements Serializable {
                       "pulls": 5,
                       "pushes": 5,
                       "tagLimit": 0
-                    },
-                    {
+                    ],
+                    [
                       "id": "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
                       "namespace": "apps",
                       "namespaceType": "organization",
@@ -51,13 +54,12 @@ class DTRClean implements Serializable {
                       "pulls": 5,
                       "pushes": 5,
                       "tagLimit": 0
-                    }
+                    ]
                 ]
-            }
-        """)
+            ])
     }
 
-    String readRepositoryTags(Registry registry, String namespace, String name) {
+    List<Map<String, Object>> readRepositoryTags(Registry registry, String namespace, String name) {
         def requestURI = registry.getRegistryUrl() + registryAPIBase + "/repositories/${namespace}/${name}/tags?pageSize=10000&count=false&includeManifests=false"
         def result = Config.pipeline.httpRequest(
                 url: requestURI,
@@ -65,9 +67,14 @@ class DTRClean implements Serializable {
                 httpMode: 'GET',
                 contentType: "APPLICATION_JSON"
         )?.getContent()
-        return Utils.resultOrTest(result, """
-            [
-              {
+
+        def tags = []
+        if (result && result != "null") {
+            tags = Config.pipeline.readJSON(text: result.toString())
+        }
+
+        return Utils.resultOrTest(tags, [
+              [
                 "name": "commit-test",
                 "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
                 "author": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
@@ -75,15 +82,15 @@ class DTRClean implements Serializable {
                 "createdAt": "2018-12-01T00:00:00.000Z",
                 "hashMismatch": false,
                 "inNotary": false,
-                "manifest": {
+                "manifest": [
                   "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
                   "mediaType": "application/vnd.docker.distribution.manifest.v2+json",
                   "configMediaType": "application/vnd.docker.container.image.v1+json",
                   "size": 100,
                   "createdAt": "2018-12-01T00:00:00.000Z"
-                }
-              },
-              {
+                ]
+              ],
+              [
                 "name": "build-aaaaaaaaaaaa",
                 "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
                 "author": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
@@ -91,15 +98,15 @@ class DTRClean implements Serializable {
                 "createdAt": "2018-12-01T00:00:00.000Z",
                 "hashMismatch": false,
                 "inNotary": false,
-                "manifest": {
+                "manifest": [
                   "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
                   "mediaType": "application/vnd.docker.distribution.manifest.v2+json",
                   "configMediaType": "application/vnd.docker.container.image.v1+json",
                   "size": 100,
                   "createdAt": "2018-12-01T00:00:00.000Z"
-                }
-              },
-              {
+                ]
+              ],
+              [
                 "name": "build-bbbbbbbbbbbb",
                 "digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
                 "author": "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
@@ -107,15 +114,15 @@ class DTRClean implements Serializable {
                 "createdAt": "2018-12-01T00:00:00.000Z",
                 "hashMismatch": false,
                 "inNotary": false,
-                "manifest": {
+                "manifest": [
                   "digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
                   "mediaType": "application/vnd.docker.distribution.manifest.v2+json",
                   "configMediaType": "application/vnd.docker.container.image.v1+json",
                   "size": 100,
                   "createdAt": "2018-12-01T00:00:00.000Z"
-                }
-              },
-              {
+                ]
+              ],
+              [
                 "name": "build-cccccccccccc",
                 "digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
                 "author": "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
@@ -123,16 +130,15 @@ class DTRClean implements Serializable {
                 "createdAt": "2018-12-01T00:00:00.000Z",
                 "hashMismatch": false,
                 "inNotary": false,
-                "manifest": {
+                "manifest": [
                   "digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
                   "mediaType": "application/vnd.docker.distribution.manifest.v2+json",
                   "configMediaType": "application/vnd.docker.container.image.v1+json",
                   "size": 100,
                   "createdAt": "2018-12-01T00:00:00.000Z"
-                }
-              }
-            ]
-        """)
+                ]
+              ]
+            ])
     }
 
     int deleteTag(Registry registry, String namespace, String name, String tag) {
@@ -159,7 +165,6 @@ class DTRClean implements Serializable {
     }
 
     protected cleanRegistry(String registryKey) {
-        def json = new JsonSlurper()
         def registry = Config.global.getRegistry(registryKey)
 
         if (dryRun) {
@@ -167,18 +172,18 @@ class DTRClean implements Serializable {
         }
         Config.pipeline.echo "RetentionDays: ${retentionDays}"
 
-        def registryRepositories = json.parseText(readRepositories(registry))
+        def registryRepositories = readRepositories(registry)
         registryRepositories.repositories.each { registryRepository ->
             String namespace = registryRepository.namespace
             String name = registryRepository.name
 
             Config.pipeline.echo "Reading ${name}/${namespace}"
 
-            def registryRepositoryTags = json.parseText(readRepositoryTags(registry, namespace, name))
+            def registryRepositoryTags = readRepositoryTags(registry, namespace, name)
 
             def imageManifests = new ImageManifests()
             registryRepositoryTags.each { registryRepositoryTag ->
-                imageManifests.addManifest(registryRepositoryTag)
+                imageManifests.addDtrManifest(registryRepositoryTag)
             }
             imageManifests.getCleanableTagsList().each { tag ->
                 deleteTag(registry, namespace, name, tag)
