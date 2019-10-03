@@ -315,7 +315,7 @@ class HarborRegistryClean implements Serializable {
                 registryRepositoryTags.each { registryRepositoryTag ->
                     imageManifests.addHarborManifest(registryRepositoryTag)
                 }
-                imageManifests.getCleanableTagsList().each { tag ->
+                imageManifests.getCleanableTagsList(retentionDays).each { tag ->
                     deleteTag(registry, name, tag)
                 }
             }
