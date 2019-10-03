@@ -25,7 +25,6 @@ class HarborRegistryClean implements Serializable {
     List<Map<String, Object>>  readRepositories(Registry registry) {
 
         def projects = requestProjects(registry)
-        Config.pipeline.echo "projects: ${projects}"
 
         def repositories = []
 
