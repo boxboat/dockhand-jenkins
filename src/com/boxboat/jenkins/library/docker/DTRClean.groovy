@@ -11,7 +11,7 @@ class DTRClean implements Serializable {
     int retentionDays
     List<String> registryKeys
 
-    LinkedHashMap<Object, Object> readRepositories(Registry registry) {
+    Map<String, Object> readRepositories(Registry registry) {
         def requestURL = registry.getRegistryUrl() + registryAPIBase + '/repositories?pageSize=100000&count=false'
         def result = Config.pipeline.httpRequest(
                 url: requestURL,
@@ -59,7 +59,7 @@ class DTRClean implements Serializable {
             ])
     }
 
-    List<Object> readRepositoryTags(Registry registry, String namespace, String name) {
+    List<Map<String, Object>> readRepositoryTags(Registry registry, String namespace, String name) {
         def requestURI = registry.getRegistryUrl() + registryAPIBase + "/repositories/${namespace}/${name}/tags?pageSize=10000&count=false&includeManifests=false"
         def result = Config.pipeline.httpRequest(
                 url: requestURI,

@@ -14,56 +14,23 @@ class HarborRegistryClean implements Serializable {
     private int projectPageSize = 100
     private int repositoryPageSize = 100
 
-    List<Object> requestProjects(Registry registry, int page) {
-        def requestURL = registry.getRegistryUrl() + registryAPIBase + "/projects?page_size=${projectPageSize}&page=${page}"
-        def result = Config.pipeline.httpRequest(
-                url: requestURL,
-                authentication: registry.credential,
-                httpMode: 'GET',
-                contentType: "APPLICATION_JSON"
-        )?.getContent()
-        def projects = []
-        if (result && result.toString() != "null") {
-            projects = Config.pipeline.readJSON(text: result.toString())
-        }
-        if (projects.size() < projectPageSize) {
-            return projects
-        } else {
-            projects.addAll(requestProjects(registry, page + 1))
-            return projects
-        }
+    List<Map<String, Object>> requestProjects(Registry registry) {
+        return requestPaginated(registry, "/projects", projectPageSize)
     }
 
-    List<Object> requestRepositories(Registry registry, int projectId, int page) {
-        def requestURL = registry.getRegistryUrl() + registryAPIBase + "/repositories?project_id=${projectId}&=${repositoryPageSize}&page=${page}"
-        def result = Config.pipeline.httpRequest(
-                url: requestURL,
-                authentication: registry.credential,
-                httpMode: 'GET',
-                contentType: "APPLICATION_JSON"
-        )?.getContent()
-        def repositories = []
-        if (result && result.toString() != "null") {
-            repositories =  Config.pipeline.readJSON(text: result.toString())
-        }
-        if (repositories.size() < repositoryPageSize){
-            return repositories
-        }
-        else {
-            repositories.addAll(requestRepositories(registry, projectId, page + 1))
-            return repositories
-        }
+    List<Map<String, Object>>  requestRepositories(Registry registry, String projectId) {
+        return requestPaginated(registry, "/repositories", repositoryPageSize,  ["project_id": projectId])
     }
 
-    List<Object> readRepositories(Registry registry) {
+    List<Map<String, Object>>  readRepositories(Registry registry) {
 
-        def projects = requestProjects(registry, 1)
+        def projects = requestProjects(registry)
         Config.pipeline.echo "projects: ${projects}"
 
         def repositories = []
 
         projects.each { project ->
-            def projectRepos = requestRepositories(registry, project.project_id, 1)
+            def projectRepos = requestRepositories(registry, project.project_id.toString())
             projectRepos.each { repo ->
                 repositories.add(repo)
             }
@@ -353,9 +320,43 @@ class HarborRegistryClean implements Serializable {
                     deleteTag(registry, name, tag)
                 }
             }
+        }
+    }
 
+    private List<Map<String, Object>> requestPaginated(
+            Registry registry,
+            String path,
+            int pageSize,
+            Map<String, String> query = [:]) {
+
+        def requestURL = registry.getRegistryUrl() + registryAPIBase + path
+        query["page_size"] =  pageSize.toString()
+
+        def result = []
+        def pResultCount = pageSize
+
+        for(def page = 1; pResultCount == pageSize; page++) {
+            def paginatedQuery = query.clone()
+            paginatedQuery["page"] = page.toString()
+
+            def pResponse = Config.pipeline.httpRequest(
+                    url: requestURL + "?" + paginatedQuery.collect{ k,v -> "$k=$v" }.join('&'),
+                    authentication: registry.credential,
+                    httpMode: 'GET',
+                    contentType: "APPLICATION_JSON"
+            )?.getContent()
+
+            def pResult = []
+            if (pResponse && pResponse.toString() != "null") {
+                pResult = Config.pipeline.readJSON(text: pResponse.toString())
+            }
+
+            result.addAll(pResult)
+            pResultCount = pResult.size()
         }
 
+        return result
     }
+
 
 }
