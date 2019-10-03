@@ -185,7 +185,7 @@ class DTRClean implements Serializable {
             registryRepositoryTags.each { registryRepositoryTag ->
                 imageManifests.addDtrManifest(registryRepositoryTag)
             }
-            imageManifests.getCleanableTagsList().each { tag ->
+            imageManifests.getCleanableTagsList(retentionDays).each { tag ->
                 deleteTag(registry, namespace, name, tag)
             }
 
