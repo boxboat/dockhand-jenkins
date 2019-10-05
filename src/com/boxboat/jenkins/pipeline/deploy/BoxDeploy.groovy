@@ -184,7 +184,7 @@ class BoxDeploy extends BoxBase<DeployConfig> implements Serializable {
             Config.pipeline.error "'format' is required and must be 'yaml'or 'env'"
         }
 
-        def buildVersions = this.getBuildVersions()
+        def buildVersions = Config.getBuildVersions()
         Config.pipeline.sh """
             rm -f "${params.outFile}"
         """

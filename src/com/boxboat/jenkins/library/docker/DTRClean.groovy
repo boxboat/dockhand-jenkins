@@ -27,36 +27,36 @@ class DTRClean implements Serializable {
 
         return Utils.resultOrTest(repositories, [
                 "repositories": [
-                    [
-                      "id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
-                      "namespace": "apps",
-                      "namespaceType": "organization",
-                      "name": "test1",
-                      "shortDescription": "",
-                      "visibility": "private",
-                      "scanOnPush": false,
-                      "immutableTags": false,
-                      "enableManifestLists": false,
-                      "pulls": 5,
-                      "pushes": 5,
-                      "tagLimit": 0
-                    ],
-                    [
-                      "id": "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
-                      "namespace": "apps",
-                      "namespaceType": "organization",
-                      "name": "test2",
-                      "shortDescription": "",
-                      "visibility": "private",
-                      "scanOnPush": false,
-                      "immutableTags": false,
-                      "enableManifestLists": false,
-                      "pulls": 5,
-                      "pushes": 5,
-                      "tagLimit": 0
-                    ]
+                        [
+                                "id"                 : "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+                                "namespace"          : "apps",
+                                "namespaceType"      : "organization",
+                                "name"               : "test1",
+                                "shortDescription"   : "",
+                                "visibility"         : "private",
+                                "scanOnPush"         : false,
+                                "immutableTags"      : false,
+                                "enableManifestLists": false,
+                                "pulls"              : 5,
+                                "pushes"             : 5,
+                                "tagLimit"           : 0
+                        ],
+                        [
+                                "id"                 : "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
+                                "namespace"          : "apps",
+                                "namespaceType"      : "organization",
+                                "name"               : "test2",
+                                "shortDescription"   : "",
+                                "visibility"         : "private",
+                                "scanOnPush"         : false,
+                                "immutableTags"      : false,
+                                "enableManifestLists": false,
+                                "pulls"              : 5,
+                                "pushes"             : 5,
+                                "tagLimit"           : 0
+                        ]
                 ]
-            ])
+        ])
     }
 
     List<Map<String, Object>> readRepositoryTags(Registry registry, String namespace, String name) {
@@ -74,71 +74,71 @@ class DTRClean implements Serializable {
         }
 
         return Utils.resultOrTest(tags, [
-              [
-                "name": "commit-test",
-                "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-                "author": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
-                "updatedAt": "2018-12-01T00:00:00.000Z",
-                "createdAt": "2018-12-01T00:00:00.000Z",
-                "hashMismatch": false,
-                "inNotary": false,
-                "manifest": [
-                  "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-                  "mediaType": "application/vnd.docker.distribution.manifest.v2+json",
-                  "configMediaType": "application/vnd.docker.container.image.v1+json",
-                  "size": 100,
-                  "createdAt": "2018-12-01T00:00:00.000Z"
+                [
+                        "name"        : "commit-test",
+                        "digest"      : "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                        "author"      : "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+                        "updatedAt"   : "2018-12-01T00:00:00.000Z",
+                        "createdAt"   : "2018-12-01T00:00:00.000Z",
+                        "hashMismatch": false,
+                        "inNotary"    : false,
+                        "manifest"    : [
+                                "digest"         : "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                                "mediaType"      : "application/vnd.docker.distribution.manifest.v2+json",
+                                "configMediaType": "application/vnd.docker.container.image.v1+json",
+                                "size"           : 100,
+                                "createdAt"      : "2018-12-01T00:00:00.000Z"
+                        ]
+                ],
+                [
+                        "name"        : "build-aaaaaaaaaaaa",
+                        "digest"      : "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                        "author"      : "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+                        "updatedAt"   : "2018-12-01T00:00:00.000Z",
+                        "createdAt"   : "2018-12-01T00:00:00.000Z",
+                        "hashMismatch": false,
+                        "inNotary"    : false,
+                        "manifest"    : [
+                                "digest"         : "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                                "mediaType"      : "application/vnd.docker.distribution.manifest.v2+json",
+                                "configMediaType": "application/vnd.docker.container.image.v1+json",
+                                "size"           : 100,
+                                "createdAt"      : "2018-12-01T00:00:00.000Z"
+                        ]
+                ],
+                [
+                        "name"        : "build-bbbbbbbbbbbb",
+                        "digest"      : "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                        "author"      : "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
+                        "updatedAt"   : "2018-12-01T00:00:00.000Z",
+                        "createdAt"   : "2018-12-01T00:00:00.000Z",
+                        "hashMismatch": false,
+                        "inNotary"    : false,
+                        "manifest"    : [
+                                "digest"         : "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                                "mediaType"      : "application/vnd.docker.distribution.manifest.v2+json",
+                                "configMediaType": "application/vnd.docker.container.image.v1+json",
+                                "size"           : 100,
+                                "createdAt"      : "2018-12-01T00:00:00.000Z"
+                        ]
+                ],
+                [
+                        "name"        : "build-cccccccccccc",
+                        "digest"      : "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                        "author"      : "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
+                        "updatedAt"   : "2018-12-01T00:00:00.000Z",
+                        "createdAt"   : "2018-12-01T00:00:00.000Z",
+                        "hashMismatch": false,
+                        "inNotary"    : false,
+                        "manifest"    : [
+                                "digest"         : "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                                "mediaType"      : "application/vnd.docker.distribution.manifest.v2+json",
+                                "configMediaType": "application/vnd.docker.container.image.v1+json",
+                                "size"           : 100,
+                                "createdAt"      : "2018-12-01T00:00:00.000Z"
+                        ]
                 ]
-              ],
-              [
-                "name": "build-aaaaaaaaaaaa",
-                "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-                "author": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
-                "updatedAt": "2018-12-01T00:00:00.000Z",
-                "createdAt": "2018-12-01T00:00:00.000Z",
-                "hashMismatch": false,
-                "inNotary": false,
-                "manifest": [
-                  "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-                  "mediaType": "application/vnd.docker.distribution.manifest.v2+json",
-                  "configMediaType": "application/vnd.docker.container.image.v1+json",
-                  "size": 100,
-                  "createdAt": "2018-12-01T00:00:00.000Z"
-                ]
-              ],
-              [
-                "name": "build-bbbbbbbbbbbb",
-                "digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
-                "author": "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
-                "updatedAt": "2018-12-01T00:00:00.000Z",
-                "createdAt": "2018-12-01T00:00:00.000Z",
-                "hashMismatch": false,
-                "inNotary": false,
-                "manifest": [
-                  "digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
-                  "mediaType": "application/vnd.docker.distribution.manifest.v2+json",
-                  "configMediaType": "application/vnd.docker.container.image.v1+json",
-                  "size": 100,
-                  "createdAt": "2018-12-01T00:00:00.000Z"
-                ]
-              ],
-              [
-                "name": "build-cccccccccccc",
-                "digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
-                "author": "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
-                "updatedAt": "2018-12-01T00:00:00.000Z",
-                "createdAt": "2018-12-01T00:00:00.000Z",
-                "hashMismatch": false,
-                "inNotary": false,
-                "manifest": [
-                  "digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
-                  "mediaType": "application/vnd.docker.distribution.manifest.v2+json",
-                  "configMediaType": "application/vnd.docker.container.image.v1+json",
-                  "size": 100,
-                  "createdAt": "2018-12-01T00:00:00.000Z"
-                ]
-              ]
-            ])
+        ])
     }
 
     int deleteTag(Registry registry, String namespace, String name, String tag) {
@@ -181,7 +181,7 @@ class DTRClean implements Serializable {
 
             def registryRepositoryTags = readRepositoryTags(registry, namespace, name)
 
-            def imageManifests = new ImageManifests()
+            def imageManifests = new ImageManifests(new Image(path: "${name}/${namespace}"))
             registryRepositoryTags.each { registryRepositoryTag ->
                 imageManifests.addDtrManifest(registryRepositoryTag)
             }

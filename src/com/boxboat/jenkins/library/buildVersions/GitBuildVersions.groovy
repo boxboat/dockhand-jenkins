@@ -4,7 +4,6 @@ import com.boxboat.jenkins.library.SemVer
 import com.boxboat.jenkins.library.Utils
 import com.boxboat.jenkins.library.config.Config
 import com.boxboat.jenkins.library.docker.Image
-import com.boxboat.jenkins.library.git.GitAccount
 import com.boxboat.jenkins.library.git.GitRepo
 import com.boxboat.jenkins.library.trigger.Trigger
 import com.boxboat.jenkins.library.yaml.YamlUtils
@@ -24,8 +23,8 @@ class GitBuildVersions implements Serializable {
         return "build-0123456789ab"
     }
 
-    def checkout(GitAccount gitAccount, String targetDir = "build-versions") {
-        gitRepo = gitAccount.checkoutRepository(Config.global.git.buildVersionsUrl, targetDir, 1)
+    def checkout(String targetDir = "build-versions") {
+        gitRepo = Config.gitAccount.checkoutRepository(Config.global.git.buildVersionsUrl, targetDir, 1)
     }
 
     def setEventImageVersion(String event, Image image, String version) {
@@ -161,6 +160,26 @@ class GitBuildVersions implements Serializable {
         Config.pipeline.sh """
             rm -rf "${dir}"
         """
+    }
+
+    def setImageRepoPath(Image image, String gitRemotePath) {
+        def dir = "${gitRepo.dir}/image-repos"
+        def path = "${dir}/${Utils.alphaNumericDashLower(image.path)}.txt"
+        Config.pipeline.sh """
+            mkdir -p "${dir}"
+            echo "${gitRemotePath}" > "${path}"
+        """
+    }
+
+    String getImageRepoPath(Image image) {
+        def dir = "${gitRepo.dir}/image-repos"
+        def path = "${dir}/${Utils.alphaNumericDashLower(image.path)}.txt"
+        def result = Config.pipeline.sh(returnStdout: true, script: """
+            if [ -f "${path}" ]; then
+                cat "${path}"
+            fi
+        """)?.trim()
+        return Utils.resultOrTest(result, Config.global.git.getRemotePath(Config.global.git.buildVersionsUrl)) ?: null
     }
 
     def save() {
