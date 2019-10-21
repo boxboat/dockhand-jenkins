@@ -1,3 +1,8 @@
+awsProfileMap:
+  default:
+    region: us-east-1
+    accessKeyIdCredential: aws-access-key-id
+    secretAccessKeyCredential: aws-secret-access-key
 deployTargetMap:
   dev01: !!com.boxboat.jenkins.library.deployTarget.KubernetesDeployTarget
     contextName: boxboat
@@ -8,6 +13,11 @@ deployTargetMap:
   prod02: !!com.boxboat.jenkins.library.deployTarget.KubernetesDeployTarget
     contextName: boxboat
     credential: kubeconfig-prod-02
+  gke: !!com.boxboat.jenkins.library.gcloud.GCloudGKEDeployTarget
+    gCloudAccountKey: default
+    name: kube-cluster-name
+    project: gcloud-project
+    zone: us-central1-a
 environmentMap:
   dev:
     name: dev
@@ -18,6 +28,10 @@ environmentMap:
     replicaEnvironments:
       - name: prod-b
         deployTargetKey: prod02
+gCloudAccountMap:
+  default:
+    account: service-account@gcloud-project.iam.gserviceaccount.com
+    keyFileCredential: gcloud-key-file-credential
 git:
   buildVersionsUrl: git@github.com:boxboat/build-versions.git
   credential: git
@@ -35,6 +49,11 @@ registryMap:
     host: dtr.boxboat.com
     credential: registry
     imageUrlReplace: https://dtr.boxboat.com/repositories/{{ path }}/{{ tag }}/linux/amd64/layers
+  gcr: !!com.boxboat.jenkins.library.gcloud.GCloudRegistry
+    scheme: https
+    host: gcr.io
+    namespace: gcloud-project
+    gCloudAccountKey: default
 vaultMap:
   default:
     kvVersion: 1
@@ -42,11 +61,6 @@ vaultMap:
     secretIdCredential: vault-secret-id
     tokenCredential: vault-token
     url: http://localhost:8200
-awsProfileMap:
-  default:
-    region: us-east-1
-    accessKeyIdCredential: aws-access-key-id
-    secretAccessKeyCredential: aws-secret-access-key
 repo:
   common:
     defaultBranch: master

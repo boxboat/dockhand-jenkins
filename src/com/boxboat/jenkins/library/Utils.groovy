@@ -27,6 +27,10 @@ class Utils implements Serializable {
         return value.replaceAll(/[^a-zA-Z0-9_]/, '_').toLowerCase()
     }
 
+    static String trimSlash(String value) {
+        return value.replaceAll(/(^\/+|\/+$)/, "")
+    }
+
     static String yamlPathScript(List<String> yamlPath, String fileName, String fileFormat) {
         if (!yamlPath) {
             return ""

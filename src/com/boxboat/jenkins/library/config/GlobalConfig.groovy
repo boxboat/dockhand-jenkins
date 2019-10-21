@@ -4,15 +4,20 @@ import com.boxboat.jenkins.library.aws.AwsProfile
 import com.boxboat.jenkins.library.deployTarget.IDeployTarget
 import com.boxboat.jenkins.library.docker.Registry
 import com.boxboat.jenkins.library.environment.Environment
+import com.boxboat.jenkins.library.gcloud.GCloudAccount
 import com.boxboat.jenkins.library.git.GitConfig
 import com.boxboat.jenkins.library.notify.INotifyTarget
 import com.boxboat.jenkins.library.vault.Vault
 
 class GlobalConfig extends BaseConfig<GlobalConfig> implements Serializable {
 
+    Map<String, AwsProfile> awsProfileMap
+
     Map<String, IDeployTarget> deployTargetMap
 
     Map<String, Environment> environmentMap
+
+    Map<String, GCloudAccount> gCloudAccountMap
 
     GitConfig git
 
@@ -24,7 +29,13 @@ class GlobalConfig extends BaseConfig<GlobalConfig> implements Serializable {
 
     Map<String, Vault> vaultMap
 
-    Map<String, AwsProfile> awsProfileMap
+    AwsProfile getAwsProfile(String key) {
+        def awsProfile = awsProfileMap.get(key)
+        if (!awsProfile) {
+            throw new Exception("awsProfileKey entry '${key}' does not exist in config file")
+        }
+        return awsProfile
+    }
 
     IDeployTarget getDeployTarget(String key) {
         def deployTarget = deployTargetMap.get(key)
@@ -42,6 +53,14 @@ class GlobalConfig extends BaseConfig<GlobalConfig> implements Serializable {
         return environment
     }
 
+    GCloudAccount getGCloudAccount(String key) {
+        def gCloudAccount = gCloudAccountMap.get(key)
+        if (!gCloudAccount) {
+            throw new Exception("gCloudAccount entry '${key}' does not exist in config file")
+        }
+        return gCloudAccount
+    }
+
     Registry getRegistry(String key) {
         def registry = registryMap.get(key)
         if (!registry) {
@@ -56,14 +75,6 @@ class GlobalConfig extends BaseConfig<GlobalConfig> implements Serializable {
             throw new Exception("vaultKey entry '${key}' does not exist in config file")
         }
         return vault
-    }
-
-    AwsProfile getAwsProfile(String key) {
-        def awsProfile = awsProfileMap.get(key)
-        if (!awsProfile) {
-            throw new Exception("awsProfileKey entry '${key}' does not exist in config file")
-        }
-        return awsProfile
     }
 
 }
