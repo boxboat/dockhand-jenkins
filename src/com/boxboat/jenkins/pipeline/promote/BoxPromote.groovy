@@ -88,6 +88,7 @@ class BoxPromote extends BoxBase<PromoteConfig> implements Serializable {
         String gitTagToTag
         config.images.each { image ->
             image.host = promoteFromRegistry.host
+            image.namespace = promoteFromRegistry.namespace
             if (Utils.isImageTagEvent(promotion.event)) {
                 image.tag = Utils.imageTagFromEvent(promotion.event)
             } else {
@@ -175,6 +176,7 @@ class BoxPromote extends BoxBase<PromoteConfig> implements Serializable {
                     pushRegistries.each { pushRegistry ->
                         def newImageSemVer = image.copy()
                         newImageSemVer.host = pushRegistry.host
+                        newImageSemVer.namespace = pushRegistry.namespace
                         newImageSemVer.tag = nextSemVer.toString()
                         def newImageRef = image.copy()
                         newImageRef.tag = refTag

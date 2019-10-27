@@ -1,22 +1,25 @@
 package com.boxboat.jenkins.test.library.config
 
 import com.boxboat.jenkins.library.aws.AwsProfile
-import com.boxboat.jenkins.library.notify.SlackJenkinsAppNotifyTarget
-import com.boxboat.jenkins.library.vault.Vault
 import com.boxboat.jenkins.library.config.CommonConfig
 import com.boxboat.jenkins.library.config.DeployConfig
 import com.boxboat.jenkins.library.config.GlobalConfig
 import com.boxboat.jenkins.library.config.PromoteConfig
 import com.boxboat.jenkins.library.deploy.Deployment
-
+import com.boxboat.jenkins.library.deployTarget.IDeployTarget
 import com.boxboat.jenkins.library.deployTarget.KubernetesDeployTarget
 import com.boxboat.jenkins.library.docker.Registry
 import com.boxboat.jenkins.library.environment.BaseEnvironment
 import com.boxboat.jenkins.library.environment.Environment
 import com.boxboat.jenkins.library.event.EventRegistryKey
+import com.boxboat.jenkins.library.gcloud.GCloudAccount
+import com.boxboat.jenkins.library.gcloud.GCloudGKEDeployTarget
+import com.boxboat.jenkins.library.gcloud.GCloudRegistry
 import com.boxboat.jenkins.library.git.GitConfig
+import com.boxboat.jenkins.library.notify.SlackJenkinsAppNotifyTarget
 import com.boxboat.jenkins.library.notify.SlackWebHookNotifyTarget
 import com.boxboat.jenkins.library.promote.Promotion
+import com.boxboat.jenkins.library.vault.Vault
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
@@ -58,6 +61,13 @@ class GlobalConfigTest {
         return [[
                         "test.yaml",
                         new GlobalConfig(
+                                awsProfileMap: [
+                                        "default": new AwsProfile(
+                                                region: "us-east-1",
+                                                accessKeyIdCredential: "aws-access-key-id",
+                                                secretAccessKeyCredential: "aws-secret-access-key",
+                                        ),
+                                ],
                                 deployTargetMap: [
                                         "dev01" : new KubernetesDeployTarget(
                                                 contextName: "boxboat",
@@ -71,7 +81,13 @@ class GlobalConfigTest {
                                                 contextName: "boxboat",
                                                 credential: "kubeconfig-prod-02",
                                         ),
-                                ],
+                                        "gke01" : new GCloudGKEDeployTarget(
+                                                gCloudAccountKey: "default",
+                                                name: "kube-cluster-name",
+                                                project: "gcloud-project",
+                                                zone: "us-central1-a"
+                                        ),
+                                ] as Map<String, IDeployTarget>,
                                 environmentMap: [
                                         "dev" : new Environment(
                                                 name: "dev",
@@ -81,11 +97,17 @@ class GlobalConfigTest {
                                                 name: "prod-a",
                                                 deployTargetKey: "prod01",
                                                 replicaEnvironments: [
-                                                     new BaseEnvironment(
-                                                         name: "prod-b",
-                                                         deployTargetKey: "prod02"
-                                                     )
+                                                        new BaseEnvironment(
+                                                                name: "prod-b",
+                                                                deployTargetKey: "prod02"
+                                                        )
                                                 ]
+                                        ),
+                                ],
+                                gCloudAccountMap: [
+                                        "default": new GCloudAccount(
+                                                account: "service-account@gcloud-project.iam.gserviceaccount.com",
+                                                keyFileCredential: "gcloud-key-file-credential",
                                         ),
                                 ],
                                 git: new GitConfig(
@@ -109,6 +131,12 @@ class GlobalConfigTest {
                                                 credential: "registry",
                                                 imageUrlReplace: "https://dtr.boxboat.com/repositories/{{ path }}/{{ tag }}/linux/amd64/layers",
                                         ),
+                                        "gcr"    : new GCloudRegistry(
+                                                scheme: "https",
+                                                host: "gcr.io",
+                                                namespace: "gcloud-project",
+                                                gCloudAccountKey: "default",
+                                        )
                                 ],
                                 vaultMap: [
                                         "default": new Vault(
@@ -117,13 +145,6 @@ class GlobalConfigTest {
                                                 secretIdCredential: "vault-secret-id",
                                                 tokenCredential: "vault-token",
                                                 url: "http://localhost:8200",
-                                        ),
-                                ],
-                                awsProfileMap: [
-                                        "default": new AwsProfile(
-                                                region: "us-east-1",
-                                                accessKeyIdCredential: "aws-access-key-id",
-                                                secretAccessKeyCredential: "aws-secret-access-key",
                                         ),
                                 ],
                                 repo: [

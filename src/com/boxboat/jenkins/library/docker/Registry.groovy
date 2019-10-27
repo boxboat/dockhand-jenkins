@@ -9,6 +9,8 @@ class Registry extends BaseConfig<Registry> implements Serializable {
 
     String host
 
+    String namespace
+
     String credential
 
     String imageUrlReplace

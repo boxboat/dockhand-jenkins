@@ -7,6 +7,7 @@ All keys from the [Common Config](common.md) are valid in addition to the keys d
 Map of deployment targets.  Supported deployment target types are:
 
 - `com.boxboat.jenkins.library.deployTarget.KubernetesDeployTarget`
+- `com.boxboat.jenkins.library.gcloud.GCloudGKEDeployTarget`
 
 ```yaml
 deployTargetMap:
@@ -14,7 +15,18 @@ deployTargetMap:
     # kubernetes context to use
     contextName: boxboat
     # credential ID with kube config
-    credential: kubeconfig-dev 
+    credential: kubeconfig-dev
+  gke: !!com.boxboat.jenkins.library.gcloud.GCloudGKEDeployTarget
+    # gCloudAccountMap key to reference
+    gCloudAccountKey: default
+    # GKE cluster name
+    name: kube-cluster-name
+    # Google Cloud project name
+    project: gcloud-project
+    # specify either region or zone, not both; use region for regional clusters
+    region: us-central1
+    # specify either region or zone, not both; use zone for zonal clusters
+    zone: us-central1-a
 ```
 
 ## environmentMap
@@ -26,6 +38,19 @@ environmentMap:
   dev:
     # deployTargetMap key to reference
     deployTargetKey: dev01
+```
+
+## gCloudAccountMap
+
+Map of Google Cloud accounts for use with `GCloudGKEDeployTarget` and `GCloudRegistry`
+
+```yaml
+gCloudAccountMap:
+  default:
+    # name of the service account
+    account: service-account@gcloud-project.iam.gserviceaccount.com
+    # secret file credential with the service account JSON key
+    keyFileCredential: gcloud-key-file-credential
 ```
 
 ## git
@@ -78,7 +103,12 @@ notifyTargetMap:
 
 ## registryMap
 
-Map of Docker registries.
+Map of Docker registries.  Supported registry types are:
+
+Supported deployment target types are:
+
+- `com.boxboat.jenkins.library.docker.Registry` (the default)
+- `com.boxboat.jenkins.library.gcloud.GCloudRegistry`
 
 ```yaml
 registryMap:
@@ -90,6 +120,13 @@ registryMap:
     # {{ path }} is replaced with the image path
     # {{ tag }} is replaced with the image tag
     imageUrlReplace: https://dtr.boxboat.com/repositories/{{ path }}/{{ tag }}/linux/amd64/layers
+  gcr: !!com.boxboat.jenkins.library.gcloud.GCloudRegistry
+    scheme: https
+    host: gcr.io
+    # Google Cloud project
+    namespace: gcloud-project
+    # gCloudAccountMap key to reference
+    gCloudAccountKey: default
 ```
 
 ## vaultMap

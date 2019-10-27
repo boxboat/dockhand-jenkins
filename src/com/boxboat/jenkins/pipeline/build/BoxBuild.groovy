@@ -81,6 +81,7 @@ class BoxBuild extends BoxBase<BuildConfig> implements Serializable {
                         tags.each { String tag ->
                             def newImage = image.copy()
                             newImage.host = registry.host
+                            newImage.namespace = registry.namespace
                             newImage.tag = tag
                             image.reTag(newImage)
                             newImage.push()

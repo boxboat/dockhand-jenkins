@@ -1,5 +1,6 @@
 package com.boxboat.jenkins.library.docker
 
+import com.boxboat.jenkins.library.Utils
 import com.boxboat.jenkins.library.config.BaseConfig
 import com.boxboat.jenkins.library.config.Config
 
@@ -13,12 +14,13 @@ class Image extends BaseConfig<Image> implements Serializable {
 
     String host
 
+    String namespace
+
     String path
 
     String tag
 
     Boolean trigger
-
 
     Image(Map<String, Object> config = [:]) {
         config.keySet().toList().each { k ->
@@ -48,11 +50,13 @@ class Image extends BaseConfig<Image> implements Serializable {
     }
 
     String getUrl() {
-        return (host ? "${host}/" : "") + "${path}:${tag ?: "latest"}"
+        return (host ? "${Utils.trimSlash(host)}/" : "") +
+                (namespace ? "${Utils.trimSlash(namespace)}/" : "") +
+                "${path}:${tag ?: "latest"}"
     }
 
     Image copy() {
-        return new Image(host: host, path: path, tag: tag)
+        return new Image(host: host, namespace: namespace, path: path, tag: tag)
     }
 
     Image reTag(Image newImage) {
