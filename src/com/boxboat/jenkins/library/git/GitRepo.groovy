@@ -10,6 +10,12 @@ class GitRepo implements Serializable {
 
     private shortHashLength = 12
 
+    static List<String> remoteBranches(String gitRemoteUrl) {
+        return Utils.resultOrTest(Config.pipeline.sh(returnStdout: true, script: """
+            git ls-remote --heads "${gitRemoteUrl}" | sed 's|.*refs/heads/\\(.*\\)|\\1|g'
+        """)?.trim()?.split('\n')?.findAll { it -> !it.isEmpty() }, ["master", "develop"])
+    }
+
     String getHash() {
         return Utils.resultOrTest(Config.pipeline.sh(returnStdout: true, script: """
             cd "${this.dir}"

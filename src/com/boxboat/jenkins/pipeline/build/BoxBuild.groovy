@@ -94,9 +94,11 @@ class BoxBuild extends BoxBase<BuildConfig> implements Serializable {
             if (isBranchTip) {
                 Config.pipeline.echo "isBranchTip: ${event}"
                 emitEvents.add(event)
-                def buildVersions = this.getBuildVersions()
+                def buildVersions = Config.getBuildVersions()
+                def repoPath = this.gitRepo.getRemotePath()
                 config.images.each { image ->
                     buildVersions.setEventImageVersion(event, image, buildTag)
+                    buildVersions.setImageRepoPath(image, repoPath)
                 }
                 buildVersions.save()
             }
@@ -104,7 +106,7 @@ class BoxBuild extends BoxBase<BuildConfig> implements Serializable {
 
     }
 
-    def summary(){
+    def summary() {
         String triggeredBuilds = ""
 
 

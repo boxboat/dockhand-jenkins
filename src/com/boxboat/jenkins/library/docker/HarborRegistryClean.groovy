@@ -18,11 +18,11 @@ class HarborRegistryClean implements Serializable {
         return requestPaginated(registry, "/projects", projectPageSize)
     }
 
-    List<Map<String, Object>>  requestRepositories(Registry registry, String projectId) {
-        return requestPaginated(registry, "/repositories", repositoryPageSize,  ["project_id": projectId])
+    List<Map<String, Object>> requestRepositories(Registry registry, String projectId) {
+        return requestPaginated(registry, "/repositories", repositoryPageSize, ["project_id": projectId])
     }
 
-    List<Map<String, Object>>  readRepositories(Registry registry) {
+    List<Map<String, Object>> readRepositories(Registry registry) {
 
         def projects = requestProjects(registry)
 
@@ -36,34 +36,34 @@ class HarborRegistryClean implements Serializable {
         }
 
         return Utils.resultOrTest(repositories,
-            [
                 [
-                    "id" : "1",
-                    "project_id" : "1",
-                    "name" : "test1",
-                    "description" : "",
-                    "creation_time" : "2019-01-01T16:00:00Z",
-                    "update_time" : "2019-01-01T16:00:00Z",
-                    "labels" : [],
-                    "tags_count" : "1",
-                    "star_count" : "0",
-                ],
-                [
-                    "id" : "2",
-                    "project_id" : "2",
-                    "name" : "test2",
-                    "description" : "",
-                    "creation_time" : "2019-01-01T16:00:00Z",
-                    "update_time" : "2019-01-01T16:00:00Z",
-                    "labels" : [],
-                    "tags_count" : "1",
-                    "star_count" : "0",
-                ],
-            ]
+                        [
+                                "id"           : "1",
+                                "project_id"   : "1",
+                                "name"         : "test1",
+                                "description"  : "",
+                                "creation_time": "2019-01-01T16:00:00Z",
+                                "update_time"  : "2019-01-01T16:00:00Z",
+                                "labels"       : [],
+                                "tags_count"   : "1",
+                                "star_count"   : "0",
+                        ],
+                        [
+                                "id"           : "2",
+                                "project_id"   : "2",
+                                "name"         : "test2",
+                                "description"  : "",
+                                "creation_time": "2019-01-01T16:00:00Z",
+                                "update_time"  : "2019-01-01T16:00:00Z",
+                                "labels"       : [],
+                                "tags_count"   : "1",
+                                "star_count"   : "0",
+                        ],
+                ]
         )
     }
 
-    List<Object> readRepositoryTags(Registry registry, String name) {
+    List<Map<String, Object>> readRepositoryTags(Registry registry, String name) {
         def requestURI = registry.getRegistryUrl() + registryAPIBase + "/repositories/${name}/tags"
         def result = Config.pipeline.httpRequest(
                 url: requestURI,
@@ -76,199 +76,199 @@ class HarborRegistryClean implements Serializable {
             tags = Config.pipeline.readJSON(text: result.toString())
         }
         return Utils.resultOrTest(tags, [
-              [
-                "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-                "name": "build-aaaaaaaaaaaa",
-                "size": 232664445,
-                "architecture": "amd64",
-                "os": "linux",
-                "os.version": "",
-                "docker_version": "18.06.1-ce",
-                "author": "",
-                "created": "2019-09-09T19:41:11.917513133Z",
-                "config": [
-                  "labels": []
+                [
+                        "digest"        : "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                        "name"          : "build-aaaaaaaaaaaa",
+                        "size"          : 232664445,
+                        "architecture"  : "amd64",
+                        "os"            : "linux",
+                        "os.version"    : "",
+                        "docker_version": "18.06.1-ce",
+                        "author"        : "",
+                        "created"       : "2019-09-09T19:41:11.917513133Z",
+                        "config"        : [
+                                "labels": []
+                        ],
+                        "signature"     : null,
+                        "scan_overview" : [
+                                "image_digest" : "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                                "scan_status"  : "finished",
+                                "job_id"       : 407,
+                                "severity"     : 5,
+                                "components"   : [
+                                        "total"  : 111,
+                                        "summary": [
+                                                [
+                                                        "severity": 1,
+                                                        "count"   : 76
+                                                ],
+                                                [
+                                                        "severity": 5,
+                                                        "count"   : 12
+                                                ],
+                                                [
+                                                        "severity": 4,
+                                                        "count"   : 17
+                                                ],
+                                                [
+                                                        "severity": 3,
+                                                        "count"   : 6
+                                                ]
+                                        ]
+                                ],
+                                "details_key"  : "9250d0e8bf02011810a2fcc85ee87567fde1e0f09fe3548a138ee20e9196a034",
+                                "creation_time": "2019-09-10T00:00:02.706191Z",
+                                "update_time"  : "2019-10-02T00:00:04.812058Z"
+                        ],
+                        "labels"        : [],
+                        "push_time"     : "2019-09-20T12:25:36.423777Z",
+                        "pull_time"     : "0001-01-01T00:00:00Z"
                 ],
-                "signature": null,
-                "scan_overview": [
-                  "image_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-                  "scan_status": "finished",
-                  "job_id": 407,
-                  "severity": 5,
-                  "components": [
-                    "total": 111,
-                    "summary": [
-                      [
-                        "severity": 1,
-                        "count": 76
-                      ],
-                      [
-                        "severity": 5,
-                        "count": 12
-                      ],
-                      [
-                        "severity": 4,
-                        "count": 17
-                      ],
-                      [
-                        "severity": 3,
-                        "count": 6
-                      ]
-                    ]
-                  ],
-                  "details_key": "9250d0e8bf02011810a2fcc85ee87567fde1e0f09fe3548a138ee20e9196a034",
-                  "creation_time": "2019-09-10T00:00:02.706191Z",
-                  "update_time": "2019-10-02T00:00:04.812058Z"
+                [
+                        "digest"        : "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                        "name"          : "commit-test",
+                        "size"          : 232664445,
+                        "architecture"  : "amd64",
+                        "os"            : "linux",
+                        "os.version"    : "",
+                        "docker_version": "18.06.1-ce",
+                        "author"        : "",
+                        "created"       : "2019-09-09T19:41:11.917513133Z",
+                        "config"        : [
+                                "labels": []
+                        ],
+                        "signature"     : null,
+                        "scan_overview" : [
+                                "image_digest" : "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                                "scan_status"  : "finished",
+                                "job_id"       : 407,
+                                "severity"     : 5,
+                                "components"   : [
+                                        "total"  : 111,
+                                        "summary": [
+                                                [
+                                                        "severity": 1,
+                                                        "count"   : 76
+                                                ],
+                                                [
+                                                        "severity": 5,
+                                                        "count"   : 12
+                                                ],
+                                                [
+                                                        "severity": 4,
+                                                        "count"   : 17
+                                                ],
+                                                [
+                                                        "severity": 3,
+                                                        "count"   : 6
+                                                ]
+                                        ]
+                                ],
+                                "details_key"  : "9250d0e8bf02011810a2fcc85ee87567fde1e0f09fe3548a138ee20e9196a034",
+                                "creation_time": "2019-09-10T00:00:02.706191Z",
+                                "update_time"  : "2019-10-02T00:00:04.812058Z"
+                        ],
+                        "labels"        : [],
+                        "push_time"     : "2019-09-20T12:25:36.423777Z",
+                        "pull_time"     : "0001-01-01T00:00:00Z"
                 ],
-                "labels": [],
-                "push_time": "2019-09-20T12:25:36.423777Z",
-                "pull_time": "0001-01-01T00:00:00Z"
-              ],
-              [
-                "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-                "name": "commit-test",
-                "size": 232664445,
-                "architecture": "amd64",
-                "os": "linux",
-                "os.version": "",
-                "docker_version": "18.06.1-ce",
-                "author": "",
-                "created": "2019-09-09T19:41:11.917513133Z",
-                "config": [
-                  "labels": []
+                [
+                        "digest"        : "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                        "name"          : "commit-bbbbbbbbbbbb",
+                        "size"          : 232664445,
+                        "architecture"  : "amd64",
+                        "os"            : "linux",
+                        "os.version"    : "",
+                        "docker_version": "18.06.1-ce",
+                        "author"        : "",
+                        "created"       : "2019-09-09T19:41:11.917513133Z",
+                        "config"        : [
+                                "labels": []
+                        ],
+                        "signature"     : null,
+                        "scan_overview" : [
+                                "image_digest" : "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                                "scan_status"  : "finished",
+                                "job_id"       : 407,
+                                "severity"     : 5,
+                                "components"   : [
+                                        "total"  : 111,
+                                        "summary": [
+                                                [
+                                                        "severity": 1,
+                                                        "count"   : 76
+                                                ],
+                                                [
+                                                        "severity": 5,
+                                                        "count"   : 12
+                                                ],
+                                                [
+                                                        "severity": 4,
+                                                        "count"   : 17
+                                                ],
+                                                [
+                                                        "severity": 3,
+                                                        "count"   : 6
+                                                ]
+                                        ]
+                                ],
+                                "details_key"  : "9250d0e8bf02011810a2fcc85ee87567fde1e0f09fe3548a138ee20e9196a034",
+                                "creation_time": "2019-09-10T00:00:02.706191Z",
+                                "update_time"  : "2019-10-02T00:00:04.812058Z"
+                        ],
+                        "labels"        : [],
+                        "push_time"     : "2019-09-20T12:25:36.423777Z",
+                        "pull_time"     : "0001-01-01T00:00:00Z"
                 ],
-                "signature": null,
-                "scan_overview": [
-                  "image_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-                  "scan_status": "finished",
-                  "job_id": 407,
-                  "severity": 5,
-                  "components": [
-                    "total": 111,
-                    "summary": [
-                      [
-                        "severity": 1,
-                        "count": 76
-                      ],
-                      [
-                        "severity": 5,
-                        "count": 12
-                      ],
-                      [
-                        "severity": 4,
-                        "count": 17
-                      ],
-                      [
-                        "severity": 3,
-                        "count": 6
-                      ]
-                    ]
-                  ],
-                  "details_key": "9250d0e8bf02011810a2fcc85ee87567fde1e0f09fe3548a138ee20e9196a034",
-                  "creation_time": "2019-09-10T00:00:02.706191Z",
-                  "update_time": "2019-10-02T00:00:04.812058Z"
-                ],
-                "labels": [],
-                "push_time": "2019-09-20T12:25:36.423777Z",
-                "pull_time": "0001-01-01T00:00:00Z"
-              ],
-              [
-                "digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
-                "name": "commit-bbbbbbbbbbbb",
-                "size": 232664445,
-                "architecture": "amd64",
-                "os": "linux",
-                "os.version": "",
-                "docker_version": "18.06.1-ce",
-                "author": "",
-                "created": "2019-09-09T19:41:11.917513133Z",
-                "config": [
-                  "labels": []
-                ],
-                "signature": null,
-                "scan_overview": [
-                  "image_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
-                  "scan_status": "finished",
-                  "job_id": 407,
-                  "severity": 5,
-                  "components": [
-                    "total": 111,
-                    "summary": [
-                      [
-                        "severity": 1,
-                        "count": 76
-                      ],
-                      [
-                        "severity": 5,
-                        "count": 12
-                      ],
-                      [
-                        "severity": 4,
-                        "count": 17
-                      ],
-                      [
-                        "severity": 3,
-                        "count": 6
-                      ]
-                    ]
-                  ],
-                  "details_key": "9250d0e8bf02011810a2fcc85ee87567fde1e0f09fe3548a138ee20e9196a034",
-                  "creation_time": "2019-09-10T00:00:02.706191Z",
-                  "update_time": "2019-10-02T00:00:04.812058Z"
-                ],
-                "labels": [],
-                "push_time": "2019-09-20T12:25:36.423777Z",
-                "pull_time": "0001-01-01T00:00:00Z"
-              ],
-              [
-                "digest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
-                "name": "commit-cccccccccccc",
-                "size": 232664445,
-                "architecture": "amd64",
-                "os": "linux",
-                "os.version": "",
-                "docker_version": "18.06.1-ce",
-                "author": "",
-                "created": "2019-09-09T19:41:11.917513133Z",
-                "config": [
-                  "labels": []
-                ],
-                "signature": null,
-                "scan_overview": [
-                  "image_digest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
-                  "scan_status": "finished",
-                  "job_id": 407,
-                  "severity": 5,
-                  "components": [
-                    "total": 111,
-                    "summary": [
-                      [
-                        "severity": 1,
-                        "count": 76
-                      ],
-                      [
-                        "severity": 5,
-                        "count": 12
-                      ],
-                      [
-                        "severity": 4,
-                        "count": 17
-                      ],
-                      [
-                        "severity": 3,
-                        "count": 6
-                      ]
-                    ]
-                  ],
-                  "details_key": "9250d0e8bf02011810a2fcc85ee87567fde1e0f09fe3548a138ee20e9196a034",
-                  "creation_time": "2019-09-10T00:00:02.706191Z",
-                  "update_time": "2019-10-02T00:00:04.812058Z"
-                ],
-                "labels": [],
-                "push_time": "2019-09-20T12:25:36.423777Z",
-                "pull_time": "0001-01-01T00:00:00Z"
-              ]
-            ])
+                [
+                        "digest"        : "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+                        "name"          : "commit-cccccccccccc",
+                        "size"          : 232664445,
+                        "architecture"  : "amd64",
+                        "os"            : "linux",
+                        "os.version"    : "",
+                        "docker_version": "18.06.1-ce",
+                        "author"        : "",
+                        "created"       : "2019-09-09T19:41:11.917513133Z",
+                        "config"        : [
+                                "labels": []
+                        ],
+                        "signature"     : null,
+                        "scan_overview" : [
+                                "image_digest" : "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+                                "scan_status"  : "finished",
+                                "job_id"       : 407,
+                                "severity"     : 5,
+                                "components"   : [
+                                        "total"  : 111,
+                                        "summary": [
+                                                [
+                                                        "severity": 1,
+                                                        "count"   : 76
+                                                ],
+                                                [
+                                                        "severity": 5,
+                                                        "count"   : 12
+                                                ],
+                                                [
+                                                        "severity": 4,
+                                                        "count"   : 17
+                                                ],
+                                                [
+                                                        "severity": 3,
+                                                        "count"   : 6
+                                                ]
+                                        ]
+                                ],
+                                "details_key"  : "9250d0e8bf02011810a2fcc85ee87567fde1e0f09fe3548a138ee20e9196a034",
+                                "creation_time": "2019-09-10T00:00:02.706191Z",
+                                "update_time"  : "2019-10-02T00:00:04.812058Z"
+                        ],
+                        "labels"        : [],
+                        "push_time"     : "2019-09-20T12:25:36.423777Z",
+                        "pull_time"     : "0001-01-01T00:00:00Z"
+                ]
+        ])
     }
 
     int deleteTag(Registry registry, String name, String tag) {
@@ -309,9 +309,9 @@ class HarborRegistryClean implements Serializable {
 
                 Config.pipeline.echo "Reading ${name}"
 
-                def registryRepositoryTags =readRepositoryTags(registry, name)
+                def registryRepositoryTags = readRepositoryTags(registry, name)
 
-                def imageManifests = new ImageManifests()
+                def imageManifests = new ImageManifests(new Image(path: name))
                 registryRepositoryTags.each { registryRepositoryTag ->
                     imageManifests.addHarborManifest(registryRepositoryTag)
                 }
@@ -329,17 +329,17 @@ class HarborRegistryClean implements Serializable {
             Map<String, String> query = [:]) {
 
         def requestURL = registry.getRegistryUrl() + registryAPIBase + path
-        query["page_size"] =  pageSize.toString()
+        query["page_size"] = pageSize.toString()
 
         def result = []
         def pResultCount = pageSize
 
-        for(def page = 1; pResultCount == pageSize; page++) {
+        for (def page = 1; pResultCount == pageSize; page++) {
             def paginatedQuery = query.clone()
             paginatedQuery["page"] = page.toString()
 
             def pResponse = Config.pipeline.httpRequest(
-                    url: requestURL + "?" + paginatedQuery.collect{ k,v -> "$k=$v" }.join('&'),
+                    url: requestURL + "?" + paginatedQuery.collect { k, v -> "$k=$v" }.join('&'),
                     authentication: registry.credential,
                     httpMode: 'GET',
                     contentType: "APPLICATION_JSON"

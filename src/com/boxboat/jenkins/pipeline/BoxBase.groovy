@@ -6,13 +6,12 @@ import com.boxboat.jenkins.library.config.CommonConfigBase
 import com.boxboat.jenkins.library.config.Config
 import com.boxboat.jenkins.library.config.GlobalConfig
 import com.boxboat.jenkins.library.config.RepoConfig
-import com.boxboat.jenkins.library.git.GitAccount
+import com.boxboat.jenkins.library.docker.Image
+import com.boxboat.jenkins.library.docker.Registry
 import com.boxboat.jenkins.library.git.GitRepo
 import com.boxboat.jenkins.library.notify.INotifyTarget
 import com.boxboat.jenkins.library.notify.NotifyType
 import com.boxboat.jenkins.library.trigger.Trigger
-import com.boxboat.jenkins.library.docker.Image
-import com.boxboat.jenkins.library.docker.Registry
 import com.cloudbees.groovy.cps.NonCPS
 
 import java.lang.reflect.Modifier
@@ -36,9 +35,7 @@ abstract class BoxBase<T extends CommonConfigBase> implements Serializable {
     public String pipelineSummaryMessage = "Build Succeeded"
 
     protected String failureSummary
-    protected GitBuildVersions _buildVersions
     protected initialConfig
-    protected GitAccount gitAccount = new GitAccount()
     protected GitRepo gitRepo
     protected emitEvents = []
     protected emitBuilds = []
@@ -151,7 +148,7 @@ abstract class BoxBase<T extends CommonConfigBase> implements Serializable {
         }
 
         // update from Git
-        gitRepo = gitAccount.checkoutScm()
+        gitRepo = Config.gitAccount.checkoutScm()
         if (overrideBranch) {
             Config.pipeline.echo "Changing Branch to '${overrideBranch}'"
             gitRepo.fetchAndCheckoutBranch(overrideBranch)
@@ -251,7 +248,7 @@ abstract class BoxBase<T extends CommonConfigBase> implements Serializable {
 
     def writeTriggers() {
         if (gitRepo.branch == config.defaultBranch && gitRepo.isBranchTip()) {
-            def buildVersions = this.getBuildVersions()
+            def buildVersions = Config.getBuildVersions()
             String job = Config.pipeline.env.JOB_NAME
             def triggers = Trigger.merge(this.triggers())
             if (triggers) {
@@ -265,7 +262,7 @@ abstract class BoxBase<T extends CommonConfigBase> implements Serializable {
 
     def runTriggers() {
         if (emitEvents) {
-            def buildVersions = this.getBuildVersions()
+            def buildVersions = Config.getBuildVersions()
             def triggers = buildVersions.getAllJobTriggers()
             def matchingTriggers = Trigger.matches(emitEvents, config.images, triggers)
             matchingTriggers.each { trigger ->
@@ -285,14 +282,6 @@ abstract class BoxBase<T extends CommonConfigBase> implements Serializable {
 
     protected List<Trigger> triggers() {
         return []
-    }
-
-    def getBuildVersions() {
-        if (!_buildVersions) {
-            _buildVersions = new GitBuildVersions()
-            _buildVersions.checkout(gitAccount)
-        }
-        return _buildVersions
     }
 
     def success() {

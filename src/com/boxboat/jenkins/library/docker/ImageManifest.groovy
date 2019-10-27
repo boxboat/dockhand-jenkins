@@ -18,7 +18,11 @@ class ImageManifest implements Serializable {
         return (now - imageAge) / secsToDays
     }
 
-    boolean isCommitHash() {
+    boolean isCommitHashTag() {
         return tag.matches(/(?i)^build-[0-9a-f]{12}$/)
+    }
+
+    boolean isBranchTag() {
+        return tag.startsWith("commit-")
     }
 }

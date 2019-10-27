@@ -82,7 +82,7 @@ class BoxPromote extends BoxBase<PromoteConfig> implements Serializable {
     def promote() {
         def tagType = promotion.promoteToEvent.substring("tag/".length())
 
-        def buildVersions = this.getBuildVersions()
+        def buildVersions = Config.getBuildVersions()
 
         String gitCommitToTag
         String gitTagToTag
@@ -214,7 +214,7 @@ class BoxPromote extends BoxBase<PromoteConfig> implements Serializable {
 
             if (!config.gitTagDisable && (gitCommitToTag || gitTagToTag)) {
                 // resetting will remove build-versions
-                _buildVersions = null
+                Config.resetBuildVersions()
                 if (gitCommitToTag) {
                     gitRepo.fetchAndCheckoutCommit(gitCommitToTag)
                 } else if (gitTagToTag) {
