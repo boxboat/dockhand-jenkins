@@ -54,12 +54,14 @@ class GitBuildVersions implements Serializable {
 
         def dir = "${gitRepo.dir}/image-versions/${event}"
         def path = "${dir}/${Utils.alphaNumericDashLower(image.path)}.txt"
-        def key = "image_tag_${Utils.alphaNumericUnderscoreLower(image.path)}"
+        def tag_key = "image_tag_${Utils.alphaNumericUnderscoreLower(image.path)}"
+        def info_key = "image_info_${Utils.alphaNumericUnderscoreLower(image.path)}"
         def divider = format == "yaml" ? ": " : "="
         def rc = Config.pipeline.sh(returnStatus: true, script: """
             if [ -f "${path}" ]; then
                 version=\$(cat "$path")
-                echo "${key}${divider}\\"\$version\\"" >> "$outFile"
+                echo "${tag_key}${divider}\\"\$version\\"" >> "$outFile"
+                echo "${info_key}${divider}\\"${event}\\"" >> "$outFile"
                 exit 0
             fi
             exit 1
@@ -73,9 +75,11 @@ class GitBuildVersions implements Serializable {
         }
 
         def key = "image_tag_${Utils.alphaNumericUnderscoreLower(image.path)}"
+        def info_key = "image_info_${Utils.alphaNumericUnderscoreLower(image.path)}"
         def divider = format == "yaml" ? ": " : "="
         Config.pipeline.sh """
             echo "${key}${divider}\\"${version}\\"" >> "$outFile"
+            echo "${info_key}${divider}\\"${version}\\"" >> "$outFile"
         """
     }
 
