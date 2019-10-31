@@ -3,6 +3,12 @@ awsProfileMap:
     region: us-east-1
     accessKeyIdCredential: aws-access-key-id
     secretAccessKeyCredential: aws-secret-access-key
+azureProfileMap:
+  default:
+    keyVaultName: your-keyvault-name
+    tenantIdCredential: azure-tenant-id
+    clientIdCredential: azure-client-id
+    clientSecretKeyCredential: azure-client-secret-key
 deployTargetMap:
   dev01: !!com.boxboat.jenkins.library.deployTarget.KubernetesDeployTarget
     contextName: boxboat
@@ -61,6 +67,7 @@ vaultMap:
     secretIdCredential: vault-secret-id
     tokenCredential: vault-token
     url: http://localhost:8200
+
 repo:
   common:
     defaultBranch: master

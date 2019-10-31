@@ -1,6 +1,12 @@
 package com.boxboat.jenkins.test.library.config
 
 import com.boxboat.jenkins.library.aws.AwsProfile
+<<<<<<< HEAD
+=======
+import com.boxboat.jenkins.library.azure.AzureProfile
+import com.boxboat.jenkins.library.notify.SlackJenkinsAppNotifyTarget
+import com.boxboat.jenkins.library.vault.Vault
+>>>>>>> #23 Add support for Azure Key Vault
 import com.boxboat.jenkins.library.config.CommonConfig
 import com.boxboat.jenkins.library.config.DeployConfig
 import com.boxboat.jenkins.library.config.GlobalConfig
@@ -66,6 +72,14 @@ class GlobalConfigTest {
                                                 region: "us-east-1",
                                                 accessKeyIdCredential: "aws-access-key-id",
                                                 secretAccessKeyCredential: "aws-secret-access-key",
+                                        ),
+                                ],
+                                azureProfileMap: [
+                                        "default": new AzureProfile(
+                                                keyVaultName: "vault-name",
+                                                tenantIdCredential: "tenant-id",
+                                                clientIdCredential: "azure-client-id",
+                                                clientSecretKeyCredential: "azure-client-secret-key",
                                         ),
                                 ],
                                 deployTargetMap: [
