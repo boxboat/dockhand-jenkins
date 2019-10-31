@@ -1,5 +1,6 @@
 package com.boxboat.jenkins.pipeline.deploy.kubernetes
 
+import com.boxboat.jenkins.library.Utils
 import com.boxboat.jenkins.library.config.Config
 
 class HelmDeploy implements Serializable {
@@ -10,19 +11,59 @@ class HelmDeploy implements Serializable {
 
     public String name
 
+    public String namespace
+
     Map<String, Object> options = [:]
 
+    private int _majorVersion = 0
+
+    public int majorVersion() {
+        if (_majorVersion == 0) {
+            _majorVersion = Utils.resultOrTest(Config.pipeline.sh(returnStdout: true, script: """
+                if ! version=\$(helm version --client --short 2>/dev/null); then
+                    version=\$(helm version --short)
+                fi
+                echo "\$version" | grep -oE '[0-9]+' | head -n 1
+            """)?.trim()?.toInteger(), 3) as int
+        }
+        return _majorVersion
+    }
+
+    public testMajorVersion(int version) {
+        _majorVersion = version
+    }
+
     /**
-     * Delete helm deployment
+     * Delete/Uninstall helm deployment
      */
-    public delete() {
+    public delete(Map<String, Object> deleteOptions = [:]) {
         Config.pipeline.sh deleteScript()
     }
 
-    public deleteScript() {
+    public deleteScript(Map<String, Object> deleteOptions = [:]) {
+        def combinedOptions = combineOptions(deleteOptions, [:])
+        def command = ""
+        Map<String, Object> additionalOptions = [:]
+        if (majorVersion() <= 2) {
+            command = "delete"
+            combinedOptions["purge"] = true
+        } else {
+            command = "uninstall"
+            if (namespace) {
+                combinedOptions["namespace"] = namespace
+            }
+        }
         return """
-            helm delete "${name}" --purge
+            helm ${command} ${optionsString(combinedOptions)} "${name}"
         """
+    }
+
+    public uninstall(Map<String, Object> uninstallOptions = [:]) {
+        delete(uninstallOptions)
+    }
+
+    public uninstallScript(Map<String, Object> uninstallOptions = [:]) {
+        deleteScript(uninstallOptions)
     }
 
     /**
@@ -47,11 +88,19 @@ class HelmDeploy implements Serializable {
 
     public installScript(Map<String, Object> additionalOptions = [:]) {
         def combinedOptions = combineOptions(options, additionalOptions)
-        combinedOptions["name"] = [name]
+        if (namespace) {
+            combinedOptions["namespace"] = namespace
+        }
+        def namePositional = ""
+        if (majorVersion() <= 2) {
+            combinedOptions["name"] = name
+        } else {
+            namePositional = "\"${name}\""
+        }
         return """
             helm_current_dir=\$(pwd)
             cd "${directory}"
-            helm install ${optionsString(combinedOptions)} "${chart}"
+            helm install ${optionsString(combinedOptions)} ${namePositional} "${chart}"
             cd "\$helm_current_dir"
         """
     }
@@ -62,6 +111,9 @@ class HelmDeploy implements Serializable {
 
     public upgradeScript(Map<String, Object> additionalOptions = [:]) {
         def combinedOptions = combineOptions(options, additionalOptions)
+        if (namespace) {
+            combinedOptions["namespace"] = namespace
+        }
         return """
             helm_current_dir=\$(pwd)
             cd "${directory}"
@@ -70,7 +122,7 @@ class HelmDeploy implements Serializable {
         """
     }
 
-    private static Map<String, List<String>> combineOptions(Map<String, Object> options1, Map<String, Object> options2) {
+    private static Map<String, Object> combineOptions(Map<String, Object> options1, Map<String, Object> options2) {
         Map<String, List<String>> combinedOptions = [:]
         def combineCl = { String k, v ->
             if (!(v instanceof List)) {
