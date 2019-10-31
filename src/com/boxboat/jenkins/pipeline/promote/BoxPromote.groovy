@@ -171,7 +171,7 @@ class BoxPromote extends BoxBase<PromoteConfig> implements Serializable {
                     }
 
                     imageSummary += "\n${image.path} promoted"
-                    imageSummary += "\n\tfrom ${formatImageSummary(promoteFromRegistry, image)}"
+                    imageSummary += "\n\tfrom ${formatImageSummary(image, promotion.event, promoteFromRegistry)}"
 
                     pushRegistries.each { pushRegistry ->
                         def newImageSemVer = image.copy()
@@ -187,8 +187,8 @@ class BoxPromote extends BoxBase<PromoteConfig> implements Serializable {
                             newImageRef.push()
                         }
 
-                        imageSummary += "\n\tto   ${formatImageSummary(pushRegistry, newImageSemVer)}"
-                        imageSummary += "\n\t     ${formatImageSummary(pushRegistry, newImageRef)}"
+                        imageSummary += "\n\tto   ${formatImageSummary(newImageSemVer, promotion.promoteToEvent, pushRegistry)}"
+                        imageSummary += "\n\t     ${formatImageSummary(newImageRef, promotion.promoteToEvent, pushRegistry)}"
                     }
                     buildVersions.setEventImageVersion(pushEvent, image, nextSemVer.toString())
                 }

@@ -188,7 +188,7 @@ class BoxDeploy extends BoxBase<DeployConfig> implements Serializable {
         Config.pipeline.sh """
             rm -f "${params.outFile}"
         """
-        imageSummary = "Images"
+        imageSummary = imageSummaryHeader()
         config.images.each { Image image ->
             def event = deployment.event
             def eventFallback = deployment.eventFallback
@@ -203,14 +203,14 @@ class BoxDeploy extends BoxBase<DeployConfig> implements Serializable {
             if (Utils.isImageTagEvent(event)) {
                 image.tag = Utils.imageTagFromEvent(event)
                 buildVersions.writeImageVersion(image.tag, image, params.outFile, params.format)
-                notifySuccessMessage += "\n${image.path} version: ${image.tag}"
-                imageSummary += "\n${image.path}:${image.tag}"
+                notifySuccessMessage += "\n${image.path} version: ${image.tag} event: ${event}"
+                imageSummary += "\n${formatImageSummary(image, event)}"
                 return
             } else if (buildVersions.writeEventImageVersion(event, image, params.outFile, params.format)) {
                 image.tag = buildVersions.getEventImageVersion(event, image)
-                notifySuccessMessage += "\n${image.path} version: ${image.tag}"
+                notifySuccessMessage += "\n${image.path} version: ${image.tag} event: ${event}"
                 config.getEventRegistries(event).each { registry ->
-                    imageSummary += "\n${formatImageSummary(registry, image)}"
+                    imageSummary += "\n${formatImageSummary(image, event, registry)}"
                 }
                 return
             }
@@ -219,14 +219,14 @@ class BoxDeploy extends BoxBase<DeployConfig> implements Serializable {
                 if (Utils.isImageTagEvent(eventFallback)) {
                     image.tag = Utils.imageTagFromEvent(eventFallback)
                     buildVersions.writeImageVersion(image.tag, image, params.outFile, params.format)
-                    notifySuccessMessage += "\n${image.path} version: ${image.tag}"
-                    imageSummary += "\n${image.path}:${image.tag}"
+                    notifySuccessMessage += "\n${image.path} version: ${image.tag} event: ${eventFallback}"
+                    imageSummary += "\n${formatImageSummary(image, eventFallback)}"
                     return
                 } else if (buildVersions.writeEventImageVersion(eventFallback, image, params.outFile, params.format)) {
                     image.tag = buildVersions.getEventImageVersion(eventFallback, image)
-                    notifySuccessMessage += "\n${image.path} version: ${image.tag}"
+                    notifySuccessMessage += "\n${image.path} version: ${image.tag} event: ${eventFallback}"
                     config.getEventRegistries(eventFallback).each { registry ->
-                        imageSummary += "\n${formatImageSummary(registry, image)}"
+                        imageSummary += "\n${formatImageSummary(image, eventFallback, registry)}"
                     }
                     return
                 }
