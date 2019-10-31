@@ -302,12 +302,15 @@ abstract class BoxBase<T extends CommonConfigBase> implements Serializable {
         }
     }
 
-    String formatImageSummary(Registry registry, Image image) {
-        String imageName = "${image.path}:${image.tag ?: "latest"}"
-        String url = registry.getRegistryImageUrl(image.path, image.tag)
-        imageName = String.format('%-60s', imageName)
+    static String imageSummaryHeader() {
+        return String.format('%-60s%-40s%s', "IMAGE", "EVENT", "LINK")
+    }
 
-        return "${imageName} ${url}"
+    String formatImageSummary(Image image, String event = null, Registry registry = null) {
+        def imageName = "${image.path}:${image.tag ?: "latest"}"
+        def eventName = event ?: ""
+        def url = registry ? registry.getRegistryImageUrl(image.path, image.tag) : ""
+        return String.format('%-60s%-40s%s', imageName, eventName, url)
     }
 
     def cleanup() {

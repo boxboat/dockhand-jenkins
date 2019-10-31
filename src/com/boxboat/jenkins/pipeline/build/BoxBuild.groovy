@@ -74,7 +74,7 @@ class BoxBuild extends BoxBase<BuildConfig> implements Serializable {
                 tags.add(eventTag)
             }
 
-            imageSummary = "Images"
+            imageSummary = imageSummaryHeader()
             registries.each { registry ->
                 registry.withCredentials() {
                     config.images.each { Image image ->
@@ -85,7 +85,7 @@ class BoxBuild extends BoxBase<BuildConfig> implements Serializable {
                             newImage.tag = tag
                             image.reTag(newImage)
                             newImage.push()
-                            imageSummary += "\n${formatImageSummary(registry, newImage)}"
+                            imageSummary += "\n${formatImageSummary(newImage, event, registry)}"
                         }
                     }
                 }
