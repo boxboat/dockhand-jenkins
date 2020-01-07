@@ -47,6 +47,7 @@ class RepoConfigTest {
                         "test.yaml",
                         new RepoConfig(
                                 common: new CommonConfig(
+                                        buildKit: true,
                                         images: [
                                                 new Image("apps/app-1"),
                                                 new Image("apps/app-2"),

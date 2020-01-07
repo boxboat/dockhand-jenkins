@@ -7,6 +7,8 @@ import com.boxboat.jenkins.library.notify.NotifyConfig
 
 class CommonConfigBase<T> extends BaseConfig<T> {
 
+    Boolean buildKit = false
+
     String defaultBranch
 
     List<EventRegistryKey> eventRegistryKeys

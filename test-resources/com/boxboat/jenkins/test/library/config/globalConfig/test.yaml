@@ -63,6 +63,7 @@ vaultMap:
     url: http://localhost:8200
 repo:
   common:
+    buildKit: true
     defaultBranch: master
     notify:
       targetMap:

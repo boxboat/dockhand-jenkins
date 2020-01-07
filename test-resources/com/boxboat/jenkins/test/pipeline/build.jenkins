@@ -8,6 +8,7 @@ def execute() {
         dir: "./test",
         globalConfigPath: "com/boxboat/jenkins/config.example.yaml",
         config: [
+            buildKit: true,
             composeProfileMap: [
                 "dev" : "./build/docker/dev/",
                 "prod": "./build/docker/prod/",

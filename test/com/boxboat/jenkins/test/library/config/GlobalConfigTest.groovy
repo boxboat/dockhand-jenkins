@@ -149,6 +149,7 @@ class GlobalConfigTest {
                                 ],
                                 repo: [
                                         common : new CommonConfig(
+                                                buildKit: true,
                                                 defaultBranch: "master",
                                                 notify: [
                                                         "targetMap"     : [
