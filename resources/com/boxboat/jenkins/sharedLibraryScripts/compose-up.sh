@@ -1,21 +1,29 @@
 #!/bin/bash
 
-dir="$1"
+path="$1"
 profile="$2"
 
+dir="$path"
+fileArgs=()
+if [ -f "$path" ]; then
+    dir=$(dirname $path)
+    base=$(basename $path)
+    fileArgs=("-f" "$base")
+fi
 cd "$dir"
+
 set -e
-docker-compose -p "${profile}" build
-docker-compose -p "${profile}" up -d --remove-orphans
+docker-compose "${fileArgs[@]}" -p "$profile" build
+docker-compose "${fileArgs[@]}" -p "$profile" up -d --remove-orphans
 set +e
 
-docker-compose -p "$profile" logs -f &
+docker-compose "${fileArgs[@]}" -p "$profile" logs -f &
 pid=$!
 
 for i in `seq 1 600`; do
     state="running"
-    container_status=$(docker-compose -p "$profile" ps -q | xargs docker inspect --format '{{ .State.Status }}')
-    container_health=$(docker-compose -p "$profile" ps -q | xargs docker inspect --format '{{ if .State.Health }}{{ .State.Health.Status }}{{ end }}')
+    container_status=$(docker-compose "${fileArgs[@]}" -p "$profile" ps -q | xargs docker inspect --format '{{ .State.Status }}')
+    container_health=$(docker-compose "${fileArgs[@]}" -p "$profile" ps -q | xargs docker inspect --format '{{ if .State.Health }}{{ .State.Health.Status }}{{ end }}')
     for status in $container_status; do
         if [ "$status" = "created" ]; then
             state="starting"
