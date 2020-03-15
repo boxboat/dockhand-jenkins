@@ -58,6 +58,9 @@ class GitAccount implements Serializable {
             rm -rf "${targetDir}"
             mkdir -p "${targetDir}"
             cd "${targetDir}"
+            if [ -z "\$GIT_SSH_COMMAND" ]; then
+                export GIT_SSH_COMMAND="ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
+            fi
             git clone ${depthStr} "${remoteUrl}" .
         """
 
