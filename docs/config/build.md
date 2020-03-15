@@ -2,13 +2,13 @@
 
 ## composeProfileMap
 
-Key is profile name, value is directory where `docker-compose.yaml` file is located
+Key is profile name, value is directory where `docker-compose.yaml` file is located or full path to docker-compose yaml file
 
 ```yaml
 build:
   composeProfileMap:
-    dev: ./docker/dev
-    prod: ./docker/prod
+    dev: ./docker/
+    prod: ./docker/docker-compose-prod.yaml
 ```
 
 ## pullImages
