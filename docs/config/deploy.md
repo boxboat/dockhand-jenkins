@@ -28,9 +28,11 @@ deploy:
 - `eventFallback`: fallback event to pull image tags from
 - `imageOverrides`: list of images to override for this deployment, see "imageOverrides" below for format
 - `trigger`: if `true`, deployment will be automatically triggered when a matching image `event` occurs
+- `triggerBranch`: when paired with `trigger: true`, overrides [defaultBranch](common.md#defaultbranch) as the deployment branch
 
 ```yaml
 deploy:
+  defaultBranch: develop
   deploymentMap:
     dev:
       environmentKey: dev
@@ -40,6 +42,7 @@ deploy:
       environmentKey: dev
       eventRegex: commit/feature-(.*)
       trigger: true
+      triggerBranch: feature
     stage:
       environmentKey: dev
       event: tag/rc

@@ -247,7 +247,7 @@ abstract class BoxBase<T extends CommonConfigBase> implements Serializable {
     }
 
     def writeTriggers() {
-        if (gitRepo.branch == config.defaultBranch && gitRepo.isBranchTip()) {
+        if (gitRepo.isBranchTip()) {
             def buildVersions = Config.getBuildVersions()
             String job = Config.pipeline.env.JOB_NAME
             def triggers = Trigger.merge(this.triggers())

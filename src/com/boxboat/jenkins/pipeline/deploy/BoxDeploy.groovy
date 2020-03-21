@@ -125,7 +125,8 @@ class BoxDeploy extends BoxBase<DeployConfig> implements Serializable {
         def triggers = []
         config.deploymentMap.keySet().toList().each { deploymentKey ->
             def deployment = config.deploymentMap[deploymentKey]
-            if (!deployment.trigger) {
+            def triggerBranch = deployment.triggerBranch ?: config.defaultBranch
+            if (!deployment.trigger || !triggerBranch || gitRepo.branch != triggerBranch) {
                 return
             }
             def params = [
