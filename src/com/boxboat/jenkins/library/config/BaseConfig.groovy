@@ -1,7 +1,9 @@
 package com.boxboat.jenkins.library.config
 
 import com.boxboat.jenkins.library.yaml.YamlUtils
-@Grab('org.apache.commons:commons-lang3:3.8.1')
+import org.apache.commons.lang.builder.ToStringBuilder
+import org.apache.commons.lang.builder.ToStringStyle
+@Grab('org.apache.commons:commons-lang3:3.9')
 import org.apache.commons.lang3.builder.EqualsBuilder
 
 import java.lang.reflect.Modifier
@@ -23,6 +25,7 @@ abstract class BaseConfig<T> implements Serializable, ICopyableConfig<T>, IMerge
             def type = property.type
             if (name != "class"
                     && !Modifier.isStatic(property.getModifiers())
+                    && !(this.respondsTo("get${name.capitalize()}") && !this.respondsTo("set${name.capitalize()}"))
                     && type != Object
                     && newT."$name" == null) {
                 switch (type) {
@@ -72,6 +75,7 @@ abstract class BaseConfig<T> implements Serializable, ICopyableConfig<T>, IMerge
                     && otherProperty.type == type
                     && name != "class"
                     && !Modifier.isStatic(property.getModifiers())
+                    && !(this.respondsTo("get${name.capitalize()}") && !this.respondsTo("set${name.capitalize()}"))
                     && other."$name" != null) {
                 switch (type) {
                     case IMergeableConfig:
@@ -98,13 +102,29 @@ abstract class BaseConfig<T> implements Serializable, ICopyableConfig<T>, IMerge
         def equalsBuilder = new EqualsBuilder()
         this.class.metaClass.properties.each { property ->
             def name = property.name
-            if (name != "class"
-                    && !Modifier.isStatic(property.getModifiers())) {
+            if (name == "class"
+                    || Modifier.isStatic(property.getModifiers())
+                    || (this.respondsTo("get${name.capitalize()}") && !this.respondsTo("set${name.capitalize()}"))) {
                 return
             }
-            equalsBuilder.append(m."${name}", o."${name}")
+            equalsBuilder.append(this."${name}", m."${name}")
         }
         return equalsBuilder.equals
+    }
+
+    @Override
+    String toString() {
+        def toStringBuilder = new ToStringBuilder(this, ToStringStyle.MULTI_LINE_STYLE)
+        this.class.metaClass.properties.each { property ->
+            def name = property.name
+            if (name == "class"
+                    || Modifier.isStatic(property.getModifiers())
+                    || (this.respondsTo("get${name.capitalize()}") && !this.respondsTo("set${name.capitalize()}"))) {
+                return
+            }
+            toStringBuilder.append(name, this."${name}")
+        }
+        return toStringBuilder.toString()
     }
 
 }

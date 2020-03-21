@@ -3,7 +3,7 @@ package com.boxboat.jenkins.library.trigger
 import com.boxboat.jenkins.library.config.BaseConfig
 import com.boxboat.jenkins.library.docker.Image
 import org.apache.commons.lang.builder.HashCodeBuilder
-@Grab('org.apache.commons:commons-lang3:3.8.1')
+@Grab('org.apache.commons:commons-lang3:3.9')
 import org.apache.commons.lang3.builder.EqualsBuilder
 
 class Trigger extends BaseConfig<Trigger> implements Serializable {

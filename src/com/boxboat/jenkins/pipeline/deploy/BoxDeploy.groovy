@@ -9,7 +9,6 @@ import com.boxboat.jenkins.library.deploy.DeployType
 import com.boxboat.jenkins.library.deploy.Deployment
 import com.boxboat.jenkins.library.deployTarget.IDeployTarget
 import com.boxboat.jenkins.library.docker.Image
-import com.boxboat.jenkins.library.environment.BaseEnvironment
 import com.boxboat.jenkins.library.environment.Environment
 import com.boxboat.jenkins.library.trigger.Trigger
 import com.boxboat.jenkins.pipeline.BoxBase
@@ -241,11 +240,11 @@ class BoxDeploy extends BoxBase<DeployConfig> implements Serializable {
         }
     }
 
-    List<BaseEnvironment> allEnvironments() {
+    List<Environment> allEnvironments() {
         return environment.allEnvironments()
     }
 
-    List<BaseEnvironment> replicaEnvironments() {
+    List<Environment> replicaEnvironments() {
         return environment.replicaEnvironments
     }
 
