@@ -1,9 +1,10 @@
 package com.boxboat.jenkins.library.config
 
 import com.boxboat.jenkins.library.yaml.YamlUtils
+
+@Grab('org.apache.commons:commons-lang3:3.9')
 import org.apache.commons.lang.builder.ToStringBuilder
 import org.apache.commons.lang.builder.ToStringStyle
-@Grab('org.apache.commons:commons-lang3:3.9')
 import org.apache.commons.lang3.builder.EqualsBuilder
 
 import java.lang.reflect.Modifier

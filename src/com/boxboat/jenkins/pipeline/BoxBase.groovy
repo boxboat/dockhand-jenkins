@@ -260,12 +260,13 @@ abstract class BoxBase<T extends CommonConfigBase> implements Serializable {
     }
 
     def writeTriggers() {
-        if (gitRepo.isBranchTip()) {
+        def triggers = this.triggers()
+        if (triggers != null && gitRepo.isBranchTip()) {
             def buildVersions = Config.getBuildVersions()
             String job = Config.pipeline.env.JOB_NAME
-            def triggers = Trigger.merge(this.triggers())
-            if (triggers) {
-                buildVersions.setJobTriggers(job, triggers)
+            def mergedTriggers = Trigger.merge(triggers)
+            if (mergedTriggers) {
+                buildVersions.setJobTriggers(job, mergedTriggers)
             } else {
                 buildVersions.removeJobTriggers(job)
             }
@@ -294,7 +295,7 @@ abstract class BoxBase<T extends CommonConfigBase> implements Serializable {
     }
 
     protected List<Trigger> triggers() {
-        return []
+        return null
     }
 
     def success() {
