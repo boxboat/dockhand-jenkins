@@ -1,6 +1,6 @@
 # dockhand
 
-[![Build Status](https://travis-ci.org/boxboat/dockhand.svg?branch=master)](https://travis-ci.org/boxboat/dockhand)
+![Build](https://github.com/boxboat/dockhand/workflows/Build/badge.svg)
 
 The Dockhand Jenkins Shared Library is a Groovy library meant to be used by any build pipelines that need to build images, push them to a remote registry, and trigger deployments to kubernetes clusters with Helm. The library encapsulates build functionality such as:
 
