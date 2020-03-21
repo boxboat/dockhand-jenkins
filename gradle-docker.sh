@@ -7,5 +7,5 @@ docker run --rm \
     -v "$(pwd):/home/gradle/project" \
     -w "/home/gradle/project" \
     --entrypoint gradle \
-    gradle:4.4.1-jdk8-alpine \
+    gradle:6.2.2-jdk11 \
         "$@"
