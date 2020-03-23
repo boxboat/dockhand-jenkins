@@ -26,7 +26,10 @@ class Image extends BaseConfig<Image> implements Serializable {
         config.keySet().toList().each { k ->
             def v = config[k]
             def property = this.metaClass.getMetaProperty(k)
-            if (property && Modifier.isPublic(property.modifiers) && !Modifier.isStatic(property.modifiers)) {
+            if (property
+                    && Modifier.isPublic(property.modifiers)
+                    && !Modifier.isStatic(property.modifiers)
+                    && !(this.respondsTo("get${k.capitalize()}") && !this.respondsTo("set${k.capitalize()}"))) {
                 this."$k" = v
             } else {
                 throw new Exception("${this.class.simpleName} does not support property '${k}'")

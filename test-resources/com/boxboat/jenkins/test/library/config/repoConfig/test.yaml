@@ -43,6 +43,7 @@ deploy:
         event: commit/test
         eventFallback: commit/test2
       trigger: true
+      triggerBranch: feature
   imageOverrides:
   - path: apps/app-3
     event: commit/test

@@ -56,7 +56,10 @@ abstract class BoxBase<T extends CommonConfigBase> implements Serializable {
                     break
                 default:
                     def property = this.metaClass.getMetaProperty(k)
-                    if (property && Modifier.isPublic(property.modifiers) && !Modifier.isStatic(property.modifiers)) {
+                    if (property
+                            && Modifier.isPublic(property.modifiers)
+                            && !Modifier.isStatic(property.modifiers)
+                            && !(this.respondsTo("get${k.capitalize()}") && !this.respondsTo("set${k.capitalize()}"))) {
                         this."$k" = v
                     } else {
                         throw new Exception("${this.class.simpleName} does not support property '${k}'")
@@ -142,7 +145,11 @@ abstract class BoxBase<T extends CommonConfigBase> implements Serializable {
                 return
             }
             def property = this.metaClass.getMetaProperty("$k")
-            if (property && Modifier.isPublic(property.modifiers) && !Modifier.isStatic(property.modifiers) && this."$k" == null) {
+            if (property
+                    && Modifier.isPublic(property.modifiers)
+                    && !Modifier.isStatic(property.modifiers)
+                    && !(this.respondsTo("get${k.capitalize()}") && !this.respondsTo("set${k.capitalize()}"))
+                    && this."$k" == null) {
                 this."$k" = Config.pipeline.params[k]
             }
         }
@@ -212,7 +219,11 @@ abstract class BoxBase<T extends CommonConfigBase> implements Serializable {
                 return
             }
             def configProperty = this.config.metaClass.getMetaProperty("$k")
-            if (configProperty && Modifier.isPublic(configProperty.modifiers) && !Modifier.isStatic(configProperty.modifiers) && this.config."$k" == null) {
+            if (configProperty
+                    && Modifier.isPublic(configProperty.modifiers)
+                    && !Modifier.isStatic(configProperty.modifiers)
+                    && !(this.respondsTo("get${k.capitalize()}") && !this.respondsTo("set${k.capitalize()}"))
+                    && this.config."$k" == null) {
                 this.config."$k" = Config.pipeline.params[k]
             }
         }
@@ -247,12 +258,13 @@ abstract class BoxBase<T extends CommonConfigBase> implements Serializable {
     }
 
     def writeTriggers() {
-        if (gitRepo.branch == config.defaultBranch && gitRepo.isBranchTip()) {
+        def triggers = this.triggers()
+        if (triggers != null && gitRepo.isBranchTip()) {
             def buildVersions = Config.getBuildVersions()
             String job = Config.pipeline.env.JOB_NAME
-            def triggers = Trigger.merge(this.triggers())
-            if (triggers) {
-                buildVersions.setJobTriggers(job, triggers)
+            def mergedTriggers = Trigger.merge(triggers)
+            if (mergedTriggers) {
+                buildVersions.setJobTriggers(job, mergedTriggers)
             } else {
                 buildVersions.removeJobTriggers(job)
             }
@@ -281,7 +293,7 @@ abstract class BoxBase<T extends CommonConfigBase> implements Serializable {
     }
 
     protected List<Trigger> triggers() {
-        return []
+        return null
     }
 
     def success() {

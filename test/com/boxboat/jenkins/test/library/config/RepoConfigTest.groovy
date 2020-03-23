@@ -115,6 +115,7 @@ class RepoConfigTest {
                                                                 )
                                                         ],
                                                         trigger: true,
+                                                        triggerBranch: "feature",
                                                 )
                                         ],
                                         imageOverrides: [

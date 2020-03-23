@@ -9,17 +9,17 @@ repositories {
 
 dependencies {
     // main dependencies
-    compile group: 'org.codehaus.groovy', name: 'groovy-all', version: '2.4.16'
-    compile group: 'com.cloudbees', name: 'groovy-cps', version: '1.24'
-    compile group: 'org.jenkins-ci.main', name: 'jenkins-core', version: '2.102'
+    implementation group: 'org.codehaus.groovy', name: 'groovy-all', version: '2.4.16'
+    implementation group: 'com.cloudbees', name: 'groovy-cps', version: '1.24'
+    implementation group: 'org.jenkins-ci.main', name: 'jenkins-core', version: '2.102'
 
     // @grab dependencies
-    compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.8.1'
-    compile group: 'org.yaml', name: 'snakeyaml', version: '1.23'
+    implementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.9'
+    implementation group: 'org.yaml', name: 'snakeyaml', version: '1.23'
 
     // test dependencies
-    testCompile group: 'junit', name: 'junit', version: '4.12'
-    testCompile group: 'com.lesfurets', name: 'jenkins-pipeline-unit', version: '1.1'
+    testImplementation group: 'junit', name: 'junit', version: '4.12'
+    testImplementation group: 'com.lesfurets', name: 'jenkins-pipeline-unit', version: '1.1'
 }
 
 task cleanDist(type: Delete) {

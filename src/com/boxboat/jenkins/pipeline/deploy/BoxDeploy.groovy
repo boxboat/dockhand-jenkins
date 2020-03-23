@@ -9,7 +9,6 @@ import com.boxboat.jenkins.library.deploy.DeployType
 import com.boxboat.jenkins.library.deploy.Deployment
 import com.boxboat.jenkins.library.deployTarget.IDeployTarget
 import com.boxboat.jenkins.library.docker.Image
-import com.boxboat.jenkins.library.environment.BaseEnvironment
 import com.boxboat.jenkins.library.environment.Environment
 import com.boxboat.jenkins.library.trigger.Trigger
 import com.boxboat.jenkins.pipeline.BoxBase
@@ -125,7 +124,8 @@ class BoxDeploy extends BoxBase<DeployConfig> implements Serializable {
         def triggers = []
         config.deploymentMap.keySet().toList().each { deploymentKey ->
             def deployment = config.deploymentMap[deploymentKey]
-            if (!deployment.trigger) {
+            def triggerBranch = deployment.triggerBranch ?: config.defaultBranch
+            if (!deployment.trigger || !triggerBranch || gitRepo.branch != triggerBranch) {
                 return
             }
             def params = [
@@ -240,11 +240,11 @@ class BoxDeploy extends BoxBase<DeployConfig> implements Serializable {
         }
     }
 
-    List<BaseEnvironment> allEnvironments() {
+    List<Environment> allEnvironments() {
         return environment.allEnvironments()
     }
 
-    List<BaseEnvironment> replicaEnvironments() {
+    List<Environment> replicaEnvironments() {
         return environment.replicaEnvironments
     }
 

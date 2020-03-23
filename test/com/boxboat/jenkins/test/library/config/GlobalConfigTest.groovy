@@ -9,7 +9,6 @@ import com.boxboat.jenkins.library.deploy.Deployment
 import com.boxboat.jenkins.library.deployTarget.IDeployTarget
 import com.boxboat.jenkins.library.deployTarget.KubernetesDeployTarget
 import com.boxboat.jenkins.library.docker.Registry
-import com.boxboat.jenkins.library.environment.BaseEnvironment
 import com.boxboat.jenkins.library.environment.Environment
 import com.boxboat.jenkins.library.event.EventRegistryKey
 import com.boxboat.jenkins.library.gcloud.GCloudAccount
@@ -97,7 +96,7 @@ class GlobalConfigTest {
                                                 name: "prod-a",
                                                 deployTargetKey: "prod01",
                                                 replicaEnvironments: [
-                                                        new BaseEnvironment(
+                                                        new Environment(
                                                                 name: "prod-b",
                                                                 deployTargetKey: "prod02"
                                                         )

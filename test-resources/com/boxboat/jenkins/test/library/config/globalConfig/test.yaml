@@ -13,7 +13,7 @@ deployTargetMap:
   prod02: !!com.boxboat.jenkins.library.deployTarget.KubernetesDeployTarget
     contextName: boxboat
     credential: kubeconfig-prod-02
-  gke: !!com.boxboat.jenkins.library.gcloud.GCloudGKEDeployTarget
+  gke01: !!com.boxboat.jenkins.library.gcloud.GCloudGKEDeployTarget
     gCloudAccountKey: default
     name: kube-cluster-name
     project: gcloud-project

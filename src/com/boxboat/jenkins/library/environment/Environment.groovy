@@ -1,10 +1,27 @@
 package com.boxboat.jenkins.library.environment
 
-class Environment extends BaseEnvironment implements Serializable {
+import com.boxboat.jenkins.library.config.BaseConfig
+import com.boxboat.jenkins.library.config.Config
+import com.boxboat.jenkins.library.deployTarget.IDeployTarget
 
-    List<BaseEnvironment> replicaEnvironments = []
+class Environment extends BaseConfig<Environment> implements Serializable {
 
-    List<BaseEnvironment> allEnvironments() {
-        return [this as BaseEnvironment] + replicaEnvironments
+    String name
+
+    String deployTargetKey
+
+    List<Environment> replicaEnvironments
+
+    List<Environment> allEnvironments() {
+        return [this] + (replicaEnvironments ?: [])
     }
+
+    IDeployTarget getDeployTarget() {
+        return Config.global.getDeployTarget(deployTargetKey)
+    }
+
+    void withCredentials(closure) {
+        getDeployTarget().withCredentials(closure)
+    }
+
 }
