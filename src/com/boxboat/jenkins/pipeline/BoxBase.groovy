@@ -145,7 +145,6 @@ abstract class BoxBase<T extends CommonConfigBase> implements Serializable {
                 return
             }
             def property = this.metaClass.getMetaProperty("$k")
-            def setMethodName = "set${k.capitalize()}"
             if (property
                     && Modifier.isPublic(property.modifiers)
                     && !Modifier.isStatic(property.modifiers)
@@ -220,7 +219,6 @@ abstract class BoxBase<T extends CommonConfigBase> implements Serializable {
                 return
             }
             def configProperty = this.config.metaClass.getMetaProperty("$k")
-            def setMethodName = "set${k.capitalize()}"
             if (configProperty
                     && Modifier.isPublic(configProperty.modifiers)
                     && !Modifier.isStatic(configProperty.modifiers)
