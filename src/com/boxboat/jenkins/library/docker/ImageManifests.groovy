@@ -50,7 +50,7 @@ class ImageManifests implements Serializable {
         def gitRepoPath = buildVersions.getImageRepoPath(image)
         if (gitRepoPath) {
             try {
-                branchMap = GitRepo.remoteBranches(Config.global.git.getRemoteUrl(gitRepoPath)).collectEntries { it ->
+                branchMap = GitRepo.remoteBranches(Config.getGitRemoteUrl(gitRepoPath)).collectEntries { it ->
                     [(Utils.cleanTag("commit/${it}")): it]
                 }
             } catch (Exception ignored) {

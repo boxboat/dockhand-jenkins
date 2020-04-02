@@ -20,19 +20,17 @@ class GitConfig extends BaseConfig<GitConfig> implements Serializable {
 
     String commitUrlReplace
 
-    String getRemotePath(String url) {
-        if (!remotePathRegex) {
-            return ""
-        }
-        def matcher = url =~ remotePathRegex
-        return matcher.hasGroup() && matcher.size() > 0 ? matcher[0][1] : null
-    }
+    Map<String, GitConfig> gitAlternateMap
 
-    String getRemoteUrl(String path) {
-        if (!remoteUrlReplace || !path) {
-            return ""
+    GitConfig getGitConfig(String key) {
+        def gitConfig = this
+        if (key) {
+            gitConfig = gitAlternateMap.get(key)
         }
-        return replacePath(remoteUrlReplace, path)
+        if (!gitConfig) {
+            throw new Exception("git.gitAlternateMap entry '${key}' does not exist in config file")
+        }
+        return gitConfig
     }
 
     String getCommitUrl(String path, String hash) {
@@ -49,7 +47,7 @@ class GitConfig extends BaseConfig<GitConfig> implements Serializable {
         return replacePath(branchUrlReplace, path).replaceFirst(/(?i)\{\{\s+branch\s+\}\}/, branch)
     }
 
-    private String replacePath(String base, String path){
+    static String replacePath(String base, String path) {
         return base.replaceFirst(/(?i)\{\{\s+path\s+\}\}/, path)
     }
 }

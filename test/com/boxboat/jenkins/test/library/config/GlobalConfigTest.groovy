@@ -52,7 +52,6 @@ class GlobalConfigTest {
 //        System.out.println("")
 //        System.out.println(yaml.dump(config))
         assertEquals(expectedConfig, config)
-        assertEquals(config.git.buildVersionsUrl, config.git.getRemoteUrl(config.git.getRemotePath(config.git.buildVersionsUrl)))
     }
 
     @Parameters(name = "{index}: {0}")
@@ -117,6 +116,14 @@ class GlobalConfigTest {
                                         remoteUrlReplace: 'git@github.com:boxboat/{{ path }}.git',
                                         branchUrlReplace: "https://github.com/boxboat/{{ path }}/tree/{{ branch }}",
                                         commitUrlReplace: "https://github.com/boxboat/{{ path }}/commit/{{ hash }}",
+                                        gitAlternateMap: [
+                                                "gitlab": new GitConfig(
+                                                        remotePathRegex: 'gitlab\\.com[:\\/]boxboat\\/(.*)\\.git$',
+                                                        remoteUrlReplace: 'git@gitlab.com:boxboat/{{ path }}.git',
+                                                        branchUrlReplace: "https://gitlab.com/boxboat/{{ path }}/tree/{{ branch }}",
+                                                        commitUrlReplace: "https://gitlab.com/boxboat/{{ path }}/commit/{{ hash }}",
+                                                ),
+                                        ],
                                 ),
                                 notifyTargetMap: [
                                         default: new SlackWebHookNotifyTarget(

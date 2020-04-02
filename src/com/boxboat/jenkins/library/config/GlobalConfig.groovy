@@ -61,6 +61,29 @@ class GlobalConfig extends BaseConfig<GlobalConfig> implements Serializable {
         return gCloudAccount
     }
 
+    String getGitRemotePath(String key, String url) {
+        def gitConfig = git.getGitConfig(key)
+        if (!gitConfig.remotePathRegex) {
+            return ""
+        }
+        def prefix = key ? "${key}:" : ""
+        def matcher = url =~ gitConfig.remotePathRegex
+        return matcher.hasGroup() && matcher.size() > 0 ? "${prefix}${matcher[0][1]}" : null
+    }
+
+    String getGitRemoteUrl(String path) {
+        def matcher = path =~ /(.*):.*/
+        def key = matcher.hasGroup() && matcher.size() > 0 ? matcher[0][1] : null
+        def gitConfig = git.getGitConfig(key as String)
+        if (!gitConfig.remoteUrlReplace || !path) {
+            return ""
+        }
+        if (key) {
+            path = path.substring((key as String).length() + 1)
+        }
+        return GitConfig.replacePath(gitConfig.remoteUrlReplace, path)
+    }
+
     Registry getRegistry(String key) {
         def registry = registryMap.get(key)
         if (!registry) {

@@ -2,6 +2,7 @@ package com.boxboat.jenkins.library.config
 
 import com.boxboat.jenkins.library.buildVersions.GitBuildVersions
 import com.boxboat.jenkins.library.git.GitAccount
+import com.boxboat.jenkins.library.git.GitConfig
 
 class Config implements Serializable {
 
@@ -29,6 +30,18 @@ class Config implements Serializable {
             _buildVersions.checkout()
         }
         return _buildVersions
+    }
+
+    static GitConfig getGitSelected() {
+        return global.git.getGitConfig(repo.gitAlternateKey)
+    }
+
+    static String getGitRemotePath(String url) {
+        return global.getGitRemotePath(repo.gitAlternateKey, url)
+    }
+
+    static String getGitRemoteUrl(String path) {
+        return global.getGitRemoteUrl(path)
     }
 
     static resetBuildVersions() {

@@ -1,7 +1,6 @@
 package com.boxboat.jenkins.pipeline
 
 import com.boxboat.jenkins.library.Utils
-import com.boxboat.jenkins.library.buildVersions.GitBuildVersions
 import com.boxboat.jenkins.library.config.CommonConfigBase
 import com.boxboat.jenkins.library.config.Config
 import com.boxboat.jenkins.library.config.GlobalConfig
@@ -138,6 +137,7 @@ abstract class BoxBase<T extends CommonConfigBase> implements Serializable {
             config.merge(globalConfig.repo.common)
         }
         config.merge(globalConfig.repo."$configKey")
+        Config.repo = config
 
         // set null properties to non-null params
         Config.pipeline.params.keySet().toList().each { k ->
@@ -211,7 +211,6 @@ abstract class BoxBase<T extends CommonConfigBase> implements Serializable {
             def initialConfigObj = config.newFromObject(initialConfig)
             config.merge(initialConfigObj)
         }
-        Config.repo = config
 
         // set null top-level config properties to non-null params
         Config.pipeline.params.keySet().toList().each { k ->
