@@ -84,6 +84,17 @@ common:
         channel: "#jenkins-info"
 ```
 
+## userConfigMap
+Users can define their own arbitrary configuration for use with their own library functions. The below example requires that a class called `ArbitraryConfig` exists which can accept `foo` and `bar`. See the [extending documentation](../pipeline/extending.md) for a sample class.
+
+```yaml
+common:
+  userConfigMap:
+    example: !!com.example.jenkins.library.config.ArbitraryConfig
+      foo: biz
+      bar: baz
+```
+
 ## vaultKey
 
 Vault key to use

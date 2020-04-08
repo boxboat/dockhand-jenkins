@@ -72,6 +72,11 @@ class RepoConfigTest {
                                                 ),
                                         ],
                                         "gitAlternateKey": "gitlab",
+                                        userConfigMap: [
+                                                test: new ArrayList<String>(
+                                                        Arrays.asList("foo", "bar")
+                                                ),
+                                        ],
                                 ),
                                 build: new BuildConfig(
                                         composeProfileMap: [
