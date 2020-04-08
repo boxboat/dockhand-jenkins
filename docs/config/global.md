@@ -55,7 +55,7 @@ gCloudAccountMap:
 
 ## git
 
-Stores the git configuration.
+Stores the git configuration.  To select an alternate config, set a repo-specific [gitAlternateKey](common.md#gitAlternateKey)
 
 ```yaml
 git:
@@ -79,6 +79,15 @@ git:
   # {{ path }} is replaced with the git path
   # {{ hash }} is replaced with the git commit hash
   commitUrlReplace: https://github.com/boxboat/{{ path }}/commit/{{ hash }}
+  # alternate git configurations
+  # buildVersionsUrl, credential, and email are not allowed
+  # in alternate git configurations
+  gitAlternateMap:
+    gitlab:
+      remotePathRegex: gitlab\.com[:\/]boxboat\/(.*)\.git$
+      remoteUrlReplace: git@gitlab.com:boxboat/{{ path }}.git
+      branchUrlReplace: https://gitlab.com/boxboat/{{ path }}/tree/{{ branch }}
+      commitUrlReplace: https://gitlab.com/boxboat/{{ path }}/commit/{{ hash }}
 ```
 
 ## notifyTargetMap

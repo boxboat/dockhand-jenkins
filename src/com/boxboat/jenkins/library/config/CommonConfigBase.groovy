@@ -11,6 +11,8 @@ class CommonConfigBase<T> extends BaseConfig<T> {
 
     List<EventRegistryKey> eventRegistryKeys
 
+    String gitAlternateKey
+
     List<Image> images
 
     NotifyConfig notify

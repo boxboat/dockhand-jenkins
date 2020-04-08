@@ -22,6 +22,15 @@ common:
       registryKey: default
 ```
 
+## gitAlternateKey
+
+Alternate Git configuration to select from Global Config [git.gitAlternateMap](global.md#git)
+
+```yaml
+common:
+  gitAlternateKey: gitlab
+```
+
 ## images
 
 `images` are used in the following way:

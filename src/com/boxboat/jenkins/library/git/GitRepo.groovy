@@ -54,15 +54,15 @@ class GitRepo implements Serializable {
     }
 
     String getRemotePath() {
-        return Config.global.git.getRemotePath(getRemoteUrl())
+        return Config.getGitRemotePath(getRemoteUrl())
     }
 
     String getCommitUrl() {
-        return Config.global.git.getCommitUrl(getRemotePath(), getHash())
+        return Config.getGitSelected().getCommitUrl(getRemotePath(), getHash())
     }
 
     String getBranchUrl() {
-        return Config.global.git.getBranchUrl(getRemotePath(), getBranch())
+        return Config.getGitSelected().getBranchUrl(getRemotePath(), getBranch())
     }
 
     String getTagReferenceHash(String tag) {

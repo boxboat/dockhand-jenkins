@@ -183,7 +183,7 @@ class GitBuildVersions implements Serializable {
                 cat "${path}"
             fi
         """)?.trim()
-        return Utils.resultOrTest(result, Config.global.git.getRemotePath(Config.global.git.buildVersionsUrl)) ?: null
+        return Utils.resultOrTest(result, Config.getGitRemotePath(Config.global.git.buildVersionsUrl)) ?: null
     }
 
     def save() {
@@ -192,8 +192,8 @@ class GitBuildVersions implements Serializable {
                 gitRepo.pull()
                 gitRepo.commitAndPush("update build versions")
             }
-            if (Config.global.git.buildVersionsLockableResource) {
-                Config.pipeline.lock(Config.global.git.buildVersionsLockableResource, closure)
+            if (Config.getGitSelected().buildVersionsLockableResource) {
+                Config.pipeline.lock(Config.getGitSelected().buildVersionsLockableResource, closure)
             } else {
                 closure()
             }

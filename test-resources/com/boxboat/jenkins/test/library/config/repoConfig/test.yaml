@@ -13,6 +13,7 @@ common:
     registryKey: default
   - event: tag/.*
     registryKey: default
+  gitAlternateKey: gitlab
 build:
   composeProfileMap:
     docker: ./build/docker

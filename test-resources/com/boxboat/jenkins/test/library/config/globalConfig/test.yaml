@@ -40,6 +40,12 @@ git:
   remoteUrlReplace: git@github.com:boxboat/{{ path }}.git
   branchUrlReplace: https://github.com/boxboat/{{ path }}/tree/{{ branch }}
   commitUrlReplace: https://github.com/boxboat/{{ path }}/commit/{{ hash }}
+  gitAlternateMap:
+    gitlab:
+      remotePathRegex: gitlab\.com[:\/]boxboat\/(.*)\.git$
+      remoteUrlReplace: git@gitlab.com:boxboat/{{ path }}.git
+      branchUrlReplace: https://gitlab.com/boxboat/{{ path }}/tree/{{ branch }}
+      commitUrlReplace: https://gitlab.com/boxboat/{{ path }}/commit/{{ hash }}
 notifyTargetMap:
   default: !!com.boxboat.jenkins.library.notify.SlackWebHookNotifyTarget
     credential: slack-webhook-url

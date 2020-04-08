@@ -71,6 +71,7 @@ class RepoConfigTest {
                                                         registryKey: "default",
                                                 ),
                                         ],
+                                        "gitAlternateKey": "gitlab",
                                 ),
                                 build: new BuildConfig(
                                         composeProfileMap: [
