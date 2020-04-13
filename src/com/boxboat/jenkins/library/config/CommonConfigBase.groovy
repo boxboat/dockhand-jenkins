@@ -19,6 +19,8 @@ class CommonConfigBase<T> extends BaseConfig<T> {
 
     String vaultKey
 
+    Map<String, Object> userConfigMap
+
     List<Registry> getEventRegistries(String event) {
         List<Registry> registries = []
         eventRegistryKeys?.each { EventRegistryKey eventRegistryKey ->
@@ -34,6 +36,14 @@ class CommonConfigBase<T> extends BaseConfig<T> {
             }
         }
         return registries
+    }
+
+    Object getUserConfig(String key) {
+        def userConfig = userConfigMap.get(key)
+        if (!userConfig) {
+            throw new Exception("userConfigMap entry '${key}' does not exist in config file")
+        }
+        return userConfig
     }
 
 }
