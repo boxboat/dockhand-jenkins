@@ -1,6 +1,8 @@
 package com.boxboat.jenkins.library.git
 
 import com.boxboat.jenkins.library.config.BaseConfig
+import com.boxboat.jenkins.library.config.Config
+import com.boxboat.jenkins.library.credentials.vault.VaultFileCredential
 
 class GitConfig extends BaseConfig<GitConfig> implements Serializable {
 
@@ -10,7 +12,7 @@ class GitConfig extends BaseConfig<GitConfig> implements Serializable {
 
     String email
 
-    String credential
+    Object credential
 
     String remotePathRegex
 
@@ -21,6 +23,11 @@ class GitConfig extends BaseConfig<GitConfig> implements Serializable {
     String commitUrlReplace
 
     Map<String, GitConfig> gitAlternateMap
+
+    static class Params extends BaseConfig<Params> implements Serializable {
+        String keyFileVariable
+        String usernameVariable
+    }
 
     GitConfig getGitConfig(String key) {
         def gitConfig = this
@@ -49,5 +56,32 @@ class GitConfig extends BaseConfig<GitConfig> implements Serializable {
 
     static String replacePath(String base, String path) {
         return base.replaceFirst(/(?i)\{\{\s+path\s+\}\}/, path)
+    }
+
+    def withCredentials(Params params, closure) {
+        params.keyFileVariable = params.keyFileVariable ?: "SSH_KEY"
+        params.usernameVariable = params.usernameVariable ?: "USERNAME"
+
+        if (credential instanceof VaultFileCredential) {
+            credential.withCredentials(['variable': params.keyFileVariable]){
+                closure()
+            }
+        }else{
+            Config.pipeline.withCredentials([Config.pipeline.sshUserPrivateKey(
+                credentialsId: credential,
+                keyFileVariable: params.keyFileVariable,
+                usernameVariable: params.usernameVariable
+            )]) {
+                closure()
+            }
+        }
+    }
+
+    def withCredentials(Map paramsMap, closure) {
+        withCredentials(new Params().newFromObject(paramsMap), closure)
+    }
+
+    def withCredentials(Closure closure) {
+        withCredentials(new Params(), closure)
     }
 }

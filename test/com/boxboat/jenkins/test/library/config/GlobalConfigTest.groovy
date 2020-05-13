@@ -5,6 +5,9 @@ import com.boxboat.jenkins.library.config.CommonConfig
 import com.boxboat.jenkins.library.config.DeployConfig
 import com.boxboat.jenkins.library.config.GlobalConfig
 import com.boxboat.jenkins.library.config.PromoteConfig
+import com.boxboat.jenkins.library.credentials.vault.VaultFileCredential
+import com.boxboat.jenkins.library.credentials.vault.VaultStringCredential
+import com.boxboat.jenkins.library.credentials.vault.VaultUsernamePasswordCredential
 import com.boxboat.jenkins.library.deploy.Deployment
 import com.boxboat.jenkins.library.deployTarget.IDeployTarget
 import com.boxboat.jenkins.library.deployTarget.KubernetesDeployTarget
@@ -79,11 +82,18 @@ class GlobalConfigTest {
                                                 contextName: "boxboat",
                                                 credential: "kubeconfig-prod-02",
                                         ),
+                                        "prod03": new KubernetesDeployTarget(
+                                                credential: new VaultFileCredential(
+                                                        vault: "default",
+                                                        path: "kv/kubeconfig",
+                                                        fileKey: "prod03",
+                                                ),
+                                        ),
                                         "gke01" : new GCloudGKEDeployTarget(
                                                 gCloudAccountKey: "default",
                                                 name: "kube-cluster-name",
                                                 project: "gcloud-project",
-                                                zone: "us-central1-a"
+                                                zone: "us-central1-a",
                                         ),
                                 ] as Map<String, IDeployTarget>,
                                 environmentMap: [
@@ -129,6 +139,13 @@ class GlobalConfigTest {
                                         default: new SlackWebHookNotifyTarget(
                                                 credential: "slack-webhook-url",
                                         ),
+                                        prod: new SlackWebHookNotifyTarget(
+                                                credential: new VaultStringCredential(
+                                                        vault: "default",
+                                                        path: "kv/slack-prod-credentials",
+                                                        stringKey: "webhook-url",
+                                                ),
+                                        ),
                                 ],
                                 registryMap: [
                                         "default": new Registry(
@@ -136,6 +153,17 @@ class GlobalConfigTest {
                                                 host: "dtr.boxboat.com",
                                                 credential: "registry",
                                                 imageUrlReplace: "https://dtr.boxboat.com/repositories/{{ path }}/{{ tag }}/linux/amd64/layers",
+                                        ),
+                                        "dev": new Registry(
+                                                scheme: "https",
+                                                host: "harbor.boxboat.com",
+                                                credential: new VaultUsernamePasswordCredential(
+                                                        vault: "default",
+                                                        path: "kv/harbor-dev-credentials",
+                                                        usernameKey: "username",
+                                                        passwordKey: "password",
+                                                ),
+                                                imageUrlReplace: "https://harbor.boxboat.com/harbor/projects/1/repositories/{{ path }}/tags/{{ tag }}",
                                         ),
                                         "gcr"    : new GCloudRegistry(
                                                 scheme: "https",

@@ -13,6 +13,11 @@ deployTargetMap:
   prod02: !!com.boxboat.jenkins.library.deployTarget.KubernetesDeployTarget
     contextName: boxboat
     credential: kubeconfig-prod-02
+  prod03: !!com.boxboat.jenkins.library.deployTarget.KubernetesDeployTarget
+    credential: !!com.boxboat.jenkins.library.credentials.vault.VaultFileCredential
+      vault: default
+      path: kv/kubeconfig
+      fileKey: prod03
   gke01: !!com.boxboat.jenkins.library.gcloud.GCloudGKEDeployTarget
     gCloudAccountKey: default
     name: kube-cluster-name
@@ -49,12 +54,26 @@ git:
 notifyTargetMap:
   default: !!com.boxboat.jenkins.library.notify.SlackWebHookNotifyTarget
     credential: slack-webhook-url
+  prod: !!com.boxboat.jenkins.library.notify.SlackWebHookNotifyTarget
+    credential: !!com.boxboat.jenkins.library.credentials.vault.VaultStringCredential
+      vault: default
+      path: kv/slack-prod-credentials
+      stringKey: webhook-url
 registryMap:
   default:
     scheme: https
     host: dtr.boxboat.com
     credential: registry
     imageUrlReplace: https://dtr.boxboat.com/repositories/{{ path }}/{{ tag }}/linux/amd64/layers
+  dev:
+    scheme: https
+    host: harbor.boxboat.com
+    credential: !!com.boxboat.jenkins.library.credentials.vault.VaultUsernamePasswordCredential
+      vault: default
+      path: kv/harbor-dev-credentials
+      usernameKey: username
+      passwordKey: password
+    imageUrlReplace: https://harbor.boxboat.com/harbor/projects/1/repositories/{{ path }}/tags/{{ tag }}
   gcr: !!com.boxboat.jenkins.library.gcloud.GCloudRegistry
     scheme: https
     host: gcr.io

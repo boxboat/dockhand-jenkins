@@ -65,12 +65,17 @@ class HarborRegistryClean implements Serializable {
 
     List<Map<String, Object>> readRepositoryTags(Registry registry, String name) {
         def requestURI = registry.getRegistryUrl() + registryAPIBase + "/repositories/${name}/tags"
-        def result = Config.pipeline.httpRequest(
-                url: requestURI,
-                authentication: registry.credential,
-                httpMode: 'GET',
-                contentType: "APPLICATION_JSON"
-        )?.getContent()
+        def result
+        registry.withCredentials {
+            def auth = Config.pipeline.env["REGISTRY_USERNAME"] + ":" + Config.pipeline.env["REGISTRY_PASSWORD"]
+            def encoded = auth.bytes.encodeBase64().toString()
+            result = Config.pipeline.httpRequest(
+                    url: requestURI,
+                    httpMode: 'GET',
+                    contentType: "APPLICATION_JSON",
+                    customHeaders: [[name: 'Authorization', value: "Basic ${encoded}"]]
+            )?.getContent()
+        }
         def tags = []
         if (result && result != "null") {
             tags = Config.pipeline.readJSON(text: result.toString())
@@ -276,15 +281,19 @@ class HarborRegistryClean implements Serializable {
         if (dryRun) {
             return 200
         }
-
-        // clean up tags
         def requestURI = registry.getRegistryUrl() + registryAPIBase + "/repositories/${name}/tags/${tag}"
-        def result = Config.pipeline.httpRequest(
-                url: requestURI,
-                authentication: registry.credential,
-                httpMode: 'DELETE',
-                contentType: "APPLICATION_JSON"
-        )?.getStatus()
+        def result
+        registry.withCredentials {
+            def auth = Config.pipeline.env["REGISTRY_USERNAME"] + ":" + Config.pipeline.env["REGISTRY_PASSWORD"]
+            def encoded = auth.bytes.encodeBase64().toString()
+            result = Config.pipeline.httpRequest(
+                    url: requestURI,
+                    httpMode: 'DELETE',
+                    contentType: "APPLICATION_JSON",
+                    customHeaders: [[name: 'Authorization', value: "Basic ${encoded}"]]
+            )?.getStatus()
+        }
+        // clean up tags
         return Utils.resultOrTest(result, 200)
     }
 
@@ -338,12 +347,17 @@ class HarborRegistryClean implements Serializable {
             def paginatedQuery = query.clone()
             paginatedQuery["page"] = page.toString()
 
-            def pResponse = Config.pipeline.httpRequest(
-                    url: requestURL + "?" + paginatedQuery.collect { k, v -> "$k=$v" }.join('&'),
-                    authentication: registry.credential,
-                    httpMode: 'GET',
-                    contentType: "APPLICATION_JSON"
-            )?.getContent()
+            def pResponse
+            registry.withCredentials {
+                def auth = Config.pipeline.env["REGISTRY_USERNAME"] + ":" + Config.pipeline.env["REGISTRY_PASSWORD"]
+                def encoded = auth.bytes.encodeBase64().toString()
+                pResponse = Config.pipeline.httpRequest(
+                        url: requestURL + "?" + paginatedQuery.collect { k, v -> "$k=$v" }.join('&'),
+                        httpMode: 'GET',
+                        contentType: "APPLICATION_JSON",
+                        customHeaders: [[name: 'Authorization', value: "Basic ${encoded}"]]
+                )?.getContent()
+            }
 
             def pResult = []
             if (pResponse && pResponse.toString() != "null") {

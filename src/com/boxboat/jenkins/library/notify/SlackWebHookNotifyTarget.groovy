@@ -2,11 +2,12 @@ package com.boxboat.jenkins.library.notify
 
 import com.boxboat.jenkins.library.config.BaseConfig
 import com.boxboat.jenkins.library.config.Config
+import com.boxboat.jenkins.library.credentials.vault.VaultStringCredential
 import groovy.json.JsonBuilder
 
 class SlackWebHookNotifyTarget extends BaseConfig<SlackWebHookNotifyTarget> implements INotifyTarget, Serializable {
 
-    String credential
+    Object credential
 
     @Override
     void postMessage(String message, NotifyType notifyType) {
@@ -19,15 +20,15 @@ class SlackWebHookNotifyTarget extends BaseConfig<SlackWebHookNotifyTarget> impl
                 color = "#36a64f"
                 break
         }
-        Config.pipeline.withCredentials([
-                Config.pipeline.string(credentialsId: credential, variable: 'SLACK_URL',)
-        ]) {
+
+
+        Closure closure = {
             String jsonStr = new JsonBuilder([
-                    text: "*${Config.pipeline.env.JOB_NAME}* (<${Config.pipeline.env.BUILD_URL}|build #${Config.pipeline.env.BUILD_NUMBER}>)",
+                    text       : "*${Config.pipeline.env.JOB_NAME}* (<${Config.pipeline.env.BUILD_URL}|build #${Config.pipeline.env.BUILD_NUMBER}>)",
                     attachments: [
                             [
                                     color: color,
-                                    text: message,
+                                    text : message,
                             ]
                     ]
             ]).toString()
@@ -37,6 +38,18 @@ class SlackWebHookNotifyTarget extends BaseConfig<SlackWebHookNotifyTarget> impl
                     contentType: "APPLICATION_JSON",
                     requestBody: jsonStr
             )
+        }
+
+        if (credential instanceof VaultStringCredential) {
+            credential.withCredentials(['variable': 'SLACK_URL']) {
+                closure()
+            }
+        } else {
+            Config.pipeline.withCredentials([
+                    Config.pipeline.string(credentialsId: credential, variable: 'SLACK_URL',)
+            ]) {
+                closure()
+            }
         }
     }
 

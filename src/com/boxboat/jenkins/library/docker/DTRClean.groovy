@@ -13,12 +13,18 @@ class DTRClean implements Serializable {
 
     Map<String, Object> readRepositories(Registry registry) {
         def requestURL = registry.getRegistryUrl() + registryAPIBase + '/repositories?pageSize=100000&count=false'
-        def result = Config.pipeline.httpRequest(
-                url: requestURL,
-                authentication: registry.credential,
-                httpMode: 'GET',
-                contentType: "APPLICATION_JSON"
-        )?.getContent()
+
+        def result
+        registry.withCredentials {
+            def auth = Config.pipeline.env["REGISTRY_USERNAME"] + ":" + Config.pipeline.env["REGISTRY_PASSWORD"]
+            def encoded = auth.bytes.encodeBase64().toString()
+            result = Config.pipeline.httpRequest(
+                    url: requestURL,
+                    httpMode: 'GET',
+                    contentType: "APPLICATION_JSON",
+                    customHeaders: [[name: 'Authorization', value: "Basic ${encoded}"]]
+            )?.getContent()
+        }
 
         def repositories = []
         if (result && result != "null") {
@@ -61,12 +67,18 @@ class DTRClean implements Serializable {
 
     List<Map<String, Object>> readRepositoryTags(Registry registry, String namespace, String name) {
         def requestURI = registry.getRegistryUrl() + registryAPIBase + "/repositories/${namespace}/${name}/tags?pageSize=10000&count=false&includeManifests=false"
-        def result = Config.pipeline.httpRequest(
-                url: requestURI,
-                authentication: registry.credential,
-                httpMode: 'GET',
-                contentType: "APPLICATION_JSON"
-        )?.getContent()
+
+        def result
+        registry.withCredentials {
+            def auth = Config.pipeline.env["REGISTRY_USERNAME"] + ":" + Config.pipeline.env["REGISTRY_PASSWORD"]
+            def encoded = auth.bytes.encodeBase64().toString()
+            result = Config.pipeline.httpRequest(
+                    url: requestURI,
+                    httpMode: 'GET',
+                    contentType: "APPLICATION_JSON",
+                    customHeaders: [[name: 'Authorization', value: "Basic ${encoded}"]]
+            )?.getContent()
+        }
 
         def tags = []
         if (result && result != "null") {
@@ -149,12 +161,17 @@ class DTRClean implements Serializable {
 
         // clean up tags
         def requestURI = registry.getRegistryUrl() + registryAPIBase + "/repositories/${namespace}/${name}/tags/${tag}"
-        def result = Config.pipeline.httpRequest(
-                url: requestURI,
-                authentication: registry.credential,
-                httpMode: 'DELETE',
-                contentType: "APPLICATION_JSON"
-        )?.getStatus()
+        def result
+        registry.withCredentials {
+            def auth = Config.pipeline.env["REGISTRY_USERNAME"] + ":" + Config.pipeline.env["REGISTRY_PASSWORD"]
+            def encoded = auth.bytes.encodeBase64().toString()
+            result = Config.pipeline.httpRequest(
+                    url: requestURI,
+                    httpMode: 'DELETE',
+                    contentType: "APPLICATION_JSON",
+                    customHeaders: [[name: 'Authorization', value: "Basic ${encoded}"]]
+            )?.getContent()
+        }
         return Utils.resultOrTest(result, 200)
     }
 

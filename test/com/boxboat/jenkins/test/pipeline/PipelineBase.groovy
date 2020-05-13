@@ -37,6 +37,9 @@ abstract class PipelineBase extends BasePipelineTest {
         helper.registerAllowedMethod('withKubeConfig', [Map.class, Closure.class], {
             config, next -> next()
         })
+        helper.registerAllowedMethod('withEnv', [List.class, Closure.class], {
+            env, next -> next()
+        })
         helper.registerAllowedMethod('slackSend', [Map.class], null)
 
         binding.setVariable('env', [

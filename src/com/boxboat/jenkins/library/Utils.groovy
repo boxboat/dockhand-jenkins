@@ -72,6 +72,74 @@ class Utils implements Serializable {
         return format
     }
 
+    static String generateUUIDString() {
+        return UUID.randomUUID().toString()
+    }
+
+    static String makeTmpFile() {
+        String tmpFile = "./tmp-${generateUUIDString()}"
+        Config.pipeline.sh """
+            set +x
+            touch ${tmpFile}
+        """
+        return tmpFile
+    }
+
+    static void withTmpFile(String fileVariable = "TARGET_FILE", Closure closure) {
+        def file = makeTmpFile()
+        try {
+            Config.pipeline.withEnv(["${fileVariable}=${file}"]) {
+                closure()
+            }
+        } finally {
+            Config.pipeline.sh """
+                set +x
+                rm -f ${file}
+            """
+        }
+    }
+
+    /**
+     *  Make a temp dir in the workspace
+     *    mktemp -d may not work with pipeline steps like write() or writeJSON()
+     *    because it is outside Jenkin's current working directory
+     **/
+    static String makeTmpDir() {
+        String tmpDir = "./tmp-${generateUUIDString()}"
+        Config.pipeline.sh """
+            set +x
+            mkdir -p "${tmpDir}"
+        """.trim()
+        return tmpDir
+    }
+
+    static void withTmpDir(String dirVariable = "TARGET_DIR", Closure closure) {
+        def dir = makeTmpDir()
+        try {
+            Config.pipeline.withEnv(["${dirVariable}=${dir}"]) {
+                closure()
+            }
+        } finally {
+            Config.pipeline.sh """
+                set +x
+                rm -rf ${dir}
+            """
+        }
+    }
+
+    static boolean hasCmd(String cmd) {
+        def exists = true
+        try {
+            Config.pipeline.sh """
+                set +x
+                which ${cmd}
+            """
+        } catch (Exception ex) {
+            exists = false
+        }
+        return exists
+    }
+
     static String buildTagCommit(String tag) {
         if (tag.startsWith("build-")) {
             return tag.substring("build-".length())
