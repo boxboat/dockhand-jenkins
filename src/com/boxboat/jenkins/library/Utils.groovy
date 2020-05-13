@@ -6,6 +6,13 @@ import java.nio.file.Paths
 
 class Utils implements Serializable {
 
+    static String cleanBranch(String branch) {
+        if (branch == null) {
+            return null
+        }
+        return branch.replaceAll(/[^a-zA-Z0-9\-.\/]/, '')
+    }
+
     static String cleanTag(String tag) {
         if (tag == null) {
             return null

@@ -157,6 +157,7 @@ abstract class BoxBase<T extends CommonConfigBase> implements Serializable {
         // update from Git
         gitRepo = Config.gitAccount.checkoutScm()
         if (overrideBranch) {
+            overrideBranch = Utils.cleanBranch(overrideBranch)
             Config.pipeline.echo "Changing Branch to '${overrideBranch}'"
             gitRepo.fetchAndCheckoutBranch(overrideBranch)
         }
