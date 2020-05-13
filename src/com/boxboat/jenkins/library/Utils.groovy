@@ -10,7 +10,7 @@ class Utils implements Serializable {
         if (branch == null) {
             return null
         }
-        return branch.replaceAll(/[^a-zA-Z0-9\-.\/]/, ''])
+        return branch.replaceAll(/[^a-zA-Z0-9\-.\/]/, '')
     }
 
     static String cleanTag(String tag) {
