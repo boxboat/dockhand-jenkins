@@ -166,7 +166,7 @@ class BoxPromote extends BoxBase<PromoteConfig> implements Serializable {
                 }
 
                 config.images.each { image ->
-                    promoteFromRegistry.withCredentials() {
+                    promoteFromRegistry.withCredentials {
                         image.pull()
                     }
 
@@ -182,7 +182,7 @@ class BoxPromote extends BoxBase<PromoteConfig> implements Serializable {
                         newImageRef.tag = refTag
                         image.reTag(newImageSemVer)
                         image.reTag(newImageRef)
-                        pushRegistry.withCredentials() {
+                        pushRegistry.withCredentials {
                             newImageSemVer.push()
                             newImageRef.push()
                         }

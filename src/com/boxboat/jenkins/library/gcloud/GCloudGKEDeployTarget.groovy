@@ -3,6 +3,7 @@ package com.boxboat.jenkins.library.gcloud
 import com.boxboat.jenkins.library.config.BaseConfig
 import com.boxboat.jenkins.library.config.Config
 import com.boxboat.jenkins.library.deployTarget.IDeployTarget
+import com.boxboat.jenkins.library.Utils
 
 class GCloudGKEDeployTarget extends BaseConfig<GCloudGKEDeployTarget> implements IDeployTarget, Serializable {
 
@@ -17,12 +18,9 @@ class GCloudGKEDeployTarget extends BaseConfig<GCloudGKEDeployTarget> implements
     String zone
 
     @Override
-    void withCredentials(closure) {
+    void withCredentials(Closure closure) {
         Config.global.getGCloudAccount(gCloudAccountKey).withCredentials {
-            def tempDir = Config.pipeline.sh(returnStdout: true, script: """
-                mktemp -d
-            """)?.trim()
-            try {
+            Utils.withTmpDir("KUBEHOME") {
                 def projectSwitch = project ? """
                     --project="${project}"
                 """.trim() : ""
@@ -32,16 +30,12 @@ class GCloudGKEDeployTarget extends BaseConfig<GCloudGKEDeployTarget> implements
                 def zoneSwitch = zone ? """
                     --zone="${zone}"
                 """.trim() : ""
-                Config.pipeline.withEnv(["KUBECONFIG=${tempDir}/kube.config"]) {
+                Config.pipeline.withEnv(["KUBECONFIG=${Config.pipeline.env["KUBEHOME"]}/kube.config"]) {
                     Config.pipeline.sh """
                         gcloud container clusters get-credentials "${name}" ${projectSwitch} ${regionSwitch} ${zoneSwitch}
                     """
                     closure()
                 }
-            } finally {
-                Config.pipeline.sh """
-                    rm -rf "${tempDir}"
-                """
             }
         }
     }

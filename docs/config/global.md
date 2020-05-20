@@ -151,7 +151,7 @@ vaultMap:
     roleIdCredential: vault-role-id
     # secret text credential ID with secretId
     secretIdCredential: vault-secret-id
-    # secret text credential ID 
+    # secret text credential ID
     tokenCredential: vault-token
     # full URL to vault
     url: http://localhost:8200

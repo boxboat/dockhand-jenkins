@@ -2,6 +2,6 @@ package com.boxboat.jenkins.library.deployTarget
 
 interface IDeployTarget {
 
-    void withCredentials(closure)
+    void withCredentials(Closure closure)
 
 }

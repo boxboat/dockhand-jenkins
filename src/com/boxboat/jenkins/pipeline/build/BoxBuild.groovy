@@ -76,7 +76,7 @@ class BoxBuild extends BoxBase<BuildConfig> implements Serializable {
 
             imageSummary = imageSummaryHeader()
             registries.each { registry ->
-                registry.withCredentials() {
+                registry.withCredentials {
                     config.images.each { Image image ->
                         tags.each { String tag ->
                             def newImage = image.copy()

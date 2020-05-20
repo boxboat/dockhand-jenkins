@@ -2,6 +2,7 @@ package com.boxboat.jenkins.library.gcloud
 
 import com.boxboat.jenkins.library.config.BaseConfig
 import com.boxboat.jenkins.library.config.Config
+import com.boxboat.jenkins.library.Utils
 
 class GCloudAccount extends BaseConfig<GCloudAccount> implements Serializable {
 
@@ -10,22 +11,13 @@ class GCloudAccount extends BaseConfig<GCloudAccount> implements Serializable {
     String keyFileCredential
 
     def withCredentials(Closure closure) {
-        def tempDir = Config.pipeline.sh(returnStdout: true, script: """
-            mktemp -d
-        """)?.trim()
-        try {
-            Config.pipeline.withEnv(["CLOUDSDK_CONFIG=${tempDir}"]) {
-                Config.pipeline.withCredentials([Config.pipeline.file(credentialsId: keyFileCredential, variable: 'GCLOUD_KEY_FILE')]) {
-                    Config.pipeline.sh """
-                        gcloud auth activate-service-account "${account}" --key-file="\$GCLOUD_KEY_FILE"
-                    """
-                }
-                closure()
+        Utils.withTmpDir("CLOUDSDK_CONFIG") {
+            Config.pipeline.withCredentials([Config.pipeline.file(credentialsId: keyFileCredential, variable: 'GCLOUD_KEY_FILE')]) {
+                Config.pipeline.sh """
+                    gcloud auth activate-service-account "${account}" --key-file="\$GCLOUD_KEY_FILE"
+                """
             }
-        } finally {
-            Config.pipeline.sh """
-                rm -rf "${tempDir}"
-            """
+            closure()
         }
     }
 

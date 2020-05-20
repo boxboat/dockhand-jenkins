@@ -5,3 +5,4 @@
 - [Build](build.md)
 - [Promote](promote.md)
 - [Deploy](deploy.md)
+- [Credentials](credentials/README.md)
