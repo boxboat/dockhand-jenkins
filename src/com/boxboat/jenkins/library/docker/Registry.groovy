@@ -70,7 +70,10 @@ class Registry extends BaseConfig<Registry> implements Serializable {
         }
 
         if (credential instanceof VaultUsernamePasswordCredential) {
-            credential.withCredentials(params) {
+            credential.withCredentials([
+                "usernameVariable": params.usernameVariable,
+                "passwordVariable": params.passwordVariable
+            ]) {
                 credClosure()
             }
         } else {
