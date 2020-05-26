@@ -77,7 +77,8 @@ class Utils implements Serializable {
     }
 
     static String makeTmpFile() {
-        String tmpFile = "./tmp-${generateUUIDString()}"
+        def baseDir = Config.pipeline.env["WORKSPACE"] ?: "."
+        String tmpFile = "${baseDir}/tmp-${generateUUIDString()}"
         Config.pipeline.sh """
             set +x
             touch ${tmpFile}
@@ -105,7 +106,8 @@ class Utils implements Serializable {
      *    because it is outside Jenkin's current working directory
      **/
     static String makeTmpDir() {
-        String tmpDir = "./tmp-${generateUUIDString()}"
+        def baseDir = Config.pipeline.env["WORKSPACE"] ?: "."
+        String tmpDir = "${baseDir}/tmp-${generateUUIDString()}"
         Config.pipeline.sh """
             set +x
             mkdir -p "${tmpDir}"
