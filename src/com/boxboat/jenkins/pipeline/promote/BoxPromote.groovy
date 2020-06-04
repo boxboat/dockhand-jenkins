@@ -135,8 +135,10 @@ class BoxPromote extends BoxBase<PromoteConfig> implements Serializable {
                 fullSemVer = "${config.gitTagPrefix}${fullSemVer}"
             }
 
-            if (gitRepo.getTagReferenceHash(fullSemVer) == gitCommitToTag ||
-                    gitRepo.getTagReferenceHash(fullSemVer) == gitRepo.getTagReferenceHash(fullGitTagToTag)) {
+            def semVerReferenceHash = gitRepo.getTagReferenceHash(fullSemVer)?.trim()
+            if (semVerReferenceHash && (
+                    semVerReferenceHash == gitCommitToTag ||
+                    semVerReferenceHash == gitRepo.getTagReferenceHash(fullGitTagToTag))) {
                 versionChange = false
                 Config.pipeline.echo "No version changes detected"
             }
