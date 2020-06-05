@@ -59,7 +59,7 @@ class BoxBuild extends BoxBase<BuildConfig> implements Serializable {
         Compose.down(config.composeProfileMap.get(profile), profile)
     }
 
-    def push() {
+    def push(List<String> additionalImageTags = []) {
         def branch = gitRepo.getBranch()
         def event = "commit/${branch}"
         def eventTag = Utils.cleanTag(event)
@@ -69,10 +69,12 @@ class BoxBuild extends BoxBase<BuildConfig> implements Serializable {
 
         if (registries) {
             def isBranchTip = gitRepo.isBranchTip()
-            def tags = [buildTag.toString()]
+            def tags = [buildTag.toString()] + additionalImageTags
             if (isBranchTip) {
                 tags.add(eventTag)
             }
+
+            tags = tags.unique()
 
             imageSummary = imageSummaryHeader()
             registries.each { registry ->
