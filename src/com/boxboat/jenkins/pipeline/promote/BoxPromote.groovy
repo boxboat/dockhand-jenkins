@@ -4,6 +4,7 @@ import com.boxboat.jenkins.library.SemVer
 import com.boxboat.jenkins.library.Utils
 import com.boxboat.jenkins.library.config.Config
 import com.boxboat.jenkins.library.config.PromoteConfig
+import com.boxboat.jenkins.library.docker.Image
 import com.boxboat.jenkins.library.docker.Registry
 import com.boxboat.jenkins.library.promote.Promotion
 import com.boxboat.jenkins.pipeline.BoxBase
@@ -79,37 +80,33 @@ class BoxPromote extends BoxBase<PromoteConfig> implements Serializable {
         }
     }
 
-    def promote() {
-        def tagType = promotion.promoteToEvent.substring("tag/".length())
+    String getTagType(){
+        return promotion.promoteToEvent.substring("tag/".length())
+    }
 
+    String getGitCommitToTag(String tag){
+        return Utils.buildTagCommit(tag)
+    }
+
+    String getGitTagToTag(String tag) {
+        def semVer = new SemVer(tag)
+        return (semVer.isValid) ? tag : null
+    }
+
+    /**
+     * Determine the last semver promoted to
+    **/
+    SemVer getCurrentSemanticVersion(){
         def buildVersions = Config.getBuildVersions()
+        return buildVersions.getRepoEventVersion(gitRepo.getRemotePath(), config.gitTagPrefix, promotion.promoteToEvent)
+    }
 
-        String gitCommitToTag
-        String gitTagToTag
-        config.images.each { image ->
-            image.host = promoteFromRegistry.host
-            image.namespace = promoteFromRegistry.namespace
-            if (Utils.isImageTagEvent(promotion.event)) {
-                image.tag = Utils.imageTagFromEvent(promotion.event)
-            } else {
-                def tag = buildVersions.getEventImageVersion(promotion.event, image)
-                if (!tag) {
-                    Config.pipeline.error "build-versions does not contain a version for image '${image.path}', event: ${promotion.event}"
-                }
-                image.tag = tag
-            }
-            if (!gitCommitToTag && !gitTagToTag) {
-                gitCommitToTag = Utils.buildTagCommit(image.tag)
-                if (!gitCommitToTag) {
-                    def semVer = new SemVer(image.tag)
-                    if (semVer.isValid) {
-                        gitTagToTag = image.tag
-                    }
-                }
-            }
-        }
-
-        def currSemVer = buildVersions.getRepoEventVersion(gitRepo.getRemotePath(), config.gitTagPrefix, promotion.promoteToEvent)
+    /**
+     * Create a new SemVer from the one provided, bumping its patch or pre-release version
+    **/
+    SemVer getNextSemanticVersion(SemVer currSemVer) {
+        def tagType = getTagType()
+        def buildVersions = Config.getBuildVersions()
         def nextSemVer = currSemVer?.copy()
         if (nextSemVer == null || !nextSemVer.isValid) {
             nextSemVer = baseSemVer.copy()
@@ -124,7 +121,14 @@ class BoxPromote extends BoxBase<PromoteConfig> implements Serializable {
             }
             nextSemVer.incrementPreRelease(tagType)
         }
+        return nextSemVer
+    }
 
+    /**
+     * Check if currSemVer was written to this git commit
+    **/
+    Boolean hasVersionChanged(SemVer currSemVer, String gitCommitToTag, String gitTagToTag) {
+        def hasChanged = true
         if (currSemVer != null && !config.gitTagDisable && (gitCommitToTag || gitTagToTag)) {
             def fullGitTagToTag = gitTagToTag
             if (config.gitTagPrefix && gitTagToTag) {
@@ -139,98 +143,166 @@ class BoxPromote extends BoxBase<PromoteConfig> implements Serializable {
             if (semVerReferenceHash && (
                     semVerReferenceHash == gitCommitToTag ||
                     semVerReferenceHash == gitRepo.getTagReferenceHash(fullGitTagToTag))) {
-                versionChange = false
+                hasChanged = false
                 Config.pipeline.echo "No version changes detected"
             }
         }
 
-        if (versionChange) {
-            imageSummary = "Images"
+        return hasChanged
+    }
+
+    /**
+     * Update each image's tag
+    **/
+    def updateImageTags(){
+        String imageTag
+        def buildVersions = Config.getBuildVersions()
+        config.images.each { image ->
+            image.host = promoteFromRegistry.host
+            image.namespace = promoteFromRegistry.namespace
+
+            image.tag = Utils.imageTagFromEvent(promotion.event)
+            if (!image.tag) {
+                def tag = buildVersions.getEventImageVersion(promotion.event, image)
+                if (!tag) {
+                    Config.pipeline.error "build-versions does not contain a version for image '${image.path}', event: ${promotion.event}"
+                }
+                image.tag = tag
+            }
+            imageTag = image.tag
+        }
+        return imageTag
+    }
+
+    void retagImage(Image image, List<String> tags) {
+        def buildVersions = Config.getBuildVersions()
+        promoteFromRegistry.withCredentials {
+            image.pull()
+        }
+
+        imageSummary += "\n${image.path} promoted"
+        imageSummary += "\n\tfrom ${formatImageSummary(image, promotion.event, promoteFromRegistry)}"
+
+        pushRegistries.each { pushRegistry ->
+            def refImage = image.copy()
+            refImage.host = pushRegistry.host
+            refImage.namespace = pushRegistry.namespace
+
+            def pushList = []
+            tags.eachWithIndex { tag, i ->
+                def pushImage = refImage.copy()
+                pushImage.tag = tag
+                pushList.add(pushImage)
+                image.reTag(tag)
+
+                def start = (i == 0) ? "\n\tto" : "\n\t  "
+                imageSummary = "${start}   ${formatImageSummary(pushImage, promotion.promoteToEvent, pushRegistry)}"
+            }
+
+            pushRegistry.withCredentials {
+                pushList.each { pushImage ->
+                    pushImage.push()
+                }
+            }
+        }
+        buildVersions.setEventImageVersion(pushEvent, image, nextSemVer.toString())
+    }
+
+    /**
+     * Promote all images to the nextSemVer
+    **/
+    def promoteImages(def nextSemVer){
+        def buildVersions = Config.getBuildVersions()
+        imageSummary = "Images"
+        config.images.each { image ->
+            Config.pipeline.echo "Promoting '${image.path}' from '${image.tag}' to '${nextSemVer.toString()}'"
+            notifySuccessMessage += "\n${image.path} promoted from '${image.tag}' to '${nextSemVer.toString()}'"
+        }
+
+        if (!trigger) {
+            Config.pipeline.timeout(time: 10, unit: 'MINUTES') {
+                Config.pipeline.input "Upgrade images to version '${nextSemVer.toString()}'?"
+            }
+        }
+
+        def promoteClosure = { String pushEvent ->
+            def pushRegistries = config.getEventRegistries(pushEvent)
+            if (pushRegistries.size() == 0) {
+                Config.pipeline.error "'config.eventRegistryKeys' must specify a registry for event '${pushEvent}'"
+            }
+
+            def refTag = "tag-${Utils.alphaNumericDashLower(pushEvent.substring("tag/".length()))}"
+            if (refTag == "tag-release") {
+                refTag = "latest"
+            }
+            def tags = [nextSemVer.toString, refTag]
             config.images.each { image ->
-                Config.pipeline.echo "Promoting '${image.path}' from '${image.tag}' to '${nextSemVer.toString()}'"
-                notifySuccessMessage += "\n${image.path} promoted from '${image.tag}' to '${nextSemVer.toString()}'"
+                retagImage(image, tags)
             }
-            if (!trigger) {
-                Config.pipeline.timeout(time: 10, unit: 'MINUTES') {
-                    Config.pipeline.input "Upgrade images to version '${nextSemVer.toString()}'?"
-                }
-            }
+            buildVersions.setRepoEventVersion(gitRepo.getRemotePath(), config.gitTagPrefix, pushEvent, nextSemVer)
+        }
 
-            def promoteClosure = { String pushEvent ->
-                def pushRegistries = config.getEventRegistries(pushEvent)
-                if (pushRegistries.size() == 0) {
-                    Config.pipeline.error "'config.eventRegistryKeys' must specify a registry for event '${pushEvent}'"
-                }
-
-                def refTag = "tag-${Utils.alphaNumericDashLower(pushEvent.substring("tag/".length()))}"
-                if (refTag == "tag-release") {
-                    refTag = "latest"
-                }
-
-                config.images.each { image ->
-                    promoteFromRegistry.withCredentials {
-                        image.pull()
-                    }
-
-                    imageSummary += "\n${image.path} promoted"
-                    imageSummary += "\n\tfrom ${formatImageSummary(image, promotion.event, promoteFromRegistry)}"
-
-                    pushRegistries.each { pushRegistry ->
-                        def newImageSemVer = image.copy()
-                        newImageSemVer.host = pushRegistry.host
-                        newImageSemVer.namespace = pushRegistry.namespace
-                        newImageSemVer.tag = nextSemVer.toString()
-                        def newImageRef = image.copy()
-                        newImageRef.tag = refTag
-                        image.reTag(newImageSemVer)
-                        image.reTag(newImageRef)
-                        pushRegistry.withCredentials {
-                            newImageSemVer.push()
-                            newImageRef.push()
-                        }
-
-                        imageSummary += "\n\tto   ${formatImageSummary(newImageSemVer, promotion.promoteToEvent, pushRegistry)}"
-                        imageSummary += "\n\t     ${formatImageSummary(newImageRef, promotion.promoteToEvent, pushRegistry)}"
-                    }
-                    buildVersions.setEventImageVersion(pushEvent, image, nextSemVer.toString())
-                }
-                buildVersions.setRepoEventVersion(gitRepo.getRemotePath(), config.gitTagPrefix, pushEvent, nextSemVer)
-            }
-
-            if (tagType == "release") {
-                config.promotionMap.keySet().toList().each { k ->
-                    def v = config.promotionMap[k]
-                    if (v.promoteToEvent?.startsWith("tag/")) {
-                        def currentSemVer = buildVersions.getRepoEventVersion(gitRepo.getRemotePath(), config.gitTagPrefix, v.promoteToEvent)
-                        if (nextSemVer > currentSemVer) {
-                            emitEvents.add(v.promoteToEvent)
-                            promoteClosure(v.promoteToEvent)
-                        }
+        if (getTagType() == "release") {
+            config.promotionMap.keySet().toList().each { k ->
+                def v = config.promotionMap[k]
+                if (v.promoteToEvent?.startsWith("tag/")) {
+                    def currentSemVer = buildVersions.getRepoEventVersion(gitRepo.getRemotePath(), config.gitTagPrefix, v.promoteToEvent)
+                    if (nextSemVer > currentSemVer) {
+                        emitEvents.add(v.promoteToEvent)
+                        promoteClosure(v.promoteToEvent)
                     }
                 }
-            } else {
-                promoteClosure(promotion.promoteToEvent)
             }
+        } else {
+            promoteClosure(promotion.promoteToEvent)
+        }
 
-            buildVersions.save()
+        buildVersions.save()
+    }
 
-            if (!config.gitTagDisable && (gitCommitToTag || gitTagToTag)) {
-                // resetting will remove build-versions
-                Config.resetBuildVersions()
-                if (gitCommitToTag) {
-                    gitRepo.fetchAndCheckoutCommit(gitCommitToTag)
-                } else if (gitTagToTag) {
-                    if (config.gitTagPrefix) {
-                        gitTagToTag = "${config.gitTagPrefix}${gitTagToTag}"
-                    }
-                    gitRepo.fetchAndCheckoutTag(gitTagToTag)
-                }
-                def gitTag = nextSemVer.toString()
+    /**
+     * Tag the project's git repo with the Docker image tag if appropriate
+    **/
+    def tagGitRepo(def gitTag, def gitCommitToTag, def gitTagToTag) {
+        if (!config.gitTagDisable && (gitCommitToTag || gitTagToTag)) {
+            // resetting will remove build-versions
+            Config.resetBuildVersions()
+            if (gitCommitToTag) {
+                gitRepo.fetchAndCheckoutCommit(gitCommitToTag)
+            } else if (gitTagToTag) {
                 if (config.gitTagPrefix) {
-                    gitTag = "${config.gitTagPrefix}${gitTag}"
+                    gitTagToTag = "${config.gitTagPrefix}${gitTagToTag}"
                 }
-                gitRepo.tagAndPush(gitTag)
+                gitRepo.fetchAndCheckoutTag(gitTagToTag)
             }
+            if (config.gitTagPrefix) {
+                gitTag = "${config.gitTagPrefix}${gitTag}"
+            }
+            gitRepo.tagAndPush(gitTag)
+        }
+    }
+
+    /**
+     * Promote images to a new tag if the git hash has changed, and write the new tag back to git
+    **/
+    def promote() {
+        String gitTagToTag
+        String imageTag = updateImageTags()
+        String gitCommitToTag = Utils.buildTagCommit(imageTag)
+        if (!gitCommitToTag) {
+            def semVer = new SemVer(imageTag)
+            if (semVer.isValid) {
+                gitTagToTag = imageTag
+            }
+        }
+
+        def currSemVer = getCurrentSemanticVersion()
+        def nextSemVer = getNextSemanticVersion(currSemVer)
+        versionChange = hasVersionChanged(currSemVer, gitCommitToTag, gitTagToTag)
+
+        if (versionChange) {
+            promoteImages(nextSemVer)
+            tagGitRepo(nextSemVer.toString(), gitCommitToTag, gitTagToTag)
         }
     }
 
