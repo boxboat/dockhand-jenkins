@@ -5,7 +5,6 @@ import com.boxboat.jenkins.library.config.Config
 
 class GitRepo implements Serializable {
 
-    public checkoutData = [:]
     public dir
 
     private shortHashLength = 12
@@ -28,21 +27,31 @@ class GitRepo implements Serializable {
     }
 
     String _branch
+    String _prBranch
+
+    String getPrBranch(){
+        return _prBranch
+    }
 
     String getBranch() {
         if (!_branch) {
-            _branch = checkoutData?.GIT_BRANCH ?: Config.pipeline.sh(returnStdout: true, script: """
-                git rev-parse --abbrev-ref HEAD
-            """)?.trim()
-            if (_branch?.startsWith("origin/")) {
-                _branch = _branch.substring("origin/".length())
-            }
+            setBranch(Config.pipeline.sh(returnStdout: true, script: "git rev-parse --abbrev-ref HEAD")?.trim())
         }
         return Utils.resultOrTest(_branch, "master")
     }
 
     String setBranch(String value) {
         _branch = value
+        if (_branch?.startsWith("origin/")) {
+            _branch = _branch.substring("origin/".length())
+        }
+    }
+
+    String setPrBranch(String value){
+        _prBranch = value
+        if (_prBranch?.startsWith("origin/")) {
+            _prBranch = _prBranch.substring("origin/".length())
+        }
     }
 
     String getRemoteUrl() {
@@ -88,6 +97,10 @@ class GitRepo implements Serializable {
             result = hash.startsWith(tipHash)
         }
         return Utils.resultOrTest(result, true)
+    }
+
+    boolean isBranchPullRequest() {
+        return _prBranch != null
     }
 
     def checkout(String checkout) {

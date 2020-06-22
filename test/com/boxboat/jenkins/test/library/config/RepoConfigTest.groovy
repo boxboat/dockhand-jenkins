@@ -53,6 +53,7 @@ class RepoConfigTest {
                                                 new Image("apps/app-3"),
                                                 new Image("apps/app-4"),
                                         ],
+                                        prUseTargetBranch: true,
                                         eventRegistryKeys: [
                                                 new EventRegistryKey(
                                                         event: "commit/dev",
