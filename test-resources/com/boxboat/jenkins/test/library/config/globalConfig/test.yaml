@@ -90,6 +90,7 @@ vaultMap:
 repo:
   common:
     defaultBranch: master
+    prUseTargetBranch: false
     notify:
       targetMap:
         jenkins: !!com.boxboat.jenkins.library.notify.SlackJenkinsAppNotifyTarget

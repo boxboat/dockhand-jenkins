@@ -1,4 +1,5 @@
 common:
+  prUseTargetBranch: true
   images:
   - apps/app-1
   - apps/app-2

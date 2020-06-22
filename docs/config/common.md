@@ -9,6 +9,15 @@ common:
   defaultBranch: master
 ```
 
+## prUseTargetBranch
+
+If your git solution supports PR Branches, then you can set this to `true` if you would like to build PRs but retain the actual git branch name.
+This will ensure that build and deployment logic based on branch name events function correctly within Dockhand.
+If you are using `commit/PR-*` events then leave this setting set to `false`
+```yaml
+  prUseTargetBranch: false
+```
+
 ## eventRegistryKeys
 
 Events that match `event` or `eventRegex` will be pushed to to the registry at `registryKey`.

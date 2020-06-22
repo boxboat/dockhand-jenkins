@@ -28,6 +28,11 @@ class GitRepo implements Serializable {
     }
 
     String _branch
+    String _prBranch
+
+    String getPrBranch(){
+        return _prBranch
+    }
 
     String getBranch() {
         if (!_branch) {
@@ -43,6 +48,10 @@ class GitRepo implements Serializable {
 
     String setBranch(String value) {
         _branch = value
+    }
+
+    String setPrBranch(String value){
+        _prBranch = value
     }
 
     String getRemoteUrl() {
@@ -88,6 +97,10 @@ class GitRepo implements Serializable {
             result = hash.startsWith(tipHash)
         }
         return Utils.resultOrTest(result, true)
+    }
+
+    boolean isBranchPullRequest() {
+        return Utils.resultOrTest(_prBranch != null, false)
     }
 
     def checkout(String checkout) {

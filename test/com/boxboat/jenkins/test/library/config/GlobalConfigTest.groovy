@@ -184,6 +184,7 @@ class GlobalConfigTest {
                                 repo: [
                                         common : new CommonConfig(
                                                 defaultBranch: "master",
+                                                prUseTargetBranch: false,
                                                 notify: [
                                                         "targetMap"     : [
                                                                 "jenkins": new SlackJenkinsAppNotifyTarget(

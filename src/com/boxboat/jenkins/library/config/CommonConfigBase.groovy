@@ -9,6 +9,8 @@ class CommonConfigBase<T> extends BaseConfig<T> {
 
     String defaultBranch
 
+    Boolean prUseTargetBranch
+
     List<EventRegistryKey> eventRegistryKeys
 
     String gitAlternateKey
