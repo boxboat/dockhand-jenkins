@@ -47,10 +47,10 @@ class GitAccount implements Serializable {
         if (Config.repo.prUseTargetBranch) {
             if (Config.pipeline.env?.CHANGE_BRANCH) {
                 repo.setBranch(Config.pipeline.env.CHANGE_BRANCH)
-                repo.setPrBranch(Config.pipeline.env.GIT_BRANCH)
+                repo.setPrBranch(checkoutData?.GIT_BRANCH)
             }
-        } else if (Config.pipeline.env?.GIT_BRANCH) {
-            repo.setBranch(Config.pipeline.env.GIT_BRANCH)
+        } else if (checkoutData?.GIT_BRANCH) {
+            repo.setBranch(checkoutData?.GIT_BRANCH)
         }
 
         return repo

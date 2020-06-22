@@ -100,7 +100,7 @@ class GitRepo implements Serializable {
     }
 
     boolean isBranchPullRequest() {
-        return Utils.resultOrTest(_prBranch != null, false)
+        return _prBranch != null
     }
 
     def checkout(String checkout) {
