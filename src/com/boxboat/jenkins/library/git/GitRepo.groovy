@@ -42,14 +42,14 @@ class GitRepo implements Serializable {
 
     String setBranch(String value) {
         _branch = value
-        if (_branch.startsWith("origin/")) {
+        if (_branch?.startsWith("origin/")) {
             _branch = _branch.substring("origin/".length())
         }
     }
 
     String setPrBranch(String value){
         _prBranch = value
-        if (_prBranch.startsWith("origin/")) {
+        if (_prBranch?.startsWith("origin/")) {
             _prBranch = _prBranch.substring("origin/".length())
         }
     }
