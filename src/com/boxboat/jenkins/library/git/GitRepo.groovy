@@ -35,7 +35,7 @@ class GitRepo implements Serializable {
 
     String getBranch() {
         if (!_branch) {
-            _branch = Config.pipeline.sh(returnStdout: true, script: "git rev-parse --abbrev-ref HEAD")?.trim()
+            setBranch(Config.pipeline.sh(returnStdout: true, script: "git rev-parse --abbrev-ref HEAD")?.trim())
         }
         return Utils.resultOrTest(_branch, "master")
     }
