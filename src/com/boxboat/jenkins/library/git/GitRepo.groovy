@@ -83,18 +83,22 @@ class GitRepo implements Serializable {
     }
 
     boolean isBranchTip() {
-        String originHash = Config.pipeline.sh(returnStdout: true, script: """
-            git show-branch --sha1-name origin/${this.getBranch()} || :
-        """)
-        String tipHash
-        def closure = {
-            def matcher = originHash =~ /^\[([0-9a-f]+)\]/
-            tipHash = matcher.hasGroup() && matcher.size() > 0 ? matcher[0][1] : null
-        }
-        closure()
         def result = false
-        if (tipHash) {
-            result = hash.startsWith(tipHash)
+        if (this.isBranchPullRequest()) {
+            result = true
+        } else {
+            String originHash = Config.pipeline.sh(returnStdout: true, script: """
+                git show-branch --sha1-name origin/${this.getBranch()} || :
+            """)
+            String tipHash
+            def closure = {
+                def matcher = originHash =~ /^\[([0-9a-f]+)\]/
+                tipHash = matcher.hasGroup() && matcher.size() > 0 ? matcher[0][1] : null
+            }
+            closure()
+            if (tipHash) {
+                result = hash.startsWith(tipHash)
+            }
         }
         return Utils.resultOrTest(result, true)
     }

@@ -44,15 +44,13 @@ class GitAccount implements Serializable {
         def checkoutData = Config.pipeline.checkout Config.pipeline.scm
         def repo = new GitRepo(dir: Utils.toAbsolutePath("."))
 
-        if (Config.repo.prUseTargetBranch) {
-            if (Config.pipeline.env?.CHANGE_BRANCH) {
+        repo.setBranch(checkoutData?.GIT_BRANCH)
+
+        if (Config.pipeline.env?.CHANGE_BRANCH){
+            if (Config.repo.prUseTargetBranch) {
                 repo.setBranch(Config.pipeline.env.CHANGE_BRANCH)
-                repo.setPrBranch(checkoutData?.GIT_BRANCH)
-            } else {
-                repo.setBranch(checkoutData?.GIT_BRANCH)
             }
-        } else if (checkoutData?.GIT_BRANCH) {
-            repo.setBranch(checkoutData?.GIT_BRANCH)
+            repo.setPrBranch(checkoutData?.GIT_BRANCH)
         }
 
         return repo
