@@ -20,6 +20,8 @@ class Image extends BaseConfig<Image> implements Serializable {
 
     String tag
 
+    String summary = ""
+
     Boolean trigger
 
     Image(Map<String, Object> config = [:]) {
