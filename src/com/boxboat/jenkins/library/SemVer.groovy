@@ -81,6 +81,13 @@ class SemVer implements Comparable<SemVer>, Serializable {
         return new SemVer(this.toString())
     }
 
+    SemVer copyNoPrerelease() {
+        def noPrerelease = copy()
+        noPrerelease.preRelease = null
+        noPrerelease.isPreRelease = false
+        return noPrerelease
+    }
+
     @Override
     @NonCPS
     int compareTo(SemVer semver) {
