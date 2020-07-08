@@ -112,7 +112,7 @@ class BoxPromote extends BoxBase<PromoteConfig> implements Serializable {
         def currSemVer = buildVersions.getRepoEventVersion(gitRepo.getRemotePath(), config.gitTagPrefix, promotion.promoteToEvent)
         def nextSemVer = currSemVer?.copy()
         // If nextSemVer doesn't exist or is smaller than baseSemVer and is not a pre-release, use baseSemVer
-        if (nextSemVer == null || !nextSemVer.isValid || (!nextSemVer.isPreRelease && baseSemVer.compareTo(nextSemVer) > 0)) {
+        if (nextSemVer == null || !nextSemVer.isValid || (baseSemVer.nonPreReleaseCompare(nextSemVer) > 0)) {
             nextSemVer = baseSemVer.copy()
         } else if (tagType == "release") {
             nextSemVer.patch++
