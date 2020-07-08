@@ -1,4 +1,4 @@
-package com.boxboat.jenkins.test.semver
+package com.boxboat.jenkins.test.library
 
 import com.boxboat.jenkins.library.SemVer
 import org.junit.Test
@@ -15,26 +15,26 @@ class SemVerTest {
     static final int GREATER_THAN = 1
 
     @Test
-    void testSemverNonPreReleaseCompareRCs() {
+    void testSemverNoPrerelease() {
         SemVer sv1
         SemVer sv2
         sv1 = new SemVer("0.1.0")
         sv2 = new SemVer("0.1.0-rc1")
-        assertEquals(sv1.nonPreReleaseCompare(sv2), EQUAL)
+        assertEquals(sv1.copyNoPrerelease().compareTo(sv2.copyNoPrerelease()), EQUAL)
 
         sv1 = new SemVer("0.1.0-rc2")
         sv2 = new SemVer("0.1.0-rc1")
-        assertEquals(sv1.nonPreReleaseCompare(sv2), EQUAL)
+        assertEquals(sv1.copyNoPrerelease().compareTo(sv2.copyNoPrerelease()), EQUAL)
 
         sv1 = new SemVer("0.2.0")
         sv2 = new SemVer("0.1.0-rc1")
-        assertEquals(sv1.nonPreReleaseCompare(sv2), GREATER_THAN)
-        assertEquals(sv2.nonPreReleaseCompare(sv1), LESS_THAN)
+        assertEquals(sv1.copyNoPrerelease().compareTo(sv2.copyNoPrerelease()), GREATER_THAN)
+        assertEquals(sv2.copyNoPrerelease().compareTo(sv1.copyNoPrerelease()), LESS_THAN)
 
         sv1 = new SemVer("0.2.0-rc0")
         sv2 = new SemVer("0.1.0-rc1")
-        assertEquals(sv1.nonPreReleaseCompare(sv2), GREATER_THAN)
-        assertEquals(sv2.nonPreReleaseCompare(sv1), LESS_THAN)
+        assertEquals(sv1.copyNoPrerelease().compareTo(sv2.copyNoPrerelease()), GREATER_THAN)
+        assertEquals(sv2.copyNoPrerelease().compareTo(sv1.copyNoPrerelease()), LESS_THAN)
     }
 
     @Test
@@ -53,13 +53,13 @@ class SemVerTest {
 
         sv1 = new SemVer("0.2.0")
         sv2 = new SemVer("0.1.0-rc1")
-        assertEquals(sv1.nonPreReleaseCompare(sv2), GREATER_THAN)
-        assertEquals(sv2.nonPreReleaseCompare(sv1), LESS_THAN)
+        assertEquals(sv1.compareTo(sv2), GREATER_THAN)
+        assertEquals(sv2.compareTo(sv1), LESS_THAN)
 
         sv1 = new SemVer("0.2.0-rc0")
         sv2 = new SemVer("0.1.0-rc1")
-        assertEquals(sv1.nonPreReleaseCompare(sv2), GREATER_THAN)
-        assertEquals(sv2.nonPreReleaseCompare(sv1), LESS_THAN)
+        assertEquals(sv1.compareTo(sv2), GREATER_THAN)
+        assertEquals(sv2.compareTo(sv1), LESS_THAN)
     }
 
 }

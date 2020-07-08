@@ -81,36 +81,11 @@ class SemVer implements Comparable<SemVer>, Serializable {
         return new SemVer(this.toString())
     }
 
-    /**
-     * Compare, ignoring pre-releases
-    **/
-    @NonCPS
-    int nonPreReleaseCompare(SemVer semver){
-        if (this.isValid && semver.isValid) {
-            if (this.major == semver.major && this.minor == semver.minor && this.patch == semver.patch) {
-                return 0
-            }
-            if (this.major > semver.major) {
-                return 1
-            } else if (this.major < semver.major) {
-                return -1
-            }
-            if (this.minor > semver.minor) {
-                return 1
-            } else if (this.minor < semver.minor) {
-                return -1
-            }
-            if (this.patch > semver.patch) {
-                return 1
-            } else if (this.patch < semver.patch) {
-                return -1
-            }
-        } else if (this.isValid) {
-            return 1
-        } else if (semver.isValid) {
-            return -1
-        }
-        return 0
+    SemVer copyNoPrerelease() {
+        def noPrerelease = copy()
+        noPrerelease.preRelease = null
+        noPrerelease.isPreRelease = false
+        return noPrerelease
     }
 
     @Override
