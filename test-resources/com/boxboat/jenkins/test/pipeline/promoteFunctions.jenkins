@@ -1,0 +1,58 @@
+@Library('jenkins-shared-library@master')
+import com.boxboat.jenkins.pipeline.promote.*
+import static org.junit.Assert.assertEquals
+
+def execute() {
+
+    params.promotionKey = "stage"
+    def promote = new BoxPromote(
+        globalConfigPath: "com/boxboat/jenkins/config.example.yaml",
+        config: [
+            baseVersion: "0.1.0",
+            images: [
+                "test/a",
+                "test/b",
+            ],
+        ],
+    )
+
+    node() {
+        promote.wrap {
+            stage('Test getCurrSemVer'){
+                def currSemVer = promote.getCurrSemVer().toString()
+                assertEquals( "0.1.1-rc1", currSemVer)
+            }
+
+            stage('Test getNextSemVer'){
+                def nextSemVer = promote.getNextSemVer("rc").toString()
+                assertEquals("0.1.1-rc2", nextSemVer)
+
+                // Test when promoting a release
+                promote.promotion.promoteToEvent = "tag/release"
+                nextSemVer = promote.getNextSemVer("release").toString()
+                assertEquals("0.1.1", nextSemVer)
+            }
+
+            stage('Test setVersionChange'){
+                assertEquals(true, promote.versionChange)
+                // 0123456789abcdef0123456789abcdef is test hash returned for test version
+                promote.setVersionChange("0123456789abcdef0123456789abcdef", "")
+                assertEquals(false, promote.versionChange)
+            }
+
+            // Do this last, changing promoteToEvent may affect other tests
+            stage('Test getTagType'){
+                promote.promotion.promoteToEvent = "tag/release"
+                assertEquals("release", promote.getTagType())
+                promote.promotion.promoteToEvent = "tag/rc"
+                assertEquals("rc", promote.getTagType())
+                promote.promotion.promoteToEvent = "imageTag/0.0.1"
+                assertEquals("0.0.1", promote.getTagType())
+            }
+
+        }
+    }
+
+}
+
+return this

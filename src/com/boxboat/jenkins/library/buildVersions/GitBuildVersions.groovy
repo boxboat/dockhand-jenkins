@@ -16,7 +16,8 @@ class GitBuildVersions implements Serializable {
         if (event.startsWith("tag/")) {
             def test = "0.1.0"
             if (event != "tag/release") {
-                test += "-" + event.substring("tag/".length()) + "1"
+                // Update prerelease tag to be greater than release
+                test = "0.1.1-" + event.substring("tag/".length()) + "1"
             }
             return test
         }

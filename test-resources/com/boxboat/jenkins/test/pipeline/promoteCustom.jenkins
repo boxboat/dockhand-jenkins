@@ -5,11 +5,12 @@ import com.boxboat.jenkins.pipeline.promote.*
 def execute() {
 
     params.promotionKey = "stage"
+    params.overridePromoteToEvent = "imageTag/0.0.2"
+    params.overrideEvent = "commit/release/0.0.x"
     def promote = new BoxPromote(
         globalConfigPath: "com/boxboat/jenkins/config.example.yaml",
         config: [
             baseVersion: "0.1.0",
-            gitTagDisable: true,
             images: [
                 "test/a",
                 "test/b",
