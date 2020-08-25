@@ -1,6 +1,7 @@
 @Library('jenkins-shared-library@master')
 import com.boxboat.jenkins.pipeline.promote.*
 
+import static org.junit.Assert.assertEquals
 
 def execute() {
 
@@ -21,6 +22,7 @@ def execute() {
         promote.wrap {
             stage('Promote'){
                 promote.promote()
+                assertEquals(true, promote.writebackBuildVersions)
             }
         }
     }

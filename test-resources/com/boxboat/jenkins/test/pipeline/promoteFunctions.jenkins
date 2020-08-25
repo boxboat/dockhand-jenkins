@@ -42,12 +42,11 @@ def execute() {
 
             // Do this last, changing promoteToEvent may affect other tests
             stage('Test getTagType'){
-                promote.promotion.promoteToEvent = "tag/release"
-                assertEquals("release", promote.getTagType())
                 promote.promotion.promoteToEvent = "tag/rc"
                 assertEquals("rc", promote.getTagType())
-                promote.promotion.promoteToEvent = "imageTag/0.0.1"
-                assertEquals("0.0.1", promote.getTagType())
+
+                promote.promotion.promoteToEvent = "tag/release"
+                assertEquals("release", promote.getTagType())
             }
 
         }

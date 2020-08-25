@@ -5,8 +5,8 @@ import static org.junit.Assert.assertEquals
 
 def execute() {
 
-    params.promotionKey = "stage"
-    params.promoteToVersion = "0.0.2-rc10"
+    params.promotionKey = "prod"
+    params.promoteToVersion = "2.0.0-rc1"
     params.overrideEvent = "commit/release/0.0.x"
     def promote = new BoxPromote(
         globalConfigPath: "com/boxboat/jenkins/config.example.yaml",

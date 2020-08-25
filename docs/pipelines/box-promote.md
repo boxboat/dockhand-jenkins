@@ -34,7 +34,7 @@ properties([
 
     //Add these if you want to manually create a promoted version. Note if 'overridePromoteToEvent' is set, the image tag will not be written to build-versions
     string(name: 'overrideEvent', description: 'Override promote from event, typically commit/<branch>, tag/<tag>, or imageTag/<imageTag>', defaultValue: '')
-    string(name: 'overridePromoteToEvent', description: 'Override promote to event, tag/<tag>, or imageTag/<imageTag>', defaultValue: '')
+    string(name: 'promoteToVersion', description: 'Set a semver to promote to. Overrides patch bumping behavior', defaultValue: '')
   ])
 ])
 

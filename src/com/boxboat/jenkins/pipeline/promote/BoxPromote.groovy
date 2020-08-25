@@ -11,7 +11,7 @@ import com.boxboat.jenkins.pipeline.BoxBase
 class BoxPromote extends BoxBase<PromoteConfig> implements Serializable {
 
     public String overrideEvent
-    public String overridePromoteToEvent
+    public String promoteToVersion
     public String registryKey
 
     protected String imageSummary
@@ -20,7 +20,7 @@ class BoxPromote extends BoxBase<PromoteConfig> implements Serializable {
     protected Registry promoteFromRegistry
 
     protected boolean versionChange = true
-    protected boolean customPromoteVersion = false
+    protected boolean writebackBuildVersions = true
 
     BoxPromote(Map config = [:]) {
         super(config)
@@ -35,11 +35,8 @@ class BoxPromote extends BoxBase<PromoteConfig> implements Serializable {
     @Override
     def init() {
         super.init()
-        // If everything is custom, we don't need a promotionKey set
-        if (overrideEvent && overridePromoteToEvent) {
-            config.promotionKey = "custom promotion"
-            promotion = new Promotion()
-        } else if (!config.promotionKey) {
+
+        if (!config.promotionKey) {
             // abort, since pipeline may refresh without any parameters
             Config.pipeline.currentBuild.result = 'ABORTED'
             Config.pipeline.error "'config.promotionKey' must be set"
@@ -47,9 +44,6 @@ class BoxPromote extends BoxBase<PromoteConfig> implements Serializable {
             promotion = config.getPromotion(config.promotionKey)
         }
 
-        if (overridePromoteToEvent) {
-            promotion.promoteToEvent = overridePromoteToEvent
-        }
         if (overrideEvent) {
             promotion.event = overrideEvent
         }
@@ -69,8 +63,8 @@ class BoxPromote extends BoxBase<PromoteConfig> implements Serializable {
         if (!baseSemVer.isValid) {
             Config.pipeline.error "'config.baseVersion' is not a valid Semantic Version"
         }
-        if (!promotion.promoteToEvent.startsWith("tag/") && !Utils.isImageTagEvent(promotion.promoteToEvent)) {
-            Config.pipeline.error "'promoteToEvent' must start with 'tag/' or 'imageTag/'"
+        if (!promotion.promoteToEvent.startsWith("tag/")) {
+            Config.pipeline.error "'promoteToEvent' must start with 'tag/'"
         }
         emitEvents.add(promotion.promoteToEvent)
         if (registryKey) {
@@ -91,10 +85,10 @@ class BoxPromote extends BoxBase<PromoteConfig> implements Serializable {
     }
 
     /**
-     * Parse the promoteToEvent to determine the type of promote (tag/release, tag/<pre-release>, or imageTag/<custom-tag>)
+     * Parse the promoteToEvent to determine the type of promote (tag/release, or tag/<pre-release>)
     **/
     String getTagType() {
-        return Utils.imageTagFromEvent(promotion.promoteToEvent) ?: promotion.promoteToEvent.substring("tag/".length())
+        return promotion.promoteToEvent.substring("tag/".length())
     }
 
     /**
@@ -143,8 +137,29 @@ class BoxPromote extends BoxBase<PromoteConfig> implements Serializable {
      * Get the next semVer to promote to
     **/
     SemVer getNextSemVer(String tagType) {
-        def buildVersions = Config.getBuildVersions()
         def nextSemVer = currSemVer?.copy()
+        // Return the user defined version if it is set, else get nextSemVer like usual
+        if (promoteToVersion) {
+            SemVer promoteToSemVer = new SemVer(promoteToVersion)
+
+            // Check if there are any reasons not to write to build versions
+            //   1. If this is a release event but our override is a prerelease
+            //   2. If this is a prerelease event but our override is a release
+            //   3. If this tag < the current tag
+            if ((tagType == "release" && promoteToSemVer.isPreRelease) ||
+                (tagType != "release" && !promoteToSemVer.isPreRelease) ||
+                (nextSemVer && nextSemVer.compareTo(promoteToSemVer) > 0)){
+                writebackBuildVersions = false
+
+                // If we are not writing back to build versions (version less than current version),
+                //   then don't emit any events (won't have the right version anyways)
+                emitEvents = []
+            }
+
+            return promoteToSemVer
+        }
+
+        def buildVersions = Config.getBuildVersions()
         // If nextSemVer doesn't exist or its version without prerelease is smaller than baseSemVer, use baseSemVer
         if (nextSemVer == null || !nextSemVer.isValid || (baseSemVer.compareTo(nextSemVer.copyNoPrerelease()) > 0)) {
             nextSemVer = baseSemVer.copy()
@@ -180,7 +195,8 @@ class BoxPromote extends BoxBase<PromoteConfig> implements Serializable {
             }
 
             def semVerReferenceHash = gitRepo.getTagReferenceHash(fullSemVer)?.trim()
-            if (semVerReferenceHash && (
+            if (semVerReferenceHash &&
+                !promoteToVersion && (
                     semVerReferenceHash == gitCommitToTag ||
                     semVerReferenceHash == gitRepo.getTagReferenceHash(fullGitTagToTag))) {
                 versionChange = false
@@ -221,13 +237,14 @@ class BoxPromote extends BoxBase<PromoteConfig> implements Serializable {
             Config.pipeline.error "'config.eventRegistryKeys' must specify a registry for event '${pushEvent}'"
         }
 
-        // Don't push a reftag on a custom promote
-        def refTag = ""
-        if (!customPromoteVersion) {
-            refTag = "tag-${Utils.alphaNumericDashLower(pushEvent.substring("tag/".length()))}"
-        }
+        def refTag = "tag-${Utils.alphaNumericDashLower(pushEvent.substring("tag/".length()))}"
         if (refTag == "tag-release") {
             refTag = "latest"
+        }
+
+        // Don't push a reftag if we are not writing back
+        if (!writebackBuildVersions) {
+            refTag = ""
         }
 
         config.images.each { image ->
@@ -266,13 +283,11 @@ class BoxPromote extends BoxBase<PromoteConfig> implements Serializable {
                     imageSummary += "\n\t     ${formatImageSummary(newImageRef, promotion.promoteToEvent, pushRegistry)}"
                 }
             }
-            // If this is a custom promote version, don't save to build-versions
-            if (!customPromoteVersion) {
+            if (writebackBuildVersions) {
                 buildVersions.setEventImageVersion(pushEvent, image, promoteVersionString)
             }
         }
-        // If this is a custom promote version, don't save to build-versions
-        if (!customPromoteVersion) {
+        if (writebackBuildVersions) {
             buildVersions.setRepoEventVersion(gitRepo.getRemotePath(), config.gitTagPrefix, pushEvent, nextSemVer)
         }
     }
@@ -280,7 +295,7 @@ class BoxPromote extends BoxBase<PromoteConfig> implements Serializable {
     /**
      * Determine promotion type (release/non-release) and retag images
     **/
-    def promoteImages(String tagType, String promoteVersionString, SemVer nextSemVer) {
+    void promoteImages(String tagType, String promoteVersionString, SemVer nextSemVer) {
         def buildVersions = Config.getBuildVersions()
         if (tagType == "release") {
             config.promotionMap.keySet().toList().each { k ->
@@ -296,11 +311,11 @@ class BoxPromote extends BoxBase<PromoteConfig> implements Serializable {
         } else {
             retagImages(promotion.promoteToEvent, promoteVersionString, nextSemVer)
         }
+    }
 
-        // If this is a custom promote version, don't save to build-versions
-        if (!customPromoteVersion) {
-            buildVersions.save()
-        }
+    void saveBuildVersions() {
+        def buildVersions = Config.getBuildVersions()
+        buildVersions.save()
     }
 
     void tagGitRepo(String gitCommitToTag, String gitTagToTag, String promoteVersionString) {
@@ -325,8 +340,6 @@ class BoxPromote extends BoxBase<PromoteConfig> implements Serializable {
 
     def promote() {
         def tagType = getTagType()
-        // is this a user defined image tag?
-        customPromoteVersion = Utils.isImageTagEvent(promotion.promoteToEvent)
 
         List<String> gitTagInfo = getGitCommit()
         String gitCommitToTag = gitTagInfo[0]
@@ -335,25 +348,23 @@ class BoxPromote extends BoxBase<PromoteConfig> implements Serializable {
         SemVer nextSemVer
         String promoteVersionString
 
-        if (customPromoteVersion) {
-            promoteVersionString = tagType
-        } else {
-            nextSemVer = getNextSemVer(tagType)
-            promoteVersionString = nextSemVer.toString()
-            setVersionChange(gitCommitToTag, gitTagToTag)
-        }
 
-        if (versionChange || customPromoteVersion) {
+        nextSemVer = getNextSemVer(tagType)
+        promoteVersionString = nextSemVer.toString()
+        setVersionChange(gitCommitToTag, gitTagToTag)
+
+        if (versionChange) {
             prePromoteMessages(promoteVersionString)
             waitForUserConfirmation(promoteVersionString)
 
             promoteImages(tagType, promoteVersionString, nextSemVer)
+            saveBuildVersions()
             tagGitRepo(gitCommitToTag, gitTagToTag, promoteVersionString)
         }
     }
 
     def summary() {
-        if (versionChange || customPromoteVersion) {
+        if (versionChange) {
             pipelineSummaryMessage = """
 Promoted '${config.promotionKey}' from '${promotion.event}' to '${promotion.promoteToEvent}'
 Commit: ${gitRepo.commitUrl}
