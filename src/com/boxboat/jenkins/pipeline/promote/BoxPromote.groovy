@@ -242,11 +242,6 @@ class BoxPromote extends BoxBase<PromoteConfig> implements Serializable {
             refTag = "latest"
         }
 
-        // Don't push a reftag if we are not writing back
-        if (!writebackBuildVersions) {
-            refTag = ""
-        }
-
         config.images.each { image ->
             promoteFromRegistry.withCredentials {
                 image.pull()
@@ -262,7 +257,9 @@ class BoxPromote extends BoxBase<PromoteConfig> implements Serializable {
                 newImageSemVer.tag = promoteVersionString
 
                 def newImageRef
-                if (refTag) {
+
+                // Don't push a reftag if we are not writing back
+                if (writebackBuildVersions) {
                     newImageRef = image.copy()
                     newImageRef.tag = refTag
                     image.reTag(newImageRef)
