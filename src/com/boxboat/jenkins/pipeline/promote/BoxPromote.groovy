@@ -40,9 +40,8 @@ class BoxPromote extends BoxBase<PromoteConfig> implements Serializable {
             // abort, since pipeline may refresh without any parameters
             Config.pipeline.currentBuild.result = 'ABORTED'
             Config.pipeline.error "'config.promotionKey' must be set"
-        } else {
-            promotion = config.getPromotion(config.promotionKey)
         }
+        promotion = config.getPromotion(config.promotionKey)
 
         if (overrideEvent) {
             promotion.event = overrideEvent
@@ -146,9 +145,10 @@ class BoxPromote extends BoxBase<PromoteConfig> implements Serializable {
             //   1. If this is a release event but our override is a prerelease
             //   2. If this is a prerelease event but our override is a release
             //   3. If this tag < the current tag
-            if ((tagType == "release" && promoteToSemVer.isPreRelease) ||
+            if (!promoteToSemVer.isValid ||
+                (tagType == "release" && promoteToSemVer.isPreRelease) ||
                 (tagType != "release" && !promoteToSemVer.isPreRelease) ||
-                (nextSemVer && nextSemVer.compareTo(promoteToSemVer) > 0)){
+                (nextSemVer && nextSemVer.compareTo(promoteToSemVer) > 0)) {
                 writebackBuildVersions = false
 
                 // If we are not writing back to build versions (version less than current version),
