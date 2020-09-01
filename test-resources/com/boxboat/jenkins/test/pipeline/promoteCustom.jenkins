@@ -6,11 +6,12 @@ import static org.junit.Assert.assertEquals
 def execute() {
 
     params.promotionKey = "stage"
+    params.promoteToVersion = "0.0.2-rc10"
+    params.overrideEvent = "commit/release/0.0.x"
     def promote = new BoxPromote(
         globalConfigPath: "com/boxboat/jenkins/config.example.yaml",
         config: [
             baseVersion: "0.1.0",
-            gitTagDisable: true,
             images: [
                 "test/a",
                 "test/b",
@@ -22,7 +23,7 @@ def execute() {
         promote.wrap {
             stage('Promote'){
                 promote.promote()
-                assertEquals(true, promote.writebackBuildVersions)
+                assertEquals(false, promote.writebackBuildVersions)
             }
         }
     }

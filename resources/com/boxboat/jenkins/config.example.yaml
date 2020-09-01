@@ -115,6 +115,8 @@ repo:
     eventRegistryKeys:
       - event: commit/master
         registryKey: default
+      - eventRegex: commit/release/(.*)
+        registryKey: default
       - eventRegex: tag/(.*)
         registryKey: default
   promote:
