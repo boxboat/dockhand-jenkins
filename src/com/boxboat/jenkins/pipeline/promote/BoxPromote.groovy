@@ -301,8 +301,8 @@ class BoxPromote extends BoxBase<PromoteConfig> implements Serializable {
                     def currentSemVer = buildVersions.getRepoEventVersion(gitRepo.getRemotePath(), config.gitTagPrefix, v.promoteToEvent)
                     if (nextSemVer > currentSemVer) {
                         emitEvents.add(v.promoteToEvent)
-                        retagImages(v.promoteToEvent, promoteVersionString, nextSemVer)
                     }
+                    retagImages(v.promoteToEvent, promoteVersionString, nextSemVer)
                 }
             }
         } else {
