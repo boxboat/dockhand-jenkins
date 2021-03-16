@@ -9,9 +9,9 @@ repositories {
 
 dependencies {
     // main dependencies
-    implementation group: 'org.codehaus.groovy', name: 'groovy-all', version: '2.4.16'
-    implementation group: 'com.cloudbees', name: 'groovy-cps', version: '1.24'
-    implementation group: 'org.jenkins-ci.main', name: 'jenkins-core', version: '2.102'
+    implementation group: 'org.codehaus.groovy', name: 'groovy-all', version: '2.4.12'
+    implementation group: 'com.cloudbees', name: 'groovy-cps', version: '1.32'
+    implementation group: 'org.jenkins-ci.main', name: 'jenkins-core', version: '2.277'
 
     // @grab dependencies
     implementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.9'
