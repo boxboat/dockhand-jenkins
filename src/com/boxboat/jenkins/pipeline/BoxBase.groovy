@@ -34,6 +34,7 @@ abstract class BoxBase<T extends CommonConfigBase> implements Serializable {
     public String pipelineSummaryMessage = "Build Succeeded"
 
     protected String failureSummary
+    protected String jenkinsYamlFile
     protected initialConfig
     protected GitRepo gitRepo
     protected emitEvents = []
@@ -52,6 +53,9 @@ abstract class BoxBase<T extends CommonConfigBase> implements Serializable {
                     break
                 case "config":
                     initialConfig = v
+                    break
+                case "jenkinsYamlFile":
+                    jenkinsYamlFile = v
                     break
                 default:
                     def property = this.metaClass.getMetaProperty(k)
@@ -192,10 +196,16 @@ abstract class BoxBase<T extends CommonConfigBase> implements Serializable {
 
         // merge config from jenkins.yaml if exists
         String configFile = null
-        if (Config.pipeline.fileExists("jenkins.yaml")) {
-            configFile = "jenkins.yaml"
-        } else if (Config.pipeline.fileExists("jenkins.yml")) {
-            configFile = "jenkins.yml"
+        if (jenkinsYamlFile) {
+            if (Config.pipeline.fileExists(jenkinsYamlFile)) {
+                configFile = jenkinsYamlFile
+            }
+        } else {
+            if (Config.pipeline.fileExists("jenkins.yaml")) {
+                configFile = "jenkins.yaml"
+            } else if (Config.pipeline.fileExists("jenkins.yml")) {
+                configFile = "jenkins.yml"
+            }
         }
         if (configFile) {
             String configFileContents = Config.pipeline.readFile(configFile)
