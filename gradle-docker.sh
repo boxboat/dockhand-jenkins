@@ -11,5 +11,5 @@ docker run --rm -i \
     -v "$(pwd):/home/gradle/project" \
     -w "/home/gradle/project" \
     --entrypoint gradle \
-    gradle:6.2.2-jdk11 \
+    gradle:6.8.3-jdk15 \
         "$@"
