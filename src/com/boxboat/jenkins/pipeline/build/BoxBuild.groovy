@@ -60,52 +60,57 @@ class BoxBuild extends BoxBase<BuildConfig> implements Serializable {
     }
 
     def push(List<String> additionalImageTags = []) {
-        def branch = gitRepo.getBranch()
-        def event = "commit/${branch}"
-        def eventTag = Utils.cleanTag(event)
-        Config.pipeline.echo branch
-        def buildTag = "build-${gitRepo.shortHash}"
-        def registries = config.getEventRegistries(event)
+        if (config.images) {
+            def branch = gitRepo.getBranch()
+            def event = "commit/${branch}"
+            def eventTag = Utils.cleanTag(event)
+            Config.pipeline.echo branch
+            def buildTag = "build-${gitRepo.shortHash}"
+            def registries = config.getEventRegistries(event)
 
-        if (registries) {
-            def isBranchTip = gitRepo.isBranchTip()
-            def tags = [buildTag.toString()] + additionalImageTags
-            if (isBranchTip) {
-                tags.add(eventTag)
-            }
+            if (registries) {
+                def isBranchTip = gitRepo.isBranchTip()
+                def tags = [buildTag.toString()] + additionalImageTags
+                if (isBranchTip) {
+                    tags.add(eventTag)
+                }
 
-            tags = tags.unique()
+                tags = tags.unique()
 
-            imageSummary = imageSummaryHeader()
-            registries.each { registry ->
-                registry.withCredentials {
-                    config.images.each { Image image ->
-                        tags.each { String tag ->
-                            def newImage = image.copy()
-                            newImage.host = registry.host
-                            newImage.namespace = registry.namespace
-                            newImage.tag = tag
-                            image.reTag(newImage)
-                            newImage.push()
-                            imageSummary += "\n${formatImageSummary(newImage, event, registry)}"
+                imageSummary = imageSummaryHeader()
+                registries.each { registry ->
+                    registry.withCredentials {
+                        config.images.each { Image image ->
+                            tags.each { String tag ->
+                                def newImage = image.copy()
+                                newImage.host = registry.host
+                                newImage.namespace = registry.namespace
+                                newImage.tag = tag
+                                image.reTag(newImage)
+                                newImage.push()
+                                imageSummary += "\n${formatImageSummary(newImage, event, registry)}"
+                            }
                         }
                     }
                 }
-            }
 
-            if (isBranchTip) {
-                Config.pipeline.echo "isBranchTip: ${event}"
-                emitEvents.add(event)
-                def buildVersions = Config.getBuildVersions()
-                def repoPath = this.gitRepo.getRemotePath()
-                config.images.each { image ->
-                    buildVersions.setEventImageVersion(event, image, buildTag)
-                    buildVersions.setImageRepoPath(image, repoPath)
+                if (isBranchTip) {
+                    Config.pipeline.echo "isBranchTip: ${event}"
+                    emitEvents.add(event)
+                    def buildVersions = Config.getBuildVersions()
+                    def repoPath = this.gitRepo.getRemotePath()
+                    config.images.each { image ->
+                        buildVersions.setEventImageVersion(event, image, buildTag)
+                        buildVersions.setImageRepoPath(image, repoPath)
+                    }
+                    buildVersions.save()
                 }
-                buildVersions.save()
+            } else {
+                imageSummary = "no eventRegistryKeys matched; not pushing any images"
             }
+        } else {
+            imageSummary = "no images defined; not pushing any images"
         }
-
     }
 
     def summary() {
