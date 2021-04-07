@@ -37,7 +37,7 @@ class CommonConfigBase<T> extends BaseConfig<T> {
                 }
             }
         }
-        return registries
+        return registries.unique()
     }
 
     Object getUserConfig(String key) {
