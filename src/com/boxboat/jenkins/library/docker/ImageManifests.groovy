@@ -15,6 +15,14 @@ class ImageManifests implements Serializable {
         this.image = image
     }
 
+    def addArtifactoryManifest(ArtifactoryImageManifest manifest) {
+        String digest = manifest.digest
+        if (!manifests[digest]) {
+            manifests[digest] = []
+        }
+        manifests[digest].add(manifest)
+    }
+
     def addDtrManifest(manifest) {
         if (DtrImageManifest.isValid(manifest)) {
             ImageManifest imageManifest = new DtrImageManifest(manifest)
