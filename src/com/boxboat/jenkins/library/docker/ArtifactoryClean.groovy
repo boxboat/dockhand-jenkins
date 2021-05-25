@@ -18,17 +18,15 @@ class ArtifactoryClean implements Serializable {
         Config.pipeline.echo "${requestURI}"
         Config.pipeline.echo "${findString}"
         def result = null
-        registry.withCredentials {
-            def auth = Config.pipeline.env["REGISTRY_USERNAME"] + ":" + Config.pipeline.env["REGISTRY_PASSWORD"]
-            def encoded = auth.bytes.encodeBase64().toString()
-            result = Config.pipeline.httpRequest(
-                    url: requestURI,
-                    httpMode: 'POST',
-                    contentType: "TEXT_PLAIN",
-                    customHeaders: [[name: 'Authorization', value: "Basic ${encoded}"]],
-                    requestBody: findString
-            )?.getContent()
-        }
+        def auth = Config.pipeline.env["REGISTRY_USERNAME"] + ":" + Config.pipeline.env["REGISTRY_PASSWORD"]
+        def encoded = auth.bytes.encodeBase64().toString()
+        result = Config.pipeline.httpRequest(
+                url: requestURI,
+                httpMode: 'POST',
+                contentType: "TEXT_PLAIN",
+                customHeaders: [[name: 'Authorization', value: "Basic ${encoded}"]],
+                requestBody: findString
+        )?.getContent()
         def manifests = [:] as Map<String, Object>
         if (result && result != "null") {
             manifests = Config.pipeline.readJSON(text: result.toString())
@@ -64,7 +62,7 @@ class ArtifactoryClean implements Serializable {
     }
 
     int deleteTag(Registry registry, String name, String tag) {
-        def result = -1
+        def result
         Config.pipeline.echo "Removing ${name}:${tag}"
         if (dryRun) {
             cleanSummary = "${cleanSummary}\n${name}:${tag}"
@@ -74,21 +72,19 @@ class ArtifactoryClean implements Serializable {
 
         // clean up tags
         def requestURI = registry.getRegistryUrl() + "/artifactory/${dockerRepo}/${name}/${tag}"
-        registry.withCredentials {
-            def auth = Config.pipeline.env["REGISTRY_USERNAME"] + ":" + Config.pipeline.env["REGISTRY_PASSWORD"]
-            def encoded = auth.bytes.encodeBase64().toString()
-            result = Config.pipeline.httpRequest(
-                    url: requestURI,
-                    httpMode: 'DELETE',
-                    contentType: "APPLICATION_JSON",
-                    customHeaders: [[name: 'Authorization', value: "Basic ${encoded}"]],
-            )?.getContent()
-        }
-        if (result.status == 200) {
+        def auth = Config.pipeline.env["REGISTRY_USERNAME"] + ":" + Config.pipeline.env["REGISTRY_PASSWORD"]
+        def encoded = auth.bytes.encodeBase64().toString()
+        result = Config.pipeline.httpRequest(
+                url: requestURI,
+                httpMode: 'DELETE',
+                contentType: "APPLICATION_JSON",
+                customHeaders: [[name: 'Authorization', value: "Basic ${encoded}"]],
+        )?.getStatus()
+        if (result == 200 || result == 204) {
             cleanSummary = "${cleanSummary}\n${name}:${tag}"
             removalCount++
         }
-        return result.status
+        return result
     }
 
     String clean() {
@@ -111,21 +107,21 @@ class ArtifactoryClean implements Serializable {
             Config.pipeline.echo "Dry Run"
         }
         Config.pipeline.echo "RetentionDays: ${retentionDays}"
+        registry.withCredentials {
+            def registryRepositories = readRepositories(registry)
+            registryRepositories.each { repo, tags ->
 
-        def registryRepositories = readRepositories(registry)
-        registryRepositories.each { repo, tags ->
+                Config.pipeline.echo "Processing repo ${repo}"
+                def imageManifests = new ImageManifests(new Image(path: "${repo}"))
+                tags.each { tagData ->
+                    imageManifests.addArtifactoryManifest(tagData)
+                }
+                imageManifests.getCleanableTagsList(retentionDays).each { tag ->
+                    deleteTag(registry, repo, tag)
+                }
 
-            Config.pipeline.echo "Processing repo ${repo}"
-            def imageManifests = new ImageManifests(new Image(path: "${repo}"))
-            tags.each { tagData ->
-                imageManifests.addArtifactoryManifest(tagData)
             }
-            imageManifests.getCleanableTagsList(retentionDays).each { tag ->
-                deleteTag(registry, repo, tag)
-            }
-
         }
 
     }
-
 }
