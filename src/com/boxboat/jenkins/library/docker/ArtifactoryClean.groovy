@@ -7,24 +7,20 @@ class ArtifactoryClean implements Serializable {
     boolean dryRun
     int retentionDays
     int removalCount = 0
-    List<String> registryKeys
-    String dockerRepoPathMatch
-    String dockerRepo
+    List<ArtifactoryCleanRegistry> artifactoryCleanRegistries
     String cleanSummary
 
-    Map<String, List<ArtifactoryImageManifest>> readRepositories(Registry registry) {
+    Map<String, List<ArtifactoryImageManifest>> readRepositories(ArtifactoryCleanRegistry cleanRegistry) {
+        def registry = Config.global.getRegistry(cleanRegistry.registryKey)
         def requestURI = registry.getRegistryUrl() + "/artifactory/api/search/aql"
-        def findString = """items.find({"path":{"\$ne":"."},"\$or":[{"\$and":[{"repo":"${dockerRepo}","path":{"\$match":"${dockerRepoPathMatch}"},"name":"manifest.json"}]}]}).include("name","repo","path","actual_md5","actual_sha1","size","type","modified","created","property")"""
+        def findString = """items.find({"path":{"\$ne":"."},"\$or":[{"\$and":[{"repo":"${registry.namespace}","path":{"\$match":"${cleanRegistry.path}"},"name":"manifest.json"}]}]}).include("name","repo","path","actual_md5","actual_sha1","size","type","modified","created","property")"""
         Config.pipeline.echo "${requestURI}"
         Config.pipeline.echo "${findString}"
-        def result = null
-        def auth = Config.pipeline.env["REGISTRY_USERNAME"] + ":" + Config.pipeline.env["REGISTRY_PASSWORD"]
-        def encoded = auth.bytes.encodeBase64().toString()
-        result = Config.pipeline.httpRequest(
+                def result = Config.pipeline.httpRequest(
                 url: requestURI,
                 httpMode: 'POST',
                 contentType: "TEXT_PLAIN",
-                customHeaders: [[name: 'Authorization', value: "Basic ${encoded}"]],
+                authentication: registry.credential,
                 requestBody: findString
         )?.getContent()
         def manifests = [:] as Map<String, Object>
@@ -61,7 +57,8 @@ class ArtifactoryClean implements Serializable {
         return repos
     }
 
-    int deleteTag(Registry registry, String name, String tag) {
+    int deleteTag(ArtifactoryCleanRegistry cleanRegistry, String name, String tag) {
+        def registry = Config.global.getRegistry(cleanRegistry.registryKey)
         def result
         Config.pipeline.echo "Removing ${name}:${tag}"
         if (dryRun) {
@@ -71,14 +68,12 @@ class ArtifactoryClean implements Serializable {
         }
 
         // clean up tags
-        def requestURI = registry.getRegistryUrl() + "/artifactory/${dockerRepo}/${name}/${tag}"
-        def auth = Config.pipeline.env["REGISTRY_USERNAME"] + ":" + Config.pipeline.env["REGISTRY_PASSWORD"]
-        def encoded = auth.bytes.encodeBase64().toString()
+        def requestURI = registry.getRegistryUrl() + "/artifactory/${registry.namespace}/${name}/${tag}"
         result = Config.pipeline.httpRequest(
                 url: requestURI,
                 httpMode: 'DELETE',
                 contentType: "APPLICATION_JSON",
-                customHeaders: [[name: 'Authorization', value: "Basic ${encoded}"]],
+                authentication: registry.credential,
         )?.getStatus()
         if (result == 200 || result == 204) {
             cleanSummary = "${cleanSummary}\n${name}:${tag}"
@@ -93,35 +88,31 @@ class ArtifactoryClean implements Serializable {
         } else {
             cleanSummary = "Images Removed:"
         }
-        registryKeys.each { registryKey ->
-            cleanRegistry(registryKey)
+        artifactoryCleanRegistries.each { registry ->
+            cleanRegistry(registry)
         }
         cleanSummary = "${cleanSummary}\n\nTotal Images Removed: ${removalCount}"
         return cleanSummary
     }
 
-    protected cleanRegistry(String registryKey) {
-        def registry = Config.global.getRegistry(registryKey)
-
+    protected cleanRegistry(ArtifactoryCleanRegistry cleanRegistry) {
         if (dryRun) {
             Config.pipeline.echo "Dry Run"
         }
         Config.pipeline.echo "RetentionDays: ${retentionDays}"
-        registry.withCredentials {
-            def registryRepositories = readRepositories(registry)
-            registryRepositories.each { repo, tags ->
+        def registryRepositories = readRepositories(cleanRegistry)
+        registryRepositories.each { repo, tags ->
 
-                Config.pipeline.echo "Processing repo ${repo}"
-                def imageManifests = new ImageManifests(new Image(path: "${repo}"))
-                tags.each { tagData ->
-                    imageManifests.addArtifactoryManifest(tagData)
-                }
-                imageManifests.getCleanableTagsList(retentionDays).each { tag ->
-                    deleteTag(registry, repo, tag)
-                }
-
+            Config.pipeline.echo "Processing repo ${repo}"
+            def imageManifests = new ImageManifests(new Image(path: "${repo}"))
+            tags.each { tagData ->
+                imageManifests.addArtifactoryManifest(tagData)
+            }
+            imageManifests.getCleanableTagsList(retentionDays).each { tag ->
+                deleteTag(cleanRegistry, repo, tag)
             }
         }
 
     }
+
 }
