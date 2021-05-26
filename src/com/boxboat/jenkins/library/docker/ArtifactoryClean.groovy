@@ -13,7 +13,7 @@ class ArtifactoryClean implements Serializable {
     Map<String, List<ArtifactoryImageManifest>> readRepositories(ArtifactoryCleanRegistry cleanRegistry) {
         def registry = Config.global.getRegistry(cleanRegistry.registryKey)
         def requestURI = registry.getRegistryUrl() + "/artifactory/api/search/aql"
-        def pathMatch = cleanRegistry.path == null ? "*" : cleanRegistry.path
+        def pathMatch = cleanRegistry.pathMatch ?: "*"
 
         def findString = """items.find({"path":{"\$ne":"."},"\$or":[{"\$and":[{"repo":"${registry.namespace}","path":{"\$match":"${pathMatch}"},"name":"manifest.json"}]}]}).include("name","repo","path","actual_md5","actual_sha1","size","type","modified","created","property")"""
         Config.pipeline.echo "${requestURI}"

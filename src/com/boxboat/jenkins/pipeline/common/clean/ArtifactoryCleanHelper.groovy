@@ -16,7 +16,7 @@ class ArtifactoryCleanHelper implements Serializable {
     static String clean(Map params) {
         def paramsObj = new ArtifactoryCleanParams().newFromObject(params)
         if (!paramsObj.artifactoryCleanRegistries) {
-            Config.pipeline.error "'registryKeys' is required"
+            Config.pipeline.error "'artifactoryCleanRegistries' is required"
         }
 
         def artifactoryClean = new ArtifactoryClean(
