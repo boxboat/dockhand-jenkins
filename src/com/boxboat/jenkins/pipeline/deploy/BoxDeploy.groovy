@@ -12,6 +12,11 @@ import com.boxboat.jenkins.library.docker.Image
 import com.boxboat.jenkins.library.environment.Environment
 import com.boxboat.jenkins.library.trigger.Trigger
 import com.boxboat.jenkins.pipeline.BoxBase
+import hudson.model.Job
+import hudson.model.ParametersAction
+import hudson.model.Result
+import hudson.model.Run
+import jenkins.model.Jenkins
 
 class BoxDeploy extends BoxBase<DeployConfig> implements Serializable {
 
@@ -163,6 +168,51 @@ class BoxDeploy extends BoxBase<DeployConfig> implements Serializable {
             }
         }
         return triggers
+    }
+
+    static class CheckSupersededParams extends BaseConfig<CheckSupersededParams> implements Serializable {
+        int numRuns
+        Map<String, Object> paramMatchMap
+    }
+
+    static void checkSuperseded(Map paramsMap) {
+        CheckSupersededParams params = (new CheckSupersededParams()).newFromObject(paramsMap)
+        if (!params.paramMatchMap) {
+            Config.pipeline.error "'paramMatchMap' is required"
+        }
+        if (!params.numRuns) {
+            params.numRuns = 100
+        }
+
+        def job = Jenkins.get().getItemByFullName(Config.pipeline.env.JOB_NAME, Job.class)
+        def runs = job.getBuilds().limit(params.numRuns)
+        // iterate over runs from newest to oldest
+        runLoop:
+        for (def run in runs) {
+            run = run as Run
+            if (run.number.toString() == Config.pipeline.env.BUILD_NUMBER) {
+                // this is the current run; stop iterating
+                break
+            }
+            // this is a newer run than the current run
+            if (run.isBuilding() || run.getResult() == Result.SUCCESS) {
+                // newer run is pending or successful; check to see if parameters match the current run
+                def runParamsAction = run.getActions(ParametersAction.class)
+                if (runParamsAction) {
+                    def runParams = runParamsAction[0]
+                    for (def paramMatch in params.paramMatchMap) {
+                        if (runParams.getParameter(paramMatch.key)?.value != paramMatch.value) {
+                            // newer run parameters do not match paramMatchMap - continue to next run
+                            continue runLoop
+                        }
+                    }
+
+                    // newer run parameters match the current run; current run is superseded
+                    Config.pipeline.currentBuild.result = 'ABORTED'
+                    Config.pipeline.error "superseded by run #${run.number}"
+                }
+            }
+        }
     }
 
     static class ImageTagsParams extends BaseConfig<ImageTagsParams> implements Serializable {
