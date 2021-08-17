@@ -4,6 +4,7 @@ import com.boxboat.jenkins.library.docker.Image
 import com.boxboat.jenkins.library.docker.Registry
 import com.boxboat.jenkins.library.event.EventRegistryKey
 import com.boxboat.jenkins.library.notify.NotifyConfig
+import com.cloudbees.groovy.cps.NonCPS
 
 class CommonConfigBase<T> extends BaseConfig<T> {
 
@@ -23,6 +24,7 @@ class CommonConfigBase<T> extends BaseConfig<T> {
 
     Map<String, Object> userConfigMap
 
+    @NonCPS
     List<Registry> getEventRegistries(String event) {
         List<Registry> registries = []
         eventRegistryKeys?.each { EventRegistryKey eventRegistryKey ->
