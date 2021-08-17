@@ -4,7 +4,6 @@ import com.boxboat.jenkins.library.docker.Image
 import com.boxboat.jenkins.library.docker.Registry
 import com.boxboat.jenkins.library.event.EventRegistryKey
 import com.boxboat.jenkins.library.notify.NotifyConfig
-import com.cloudbees.groovy.cps.NonCPS
 
 class CommonConfigBase<T> extends BaseConfig<T> {
 
@@ -24,22 +23,21 @@ class CommonConfigBase<T> extends BaseConfig<T> {
 
     Map<String, Object> userConfigMap
 
-    @NonCPS
     List<Registry> getEventRegistries(String event) {
-        List<Registry> registries = []
+        Map<String, Registry> registryMap = [:]
         eventRegistryKeys?.each { EventRegistryKey eventRegistryKey ->
             if (eventRegistryKey.event) {
                 if (event == eventRegistryKey.event) {
-                    registries.add(Config.global.getRegistry(eventRegistryKey.registryKey))
+                    registryMap.put(eventRegistryKey.registryKey, Config.global.getRegistry(eventRegistryKey.registryKey))
                 }
             } else if (eventRegistryKey.eventRegex) {
                 def matcher = event =~ eventRegistryKey.eventRegex
                 if (matcher.matches()) {
-                    registries.add(Config.global.getRegistry(eventRegistryKey.registryKey))
+                    registryMap.put(eventRegistryKey.registryKey, Config.global.getRegistry(eventRegistryKey.registryKey))
                 }
             }
         }
-        return registries.unique()
+        return registryMap.collect { it.value }
     }
 
     Object getUserConfig(String key) {
