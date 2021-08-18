@@ -28,10 +28,11 @@ class DockcmdGetSecrets implements Serializable {
 
     public parseAwsSecretsScript(String region, Map<String, Object> additionalOptions = [:]) {
         def combinedOptions = combineOptions(options, additionalOptions)
+        def filesStr = files.collect{ "-i \"${it}\"" }.join(" ")
         return """
             dockcmd_current_dir=\$(pwd)
             cd "${directory}"
-            dockcmd aws get-secrets --region "${region}" ${optionsString(combinedOptions)} ${files.join('" "')}
+            dockcmd aws get-secrets --region "${region}" ${optionsString(combinedOptions)} ${filesStr}
             cd "\$dockcmd_current_dir"
         """
 
@@ -49,10 +50,11 @@ class DockcmdGetSecrets implements Serializable {
 
     public parseVaultSecretsScript(String vaultUrl, Map<String, Object> additionalOptions = [:]) {
         def combinedOptions = combineOptions(options, additionalOptions)
+        def filesStr = files.collect{ "-i \"${it}\"" }.join(" ")
         return """
             dockcmd_current_dir=\$(pwd)
             cd "${directory}"
-            dockcmd vault get-secrets --vault-addr "${vaultUrl}" ${optionsString(combinedOptions)}  ${files.join('" "')}
+            dockcmd vault get-secrets --vault-addr "${vaultUrl}" ${optionsString(combinedOptions)} ${filesStr}
             cd "\$dockcmd_current_dir"
         """
 
