@@ -25,7 +25,7 @@ class BoxBuild extends BoxBase<BuildConfig> implements Serializable {
     @Override
     def init() {
         super.init()
-        String notifyMessage = "Build for branch '${gitRepo.branch}' commit '${gitRepo.shortHash}'"
+        String notifyMessage = "Build for branch `${gitRepo.branch}` commit `${gitRepo.shortHash}`"
         notifySuccessMessage = "${notifyMessage} succeeded"
         notifyFailureMessage = "${notifyMessage} failed"
         buildDescription = "${gitRepo.branch} - ${gitRepo.shortHash} - ${buildUser}"
