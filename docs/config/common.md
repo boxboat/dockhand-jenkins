@@ -61,11 +61,14 @@ Notification settings.  Keys are references to targets defined in `targetMap` or
 Supported notification target types are:
 
 - `com.boxboat.jenkins.library.notify.SlackWebHookNotifyTarget`
-  - For use with the [Slack Incoming Webhooks App](https://boxboat.slack.com/apps/A0F7XDUAZ-incoming-webhooks?next_id=0)
+  - For use with the [Slack Incoming Webhooks App](https://slack.com/apps/A0F7XDUAZ-incoming-webhooks)
   - Jenkins Credential referenced in `credential` is a Secret Text credential with the full webhook URL
 - `com.boxboat.jenkins.library.notify.SlackJenkinsAppNotifyTarget`
-  - For use with the [Slack Jenkns CI App](https://boxboat.slack.com/apps/A0F7VRFKN-jenkins-ci?next_id=0)
+  - For use with the [Slack Jenkns CI App](https://slack.com/apps/A0F7VRFKN-jenkins-ci)
   - Use `channel` to override channel
+- `com.boxboat.jenkins.library.notify.GoogleChatWebHookNotifyTarget`
+  - For use with [Google Chat Webhooks](https://developers.google.com/chat/reference)
+  - Jenkins Credential referenced in `credential` is a Secret Text credential with the full webhook URL
 
 ```yaml
 common:
