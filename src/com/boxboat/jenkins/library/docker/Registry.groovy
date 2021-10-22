@@ -20,6 +20,7 @@ class Registry extends BaseConfig<Registry> implements Serializable {
     static class Params extends BaseConfig<Params> implements Serializable {
         String usernameVariable
         String passwordVariable
+        boolean skipDockerConfig
     }
 
     def getRegistryImageUrl(String path, String tag = "latest") {
@@ -52,27 +53,31 @@ class Registry extends BaseConfig<Registry> implements Serializable {
         params.passwordVariable = params.passwordVariable ?: "REGISTRY_PASSWORD"
 
         def credClosure = {
-            Utils.withTmpDir("DOCKER_CONFIG") {
-                def username = Config.pipeline.env[params.usernameVariable]
-                def password = Config.pipeline.env[params.passwordVariable]
-
-                if (Utils.hasCmd('docker')) {
-                    Config.pipeline.sh """
-                        echo -n "\${REGISTRY_PASSWORD}" | docker login -u "\${REGISTRY_USERNAME}" --password-stdin "${
-                        getRegistryUrl()
-                    }"
-                    """
-                } else {
-                    makeDockerConfig(username, password, Config.pipeline.env["DOCKER_CONFIG"])
-                }
+            if (params.skipDockerConfig) {
                 closure()
+            } else {
+                Utils.withTmpDir("DOCKER_CONFIG") {
+                    def username = Config.pipeline.env[params.usernameVariable]
+                    def password = Config.pipeline.env[params.passwordVariable]
+
+                    if (Utils.hasCmd('docker')) {
+                        Config.pipeline.sh """
+                        echo -n "\${REGISTRY_PASSWORD}" | docker login -u "\${REGISTRY_USERNAME}" --password-stdin "${
+                            getRegistryUrl()
+                        }"
+                    """
+                    } else {
+                        makeDockerConfig(username, password, Config.pipeline.env["DOCKER_CONFIG"])
+                    }
+                    closure()
+                }
             }
         }
 
         if (credential instanceof VaultUsernamePasswordCredential) {
             credential.withCredentials([
-                "usernameVariable": params.usernameVariable,
-                "passwordVariable": params.passwordVariable
+                    "usernameVariable": params.usernameVariable,
+                    "passwordVariable": params.passwordVariable
             ]) {
                 credClosure()
             }
