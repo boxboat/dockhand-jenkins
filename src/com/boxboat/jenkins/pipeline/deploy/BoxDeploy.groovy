@@ -42,16 +42,16 @@ class BoxDeploy extends BoxBase<DeployConfig> implements Serializable {
         super.init()
         if (config.deployTargetKey) {
             deployType = DeployType.DeployTarget
-            notifySuccessMessage = "Deployment to deploy target '${config.deployTargetKey}' succeeded"
-            notifyFailureMessage = "Deployment to deploy target '${config.deployTargetKey}' failed"
+            notifySuccessMessage = "Deployment to deploy target `${config.deployTargetKey}` succeeded"
+            notifyFailureMessage = "Deployment to deploy target `${config.deployTargetKey}` failed"
         } else if (config.environmentKey) {
             deployType = DeployType.Environment
-            notifySuccessMessage = "Deployment to environment '${config.environmentKey}' succeeded"
-            notifyFailureMessage = "Deployment to environment '${config.environmentKey}' failed"
+            notifySuccessMessage = "Deployment to environment `${config.environmentKey}` succeeded"
+            notifyFailureMessage = "Deployment to environment `${config.environmentKey}` failed"
         } else if (config.deploymentKey) {
             deployType = DeployType.Deployment
-            notifySuccessMessage = "Deployment '${config.deploymentKey}' succeeded"
-            notifyFailureMessage = "Deployment '${config.deploymentKey}' failed"
+            notifySuccessMessage = "Deployment `${config.deploymentKey}` succeeded"
+            notifyFailureMessage = "Deployment `${config.deploymentKey}` failed"
         } else {
             // abort, since pipeline may refresh without any parameters
             Config.pipeline.currentBuild.result = 'ABORTED'
@@ -82,8 +82,8 @@ class BoxDeploy extends BoxBase<DeployConfig> implements Serializable {
                     }
                     deployment.event = this.triggerEvent
                 }
-                notifySuccessMessage = "Deployment '${config.deploymentKey}' for event '${deployment.event}' succeeded"
-                notifyFailureMessage = "Deployment '${config.deploymentKey}' for event '${deployment.event}' failed"
+                notifySuccessMessage = "Deployment `${config.deploymentKey}` for event `${deployment.event}` succeeded"
+                notifyFailureMessage = "Deployment `${config.deploymentKey}` for event `${deployment.event}` failed"
                 buildDescription = "${config.deploymentKey}"
             case DeployType.Environment:
                 environment = Config.global.getEnvironment(config.environmentKey)
@@ -253,12 +253,12 @@ class BoxDeploy extends BoxBase<DeployConfig> implements Serializable {
             if (Utils.isImageTagEvent(event)) {
                 image.tag = Utils.imageTagFromEvent(event)
                 buildVersions.writeImageVersion(image.tag, image, params.outFile, params.format)
-                notifySuccessMessage += "\n${image.path} version: ${image.tag} event: ${event}"
+                notifySuccessMessage += "\n`${image.path}` version: `${image.tag}` event: `${event}`"
                 imageSummary += "\n${formatImageSummary(image, event)}"
                 return
             } else if (buildVersions.writeEventImageVersion(event, image, params.outFile, params.format)) {
                 image.tag = buildVersions.getEventImageVersion(event, image)
-                notifySuccessMessage += "\n${image.path} version: ${image.tag} event: ${event}"
+                notifySuccessMessage += "\n`${image.path}` version: `${image.tag}` event: `${event}`"
                 config.getEventRegistries(event).each { registry ->
                     imageSummary += "\n${formatImageSummary(image, event, registry)}"
                 }
@@ -269,12 +269,12 @@ class BoxDeploy extends BoxBase<DeployConfig> implements Serializable {
                 if (Utils.isImageTagEvent(eventFallback)) {
                     image.tag = Utils.imageTagFromEvent(eventFallback)
                     buildVersions.writeImageVersion(image.tag, image, params.outFile, params.format)
-                    notifySuccessMessage += "\n${image.path} version: ${image.tag} event: ${eventFallback}"
+                    notifySuccessMessage += "\n`${image.path}` version: `${image.tag}` event: `${eventFallback}`"
                     imageSummary += "\n${formatImageSummary(image, eventFallback)}"
                     return
                 } else if (buildVersions.writeEventImageVersion(eventFallback, image, params.outFile, params.format)) {
                     image.tag = buildVersions.getEventImageVersion(eventFallback, image)
-                    notifySuccessMessage += "\n${image.path} version: ${image.tag} event: ${eventFallback}"
+                    notifySuccessMessage += "\n`${image.path}` version: `${image.tag}` event: `${eventFallback}`"
                     config.getEventRegistries(eventFallback).each { registry ->
                         imageSummary += "\n${formatImageSummary(image, eventFallback, registry)}"
                     }

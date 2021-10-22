@@ -46,7 +46,7 @@ class BoxPromote extends BoxBase<PromoteConfig> implements Serializable {
         if (overrideEvent) {
             promotion.event = overrideEvent
         }
-        String messageBase = "Promotion '${config.promotionKey}' from '${promotion.event}' to '${promotion.promoteToEvent}'"
+        String messageBase = "Promotion `${config.promotionKey}` from `${promotion.event}` to `${promotion.promoteToEvent}`"
         notifySuccessMessage = "${messageBase} succeeded"
         notifyFailureMessage = "${messageBase} failed"
 
@@ -212,7 +212,7 @@ class BoxPromote extends BoxBase<PromoteConfig> implements Serializable {
         imageSummary = "Images"
         config.images.each { image ->
             Config.pipeline.echo "Promoting '${image.path}' from '${image.tag}' to '${promoteVersionString}'"
-            notifySuccessMessage += "\n${image.path} promoted from '${image.tag}' to '${promoteVersionString}'"
+            notifySuccessMessage += "\n`${image.path}` promoted from `${image.tag}` to `${promoteVersionString}`"
         }
     }
 
