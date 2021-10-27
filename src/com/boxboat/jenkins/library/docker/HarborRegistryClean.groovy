@@ -5,285 +5,94 @@ import com.boxboat.jenkins.library.config.Config
 
 class HarborRegistryClean implements Serializable {
 
-    protected final String registryAPIBase = '/api'
+    protected final String registryAPIBase = '/api/v2.0'
 
     boolean dryRun
     int retentionDays
     List<String> registryKeys
 
-    private int projectPageSize = 100
-    private int repositoryPageSize = 100
+    private int pageSize = 100
 
     List<Map<String, Object>> requestProjects(Registry registry) {
-        return requestPaginated(registry, "/projects", projectPageSize)
-    }
-
-    List<Map<String, Object>> requestRepositories(Registry registry, String projectId) {
-        return requestPaginated(registry, "/repositories", repositoryPageSize, ["project_id": projectId])
-    }
-
-    List<Map<String, Object>> readRepositories(Registry registry) {
-
-        def projects = requestProjects(registry)
-
-        def repositories = []
-
-        projects.each { project ->
-            def projectRepos = requestRepositories(registry, project.project_id.toString())
-            projectRepos.each { repo ->
-                repositories.add(repo)
-            }
-        }
-
-        return Utils.resultOrTest(repositories,
+        return Utils.resultOrTest(requestPaginated(registry, "/projects", pageSize),
                 [
                         [
-                                "id"           : "1",
-                                "project_id"   : "1",
-                                "name"         : "test1",
-                                "description"  : "",
-                                "creation_time": "2019-01-01T16:00:00Z",
-                                "update_time"  : "2019-01-01T16:00:00Z",
-                                "labels"       : [],
-                                "tags_count"   : "1",
-                                "star_count"   : "0",
+                                "project_id"   : 1,
+                                "name"         : "proj1",
+                                "creation_time": "2019-01-01T16:00:00.00Z",
+                                "update_time"  : "2019-01-01T16:00:00.00Z",
                         ],
                         [
-                                "id"           : "2",
-                                "project_id"   : "2",
-                                "name"         : "test2",
-                                "description"  : "",
-                                "creation_time": "2019-01-01T16:00:00Z",
-                                "update_time"  : "2019-01-01T16:00:00Z",
-                                "labels"       : [],
-                                "tags_count"   : "1",
-                                "star_count"   : "0",
+                                "project_id"   : 2,
+                                "name"         : "proj2",
+                                "creation_time": "2019-01-01T16:00:00.00Z",
+                                "update_time"  : "2019-01-01T16:00:00.00Z",
                         ],
                 ]
         )
     }
 
-    List<Map<String, Object>> readRepositoryTags(Registry registry, String name) {
-        def requestURI = registry.getRegistryUrl() + registryAPIBase + "/repositories/${name}/tags"
-        def result
-        registry.withCredentials {
-            def auth = Config.pipeline.env["REGISTRY_USERNAME"] + ":" + Config.pipeline.env["REGISTRY_PASSWORD"]
-            def encoded = auth.bytes.encodeBase64().toString()
-            result = Config.pipeline.httpRequest(
-                    url: requestURI,
-                    httpMode: 'GET',
-                    contentType: "APPLICATION_JSON",
-                    customHeaders: [[name: 'Authorization', value: "Basic ${encoded}"]]
-            )?.getContent()
-        }
-        def tags = []
-        if (result && result != "null") {
-            tags = Config.pipeline.readJSON(text: result.toString())
-        }
-        return Utils.resultOrTest(tags, [
+    List<Map<String, Object>> requestRepositories(Registry registry, String projectName) {
+        return Utils.resultOrTest(requestPaginated(registry, "/projects/${URLEncoder.encode(projectName, 'UTF-8')}/repositories", pageSize),
                 [
-                        "digest"        : "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-                        "name"          : "build-aaaaaaaaaaaa",
-                        "size"          : 232664445,
-                        "architecture"  : "amd64",
-                        "os"            : "linux",
-                        "os.version"    : "",
-                        "docker_version": "18.06.1-ce",
-                        "author"        : "",
-                        "created"       : "2019-09-09T19:41:11.917513133Z",
-                        "config"        : [
-                                "labels": []
+                        [
+                                "id"           : "1",
+                                "name"         : "proj1/repo1",
+                                "creation_time": "2019-01-01T16:00:00.00Z",
+                                "update_time"  : "2019-01-01T16:00:00.00Z",
                         ],
-                        "signature"     : null,
-                        "scan_overview" : [
-                                "image_digest" : "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-                                "scan_status"  : "finished",
-                                "job_id"       : 407,
-                                "severity"     : 5,
-                                "components"   : [
-                                        "total"  : 111,
-                                        "summary": [
-                                                [
-                                                        "severity": 1,
-                                                        "count"   : 76
-                                                ],
-                                                [
-                                                        "severity": 5,
-                                                        "count"   : 12
-                                                ],
-                                                [
-                                                        "severity": 4,
-                                                        "count"   : 17
-                                                ],
-                                                [
-                                                        "severity": 3,
-                                                        "count"   : 6
-                                                ]
-                                        ]
-                                ],
-                                "details_key"  : "9250d0e8bf02011810a2fcc85ee87567fde1e0f09fe3548a138ee20e9196a034",
-                                "creation_time": "2019-09-10T00:00:02.706191Z",
-                                "update_time"  : "2019-10-02T00:00:04.812058Z"
+                        [
+                                "id"           : "2",
+                                "name"         : "proj1/repo2",
+                                "creation_time": "2019-01-01T16:00:00.00Z",
+                                "update_time"  : "2019-01-01T16:00:00.00Z",
                         ],
-                        "labels"        : [],
-                        "push_time"     : "2019-09-20T12:25:36.423777Z",
-                        "pull_time"     : "0001-01-01T00:00:00Z"
-                ],
-                [
-                        "digest"        : "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-                        "name"          : "commit-test",
-                        "size"          : 232664445,
-                        "architecture"  : "amd64",
-                        "os"            : "linux",
-                        "os.version"    : "",
-                        "docker_version": "18.06.1-ce",
-                        "author"        : "",
-                        "created"       : "2019-09-09T19:41:11.917513133Z",
-                        "config"        : [
-                                "labels": []
-                        ],
-                        "signature"     : null,
-                        "scan_overview" : [
-                                "image_digest" : "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-                                "scan_status"  : "finished",
-                                "job_id"       : 407,
-                                "severity"     : 5,
-                                "components"   : [
-                                        "total"  : 111,
-                                        "summary": [
-                                                [
-                                                        "severity": 1,
-                                                        "count"   : 76
-                                                ],
-                                                [
-                                                        "severity": 5,
-                                                        "count"   : 12
-                                                ],
-                                                [
-                                                        "severity": 4,
-                                                        "count"   : 17
-                                                ],
-                                                [
-                                                        "severity": 3,
-                                                        "count"   : 6
-                                                ]
-                                        ]
-                                ],
-                                "details_key"  : "9250d0e8bf02011810a2fcc85ee87567fde1e0f09fe3548a138ee20e9196a034",
-                                "creation_time": "2019-09-10T00:00:02.706191Z",
-                                "update_time"  : "2019-10-02T00:00:04.812058Z"
-                        ],
-                        "labels"        : [],
-                        "push_time"     : "2019-09-20T12:25:36.423777Z",
-                        "pull_time"     : "0001-01-01T00:00:00Z"
-                ],
-                [
-                        "digest"        : "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
-                        "name"          : "commit-bbbbbbbbbbbb",
-                        "size"          : 232664445,
-                        "architecture"  : "amd64",
-                        "os"            : "linux",
-                        "os.version"    : "",
-                        "docker_version": "18.06.1-ce",
-                        "author"        : "",
-                        "created"       : "2019-09-09T19:41:11.917513133Z",
-                        "config"        : [
-                                "labels": []
-                        ],
-                        "signature"     : null,
-                        "scan_overview" : [
-                                "image_digest" : "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
-                                "scan_status"  : "finished",
-                                "job_id"       : 407,
-                                "severity"     : 5,
-                                "components"   : [
-                                        "total"  : 111,
-                                        "summary": [
-                                                [
-                                                        "severity": 1,
-                                                        "count"   : 76
-                                                ],
-                                                [
-                                                        "severity": 5,
-                                                        "count"   : 12
-                                                ],
-                                                [
-                                                        "severity": 4,
-                                                        "count"   : 17
-                                                ],
-                                                [
-                                                        "severity": 3,
-                                                        "count"   : 6
-                                                ]
-                                        ]
-                                ],
-                                "details_key"  : "9250d0e8bf02011810a2fcc85ee87567fde1e0f09fe3548a138ee20e9196a034",
-                                "creation_time": "2019-09-10T00:00:02.706191Z",
-                                "update_time"  : "2019-10-02T00:00:04.812058Z"
-                        ],
-                        "labels"        : [],
-                        "push_time"     : "2019-09-20T12:25:36.423777Z",
-                        "pull_time"     : "0001-01-01T00:00:00Z"
-                ],
-                [
-                        "digest"        : "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
-                        "name"          : "commit-cccccccccccc",
-                        "size"          : 232664445,
-                        "architecture"  : "amd64",
-                        "os"            : "linux",
-                        "os.version"    : "",
-                        "docker_version": "18.06.1-ce",
-                        "author"        : "",
-                        "created"       : "2019-09-09T19:41:11.917513133Z",
-                        "config"        : [
-                                "labels": []
-                        ],
-                        "signature"     : null,
-                        "scan_overview" : [
-                                "image_digest" : "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
-                                "scan_status"  : "finished",
-                                "job_id"       : 407,
-                                "severity"     : 5,
-                                "components"   : [
-                                        "total"  : 111,
-                                        "summary": [
-                                                [
-                                                        "severity": 1,
-                                                        "count"   : 76
-                                                ],
-                                                [
-                                                        "severity": 5,
-                                                        "count"   : 12
-                                                ],
-                                                [
-                                                        "severity": 4,
-                                                        "count"   : 17
-                                                ],
-                                                [
-                                                        "severity": 3,
-                                                        "count"   : 6
-                                                ]
-                                        ]
-                                ],
-                                "details_key"  : "9250d0e8bf02011810a2fcc85ee87567fde1e0f09fe3548a138ee20e9196a034",
-                                "creation_time": "2019-09-10T00:00:02.706191Z",
-                                "update_time"  : "2019-10-02T00:00:04.812058Z"
-                        ],
-                        "labels"        : [],
-                        "push_time"     : "2019-09-20T12:25:36.423777Z",
-                        "pull_time"     : "0001-01-01T00:00:00Z"
                 ]
-        ])
+        )
     }
 
-    int deleteTag(Registry registry, String name, String tag) {
-        Config.pipeline.echo "Removing ${name}:${tag}"
+    List<Map<String, Object>> requestArtifacts(Registry registry, String projectName, String repositoryName) {
+        return Utils.resultOrTest(requestPaginated(registry, "/projects/${URLEncoder.encode(projectName, 'UTF-8')}/repositories/${URLEncoder.encode(repositoryName, 'UTF-8')}/artifacts", pageSize, [q: "tags=*"]),
+                [
+                        [
+                                "id"    : 1,
+                                "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                                "tags"  : [
+                                        [
+                                                "id"       : 1,
+                                                "name"     : "build-aaaaaaaaaaaa",
+                                                "push_time": "2019-01-01T16:00:00.00Z",
+                                        ],
+                                        [
+                                                "id"       : 2,
+                                                "name"     : "commit-master",
+                                                "push_time": "2019-01-01T16:00:00.00Z",
+                                        ],
+                                ],
+                        ],
+                        [
+                                "id"    : 2,
+                                "digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                                "tags"  : [
+                                        [
+                                                "id"       : 3,
+                                                "name"     : "build-bbbbbbbbbbbb",
+                                                "push_time": "2019-01-01T16:00:00.00Z",
+                                        ],
+                                ],
+                        ],
+                ]
+        )
+    }
+
+    int deleteTag(Registry registry, String projectName, String repositoryName, String tag) {
+        Config.pipeline.echo "Removing ${projectName}/${repositoryName}:${tag}"
         if (dryRun) {
             return 200
         }
-        def requestURI = registry.getRegistryUrl() + registryAPIBase + "/repositories/${name}/tags/${tag}"
+        def requestURI = registry.getRegistryUrl() + registryAPIBase + "/projects/${projectName}/repositories/${repositoryName}/artifacts/${tag}/tags/${tag}"
         def result
-        registry.withCredentials {
+        registry.withCredentials([skipDockerConfig: true]) {
             def auth = Config.pipeline.env["REGISTRY_USERNAME"] + ":" + Config.pipeline.env["REGISTRY_PASSWORD"]
             def encoded = auth.bytes.encodeBase64().toString()
             result = Config.pipeline.httpRequest(
@@ -311,21 +120,19 @@ class HarborRegistryClean implements Serializable {
         }
         Config.pipeline.echo "RetentionDays: ${retentionDays}"
 
-        def registryRepositories = readRepositories(registry)
-        registryRepositories.each { registryRepository ->
-            if (registryRepository) {
-                String name = registryRepository.name
-
-                Config.pipeline.echo "Reading ${name}"
-
-                def registryRepositoryTags = readRepositoryTags(registry, name)
-
-                def imageManifests = new ImageManifests(new Image(path: name))
-                registryRepositoryTags.each { registryRepositoryTag ->
-                    imageManifests.addHarborManifest(registryRepositoryTag)
+        requestProjects(registry).each { project ->
+            String projectName = project.name
+            requestRepositories(registry, projectName).each { repository ->
+                String projectAndRepositoryName = repository.name
+                String repositoryName = repository.name.substring(project.name.size() + 1)
+                def imageManifests = new ImageManifests(new Image(path: projectAndRepositoryName))
+                requestArtifacts(registry, projectName, repositoryName).each { artifact ->
+                    artifact.tags.each { tag ->
+                        imageManifests.addHarborManifest([digest: artifact.digest] << tag)
+                    }
                 }
                 imageManifests.getCleanableTagsList(retentionDays).each { tag ->
-                    deleteTag(registry, name, tag)
+                    deleteTag(registry, projectName, repositoryName, tag)
                 }
             }
         }
@@ -348,11 +155,11 @@ class HarborRegistryClean implements Serializable {
             paginatedQuery["page"] = page.toString()
 
             def pResponse
-            registry.withCredentials {
+            registry.withCredentials([skipDockerConfig: true]) {
                 def auth = Config.pipeline.env["REGISTRY_USERNAME"] + ":" + Config.pipeline.env["REGISTRY_PASSWORD"]
                 def encoded = auth.bytes.encodeBase64().toString()
                 pResponse = Config.pipeline.httpRequest(
-                        url: requestURL + "?" + paginatedQuery.collect { k, v -> "$k=$v" }.join('&'),
+                        url: requestURL + "?" + paginatedQuery.collect { k, v -> "$k=${URLEncoder.encode(v, 'UTF-8')}" }.join('&'),
                         httpMode: 'GET',
                         contentType: "APPLICATION_JSON",
                         customHeaders: [[name: 'Authorization', value: "Basic ${encoded}"]]
