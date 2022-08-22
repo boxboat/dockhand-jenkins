@@ -114,7 +114,7 @@ class GitBuildVersions implements Serializable {
         def dir = "${gitRepo.dir}/job-triggers/"
         def result = Config.pipeline.sh(returnStdout: true, script: """
             if [ -d "${dir}" ]; then
-                find "${dir}" -type f -name "triggers.yaml" | xargs cat
+                find "${dir}" -type f -name "triggers.yaml" -print0 | xargs -0 cat
             fi
         """)?.trim()
         def testResult = """
