@@ -320,7 +320,6 @@ class BoxDeploy extends BoxBase<DeployConfig> implements Serializable {
         if (yamlPathScript) {
             Config.pipeline.sh yamlPathScript
         }
-        getImageTagsMetadata()
     }
 
     List<Environment> allEnvironments() {

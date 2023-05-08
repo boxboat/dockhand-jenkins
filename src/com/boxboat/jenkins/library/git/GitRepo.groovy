@@ -145,11 +145,11 @@ class GitRepo implements Serializable {
         List<GitCommit> commitList = new ArrayList<>()
         result.each {
             def c = new GitCommit()
-            c.author = it.author
-            c.hash = it.hash
-            c.date = it.date
-            c.subject = it.subject
-            c.body = it.body
+            c.author = it?.author
+            c.hash = it?.hash
+            c.date = it?.date
+            c.subject = it?.subject
+            c.body = it?.body
             commitList.add(c)
         }
         return commitList
