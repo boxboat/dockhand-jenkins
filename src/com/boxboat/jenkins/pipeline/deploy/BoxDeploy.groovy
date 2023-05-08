@@ -215,6 +215,38 @@ class BoxDeploy extends BoxBase<DeployConfig> implements Serializable {
         }
     }
 
+    Map<Object, Object> getImageTagsMetadata() {
+        def buildVersions = Config.getBuildVersions()
+        Map<Object, Object> imageTagsMetadata = new LinkedHashMap<>()
+        config.images.each { Image image ->
+            def event = deployment.event
+            def imageOverridesCl = { Image imageOverride ->
+                if (imageOverride.path == image.path) {
+                    event = imageOverride.event
+                }
+            }
+            config.imageOverrides.each imageOverridesCl
+            deployment.imageOverrides.each imageOverridesCl
+            String version = ""
+            Map<Object, Object> imageMetaData
+            if (Utils.isImageTagEvent(event)) {
+                image.tag = Utils.imageTagFromEvent(event)
+                imageMetaData = buildVersions.getEventImageVersionMetadata(image.tag, image)
+                version = buildVersions.getEventImageVersion(image.tag, image)
+            } else {
+                imageMetaData = buildVersions.getEventImageVersionMetadata(event, image)
+                version = buildVersions.getEventImageVersion(event, image)
+            }
+            if (!imageMetaData?.isEmpty()) {
+                Map<Object, Object> imageData = new LinkedHashMap<>()
+                imageData.put("version", version)
+                imageData.put("metadata", imageMetaData)
+                imageTagsMetadata.put(image.path, imageData)
+            }
+        }
+        return imageTagsMetadata
+    }
+
     static class ImageTagsParams extends BaseConfig<ImageTagsParams> implements Serializable {
         String format
         String outFile
@@ -231,7 +263,7 @@ class BoxDeploy extends BoxBase<DeployConfig> implements Serializable {
         }
         params.format = Utils.fileFormatNormalize(params.format)
         if (params.format != "yaml" && params.format != "env") {
-            Config.pipeline.error "'format' is required and must be 'yaml'or 'env'"
+            Config.pipeline.error "'format' is required and must be 'yaml' or 'env'"
         }
 
         def buildVersions = Config.getBuildVersions()
@@ -288,6 +320,7 @@ class BoxDeploy extends BoxBase<DeployConfig> implements Serializable {
         if (yamlPathScript) {
             Config.pipeline.sh yamlPathScript
         }
+        getImageTagsMetadata()
     }
 
     List<Environment> allEnvironments() {

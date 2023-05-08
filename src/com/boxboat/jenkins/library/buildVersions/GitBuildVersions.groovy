@@ -28,40 +28,92 @@ class GitBuildVersions implements Serializable {
         gitRepo = Config.gitAccount.checkoutRepository(Config.global.git.buildVersionsUrl, targetDir, 1)
     }
 
-    def setEventImageVersion(String event, Image image, String version) {
+    def setEventImageVersion(String event, Image image, String version, Map<Object, Object> metadata = null) {
         def dir = "${gitRepo.dir}/image-versions/${event}"
-        def path = "${dir}/${Utils.alphaNumericDashLower(image.path)}.txt"
+        def path = "${dir}/${Utils.alphaNumericDashLower(image.path)}"
+        def txtFile = "${path}.txt"
+        def yamlFile = "${path}.yaml"
+        // conversion from text to yaml
+        if (Config.pipeline.fileExists(txtFile)) {
+            Config.pipeline.sh """
+                rm "${txtFile}"
+            """
+        }
+        Map<String, Object> data = new LinkedHashMap<>()
+        data.put("version", version)
+        if(metadata != null && !metadata.isEmpty()) {
+            data.put("metadata", metadata)
+        }
+        def yamlStr = YamlUtils.dump(data)
         Config.pipeline.sh """
             mkdir -p "${dir}"
-            echo "${version}" > "${path}"
         """
+        Config.pipeline.writeFile(file: yamlFile, text: yamlStr, encoding: "Utf8")
     }
 
     String getEventImageVersion(String event, Image image) {
         def dir = "${gitRepo.dir}/image-versions/${event}"
-        def path = "${dir}/${Utils.alphaNumericDashLower(image.path)}.txt"
-        def result = Config.pipeline.sh(returnStdout: true, script: """
-            if [ -f "${path}" ]; then
-                cat "${path}"
-            fi
-        """)?.trim()
+        def path = "${dir}/${Utils.alphaNumericDashLower(image.path)}"
+        def txtFile = "${path}.txt"
+        def yamlFile = "${path}.yaml"
+        def result = ""
+
+        if (Config.pipeline.fileExists(txtFile)) {
+            result = Config.pipeline.sh(returnStdout: true, script: """
+                cat "${txtFile}"
+            """)?.trim()
+        } else if (Config.pipeline.fileExists(yamlFile)) {
+            String yamlVersion = Config.pipeline.sh(returnStdout: true, script: """
+                cat "${yamlFile}"
+            """)?.trim()
+            Map<Object, Object> yamlData = YamlUtils.load(yamlVersion) as Map<Object, Object>
+            result = yamlData.getOrDefault("version", "")
+        }
+
         return Utils.resultOrTest(result, testVersion(event))
+    }
+
+    Map<Object, Object> getEventImageVersionMetadata(String event, Image image) {
+        def dir = "${gitRepo.dir}/image-versions/${event}"
+        def path = "${dir}/${Utils.alphaNumericDashLower(image.path)}"
+        def yamlFile = "${path}.yaml"
+
+        if (Config.pipeline.fileExists(yamlFile)) {
+            String yamlVersion = Config.pipeline.sh(returnStdout: true, script: """
+                cat "${yamlFile}"
+            """)?.trim()
+            Map<Object, Object> yamlData = YamlUtils.load(yamlVersion) as Map<Object, Object>
+            return yamlData.getOrDefault("metadata", new LinkedHashMap<Object, Object>()) as Map<Object, Object>
+        }
+        return null
+    }
+
+    Map<Object, Object> addEventImageVersionMetadata(String event, Image image, Map<Object, Object> imageMetadataMap) {
+        Map<Object, Object> metaMap = new LinkedHashMap<>()
+        metaMap.putAll(imageMetadataMap)
+        def meta = getEventImageVersionMetadata(event, image)
+
+        def tag_key = "image_tag_${Utils.alphaNumericUnderscoreLower(image.path)}"
+        if (meta != null){
+            Map<Object, Object> imageMetaData = new LinkedHashMap<>()
+            imageMetadataMap.put("metadata", meta)
+            metaMap.put(tag_key, imageMetadataMap)
+        }
+        return metaMap
     }
 
     boolean writeEventImageVersion(String event, Image image, String outFile, String format) {
         if (format != "yaml" && format != "env") {
             throw new Exception("invalid format: '${format}'")
         }
+        def version = getEventImageVersion(event, image)
 
-        def dir = "${gitRepo.dir}/image-versions/${event}"
-        def path = "${dir}/${Utils.alphaNumericDashLower(image.path)}.txt"
         def tag_key = "image_tag_${Utils.alphaNumericUnderscoreLower(image.path)}"
         def event_key = "image_event_${Utils.alphaNumericUnderscoreLower(image.path)}"
         def divider = format == "yaml" ? ": " : "="
         def rc = Config.pipeline.sh(returnStatus: true, script: """
-            if [ -f "${path}" ]; then
-                version=\$(cat "$path")
-                echo "${tag_key}${divider}\\"\$version\\"" >> "$outFile"
+            if [ -n "${version}" ]; then
+                echo "${tag_key}${divider}\\"${version}\\"" >> "$outFile"
                 echo "${event_key}${divider}\\"${event}\\"" >> "$outFile"
                 exit 0
             fi
@@ -84,28 +136,54 @@ class GitBuildVersions implements Serializable {
         """
     }
 
-    def setRepoEventVersion(String gitRemotePath, String gitTagPrefix, String event, SemVer semVer) {
+    def setRepoEventVersion(String gitRemotePath, String gitTagPrefix, String event, SemVer semVer, Map<Object, Object> metadata = null) {
         def eventWithPrefix = gitTagPrefix ? "${gitTagPrefix}${event}" : event
         def dir = "${gitRepo.dir}/repo-versions/${gitRemotePath}"
-        def path = "${dir}/${Utils.alphaNumericDashLower(eventWithPrefix)}.txt"
-        Config.pipeline.sh """
-            mkdir -p "${dir}"
-            echo '${semVer.toString()}' > "${path}"
-        """
+        def path = "${dir}/${Utils.alphaNumericDashLower(eventWithPrefix)}"
+        def yamlFile = "${path}.yaml"
+        def txtFile = "${path}.txt"
+
+        // remove text file for conversion from text to yaml
+        if (Config.pipeline.fileExists(txtFile)) {
+            Config.pipeline.sh """
+                rm "${txtFile}"
+            """
+        }
+        Map<String, Object> data = new LinkedHashMap<>()
+        data.put("version", semVer.toString())
+        data.put("previousVersion", semVer.getPreviousVersion())
+        if(metadata != null && !metadata.isEmpty()) {
+            data.put("metadata", metadata)
+        }
+        def yamlStr = YamlUtils.dump(data)
+        Config.pipeline.echo "${yamlStr}"
+        Config.pipeline.writeFile(file: yamlFile, text: yamlStr, encoding: "Utf8")
     }
 
     SemVer getRepoEventVersion(String gitRemotePath, String gitTagPrefix, String event) {
         def eventWithPrefix = gitTagPrefix ? "${gitTagPrefix}${event}" : event
         def dir = "${gitRepo.dir}/repo-versions/${gitRemotePath}"
-        def path = "${dir}/${Utils.alphaNumericDashLower(eventWithPrefix)}.txt"
-        String version = Config.pipeline.sh(returnStdout: true, script: """
-            if [ -f "${path}" ]; then
-                cat "${path}"
-            fi
-        """)?.trim()
+        def path = "${dir}/${Utils.alphaNumericDashLower(eventWithPrefix)}"
+        def yamlFile = "${path}.yaml"
+        def txtFile = "${path}.txt"
+        String previousVersion = ""
+
+        String version = ""
+        if (Config.pipeline.fileExists(txtFile)) {
+            version = Config.pipeline.sh(returnStdout: true, script: """
+                cat "${txtFile}"
+            """)?.trim()
+        } else if (Config.pipeline.fileExists(yamlFile)) {
+            String yamlVersion = Config.pipeline.sh(returnStdout: true, script: """
+                cat "${yamlFile}"
+            """)?.trim()
+            Map<Object, Object> yamlData = YamlUtils.load(yamlVersion) as Map<Object, Object>
+            version = yamlData.getOrDefault("version", "")
+            previousVersion = yamlData.getOrDefault("previousVersion", "")
+        }
         version = Utils.resultOrTest(version, testVersion(event))
         if (version) {
-            return new SemVer(version)
+            return new SemVer(version, previousVersion)
         }
         return null
     }

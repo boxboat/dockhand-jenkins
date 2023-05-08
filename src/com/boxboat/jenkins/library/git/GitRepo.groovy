@@ -2,6 +2,7 @@ package com.boxboat.jenkins.library.git
 
 import com.boxboat.jenkins.library.Utils
 import com.boxboat.jenkins.library.config.Config
+import groovy.json.JsonSlurper
 
 class GitRepo implements Serializable {
 
@@ -133,6 +134,25 @@ class GitRepo implements Serializable {
                 git clean -ffd
             """
         }
+    }
+
+    List<GitCommit> getCommitsBetween(String first, String second) {
+        String commits = "[${Config.pipeline.sh(returnStdout: true, script:"""
+            git log --pretty=format:"{\\"author\\":\\"%ce\\",\\"hash\\":\\"%H\\",\\"date\\":\\"%ct\\",\\"subject\\":\\"%s\\",\\"body\\":\\"%B\\"}," ${first}...${second}
+        """)?.trim()?.replaceAll(",\$","")?.replaceAll("\\R"," ")}]"
+        JsonSlurper slurper = new JsonSlurper()
+        def result = slurper.parseText(commits)
+        List<GitCommit> commitList = new ArrayList<>()
+        result.each {
+            def c = new GitCommit()
+            c.author = it.author
+            c.hash = it.hash
+            c.date = it.date
+            c.subject = it.subject
+            c.body = it.body
+            commitList.add(c)
+        }
+        return commitList
     }
 
     def tagAndPush(String tag) {
