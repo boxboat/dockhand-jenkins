@@ -350,7 +350,7 @@ class BoxPromote extends BoxBase<PromoteConfig> implements Serializable {
 
     /**
      * Called during promote() after promotions have been prepared. You can use this to populate the metadata map
-     * 
+     *
      * Override and extend this method to insert metadata on the promotion data stored in build-versions
      **/
     def addPromotionMetadata() {
