@@ -63,10 +63,7 @@ class GitBuildVersions implements Serializable {
                 cat "${txtFile}"
             """)?.trim()
         } else if (Config.pipeline.fileExists(yamlFile)) {
-            String yamlVersion = Config.pipeline.sh(returnStdout: true, script: """
-                cat "${yamlFile}"
-            """)?.trim()
-            Map<Object, Object> yamlData = YamlUtils.load(yamlVersion) as Map<Object, Object>
+            Map<Object, Object> yamlData = Config.pipeline.readYaml(file: yamlFile) as Map<Object, Object>
             result = yamlData.getOrDefault("version", "")
         }
 
@@ -79,27 +76,10 @@ class GitBuildVersions implements Serializable {
         def yamlFile = "${path}.yaml"
 
         if (Config.pipeline.fileExists(yamlFile)) {
-            String yamlVersion = Config.pipeline.sh(returnStdout: true, script: """
-                cat "${yamlFile}"
-            """)?.trim()
-            Map<Object, Object> yamlData = YamlUtils.load(yamlVersion) as Map<Object, Object>
+            Map<Object, Object> yamlData = Config.pipeline.readYaml(file: yamlFile) as Map<Object, Object>
             return yamlData.getOrDefault("metadata", new LinkedHashMap<Object, Object>()) as Map<Object, Object>
         }
         return null
-    }
-
-    Map<Object, Object> addEventImageVersionMetadata(String event, Image image, Map<Object, Object> imageMetadataMap) {
-        Map<Object, Object> metaMap = new LinkedHashMap<>()
-        metaMap.putAll(imageMetadataMap)
-        def meta = getEventImageVersionMetadata(event, image)
-
-        def tag_key = "image_tag_${Utils.alphaNumericUnderscoreLower(image.path)}"
-        if (meta != null){
-            Map<Object, Object> imageMetaData = new LinkedHashMap<>()
-            imageMetadataMap.put("metadata", meta)
-            metaMap.put(tag_key, imageMetadataMap)
-        }
-        return metaMap
     }
 
     boolean writeEventImageVersion(String event, Image image, String outFile, String format) {
@@ -156,7 +136,6 @@ class GitBuildVersions implements Serializable {
             data.put("metadata", metadata)
         }
         def yamlStr = YamlUtils.dump(data)
-        Config.pipeline.echo "${yamlStr}"
         Config.pipeline.writeFile(file: yamlFile, text: yamlStr, encoding: "Utf8")
     }
 
@@ -174,10 +153,7 @@ class GitBuildVersions implements Serializable {
                 cat "${txtFile}"
             """)?.trim()
         } else if (Config.pipeline.fileExists(yamlFile)) {
-            String yamlVersion = Config.pipeline.sh(returnStdout: true, script: """
-                cat "${yamlFile}"
-            """)?.trim()
-            Map<Object, Object> yamlData = YamlUtils.load(yamlVersion) as Map<Object, Object>
+            Map<Object, Object> yamlData = Config.pipeline.readYaml(file: yamlFile) as Map<Object, Object>
             version = yamlData.getOrDefault("version", "")
             previousVersion = yamlData.getOrDefault("previousVersion", "")
         }
