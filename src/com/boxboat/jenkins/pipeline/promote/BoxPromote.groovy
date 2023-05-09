@@ -5,6 +5,7 @@ import com.boxboat.jenkins.library.Utils
 import com.boxboat.jenkins.library.config.Config
 import com.boxboat.jenkins.library.config.PromoteConfig
 import com.boxboat.jenkins.library.docker.Registry
+import com.boxboat.jenkins.library.git.GitCommit
 import com.boxboat.jenkins.library.promote.Promotion
 import com.boxboat.jenkins.pipeline.BoxBase
 
@@ -21,6 +22,15 @@ class BoxPromote extends BoxBase<PromoteConfig> implements Serializable {
 
     protected boolean versionChange = true
     protected boolean writebackBuildVersions = true
+
+    protected String gitCommitToTag
+    protected String gitTagToTag
+    protected SemVer nextSemVer
+    protected String promoteVersionString
+
+    protected List<GitCommit> commits = new ArrayList<>()
+
+    protected Map<Object, Object> metadata = new LinkedHashMap<>()
 
     BoxPromote(Map config = [:]) {
         super(config)
@@ -85,15 +95,15 @@ class BoxPromote extends BoxBase<PromoteConfig> implements Serializable {
 
     /**
      * Parse the promoteToEvent to determine the type of promote (tag/release, or tag/<pre-release>)
-    **/
+     **/
     String getTagType() {
         return promotion.promoteToEvent.substring("tag/".length())
     }
 
     /**
      * Get the git commit (or git tag) that used for this promote
-    **/
-    List<String> getGitCommit(){
+     **/
+    List<String> getGitCommit() {
         String gitCommitToTag
         String gitTagToTag
         def buildVersions = Config.getBuildVersions()
@@ -125,7 +135,7 @@ class BoxPromote extends BoxBase<PromoteConfig> implements Serializable {
 
     /**
      * Get the current semVer for promotion
-    **/
+     **/
     SemVer getCurrSemVer() {
         // getBuildVersions returns singleton - If buildVersions already checked out, will initialized object
         def buildVersions = Config.getBuildVersions()
@@ -134,7 +144,7 @@ class BoxPromote extends BoxBase<PromoteConfig> implements Serializable {
 
     /**
      * Get the next semVer to promote to
-    **/
+     **/
     SemVer getNextSemVer(String tagType) {
         def nextSemVer = currSemVer?.copy()
         // Return the user defined version if it is set, else get nextSemVer like usual
@@ -146,9 +156,9 @@ class BoxPromote extends BoxBase<PromoteConfig> implements Serializable {
             //   2. If this is a prerelease event but our override is a release
             //   3. If this tag < the current tag
             if (!promoteToSemVer.isValid ||
-                (tagType == "release" && promoteToSemVer.isPreRelease) ||
-                (tagType != "release" && !promoteToSemVer.isPreRelease) ||
-                (nextSemVer && nextSemVer.compareTo(promoteToSemVer) > 0)) {
+                    (tagType == "release" && promoteToSemVer.isPreRelease) ||
+                    (tagType != "release" && !promoteToSemVer.isPreRelease) ||
+                    (nextSemVer && nextSemVer.compareTo(promoteToSemVer) > 0)) {
                 writebackBuildVersions = false
 
                 // If we are not writing back to build versions (version less than current version),
@@ -163,14 +173,17 @@ class BoxPromote extends BoxBase<PromoteConfig> implements Serializable {
         // If nextSemVer doesn't exist or its version without prerelease is smaller than baseSemVer, use baseSemVer
         if (nextSemVer == null || !nextSemVer.isValid || (baseSemVer.compareTo(nextSemVer.copyNoPrerelease()) > 0)) {
             nextSemVer = baseSemVer.copy()
+            nextSemVer.setPreviousVersion(currSemVer.toString())
         } else if (tagType == "release") {
             nextSemVer.patch++
+            nextSemVer.setPreviousVersion(currSemVer.toString())
         }
 
         if (tagType != "release") {
             def releaseSemVer = buildVersions.getRepoEventVersion(gitRepo.getRemotePath(), config.gitTagPrefix, "tag/release")
             if (releaseSemVer != null && releaseSemVer.isValid && releaseSemVer >= nextSemVer) {
                 nextSemVer = releaseSemVer.copy()
+                nextSemVer.setPreviousVersion(releaseSemVer.toString())
                 nextSemVer.patch++
             }
             nextSemVer.incrementPreRelease(tagType)
@@ -181,7 +194,7 @@ class BoxPromote extends BoxBase<PromoteConfig> implements Serializable {
 
     /**
      * Set versionChange instance var
-    **/
+     **/
     void setVersionChange(String gitCommitToTag, String gitTagToTag) {
         SemVer currSemVer = getCurrSemVer()
         if (currSemVer != null && !config.gitTagDisable && (gitCommitToTag || gitTagToTag)) {
@@ -196,9 +209,9 @@ class BoxPromote extends BoxBase<PromoteConfig> implements Serializable {
 
             def semVerReferenceHash = gitRepo.getTagReferenceHash(fullSemVer)?.trim()
             if (semVerReferenceHash &&
-                !promoteToVersion && (
+                    !promoteToVersion && (
                     semVerReferenceHash == gitCommitToTag ||
-                    semVerReferenceHash == gitRepo.getTagReferenceHash(fullGitTagToTag))) {
+                            semVerReferenceHash == gitRepo.getTagReferenceHash(fullGitTagToTag))) {
                 versionChange = false
                 Config.pipeline.echo "No version changes detected"
             }
@@ -207,7 +220,7 @@ class BoxPromote extends BoxBase<PromoteConfig> implements Serializable {
 
     /**
      * Print out each of the images being promoted
-    **/
+     **/
     void prePromoteMessages(String promoteVersionString) {
         imageSummary = "Images"
         config.images.each { image ->
@@ -218,7 +231,7 @@ class BoxPromote extends BoxBase<PromoteConfig> implements Serializable {
 
     /**
      * If not an automated run, wait for user to click the button
-    **/
+     **/
     void waitForUserConfirmation(String promoteVersionString) {
         if (!trigger) {
             Config.pipeline.timeout(time: 10, unit: 'MINUTES') {
@@ -229,7 +242,7 @@ class BoxPromote extends BoxBase<PromoteConfig> implements Serializable {
 
     /**
      * Iterate through images and retag and push to new registry. Write to build versions if not a user-defined promotion version
-    **/
+     **/
     void retagImages(String pushEvent, String promoteVersionString, SemVer nextSemVer) {
         def buildVersions = Config.getBuildVersions()
         def pushRegistries = config.getEventRegistries(pushEvent)
@@ -281,17 +294,17 @@ class BoxPromote extends BoxBase<PromoteConfig> implements Serializable {
                 }
             }
             if (writebackBuildVersions) {
-                buildVersions.setEventImageVersion(pushEvent, image, promoteVersionString)
+                buildVersions.setEventImageVersion(pushEvent, image, promoteVersionString, metadata)
             }
         }
         if (writebackBuildVersions) {
-            buildVersions.setRepoEventVersion(gitRepo.getRemotePath(), config.gitTagPrefix, pushEvent, nextSemVer)
+            buildVersions.setRepoEventVersion(gitRepo.getRemotePath(), config.gitTagPrefix, pushEvent, nextSemVer, metadata)
         }
     }
 
     /**
      * Determine promotion type (release/non-release) and retag images
-    **/
+     **/
     void promoteImages(String tagType, String promoteVersionString, SemVer nextSemVer) {
         def buildVersions = Config.getBuildVersions()
         if (tagType == "release") {
@@ -335,29 +348,45 @@ class BoxPromote extends BoxBase<PromoteConfig> implements Serializable {
         }
     }
 
-    def promote() {
-        def tagType = getTagType()
+    /**
+     * Called during promote() after promotions have been prepared. You can use this to populate the metadata map
+     *
+     * Override and extend this method to insert metadata on the promotion data stored in build-versions
+     **/
+    def addPromotionMetadata() {
+    }
 
+    def preparePromotions() {
         List<String> gitTagInfo = getGitCommit()
-        String gitCommitToTag = gitTagInfo[0]
-        String gitTagToTag = gitTagInfo[1]
+        gitCommitToTag = gitTagInfo[0]
+        gitTagToTag = gitTagInfo[1]
 
-        SemVer nextSemVer
-        String promoteVersionString
-
-
-        nextSemVer = getNextSemVer(tagType)
+        nextSemVer = getNextSemVer(getTagType())
         promoteVersionString = nextSemVer.toString()
         setVersionChange(gitCommitToTag, gitTagToTag)
 
+        if (gitCommitToTag) {
+            commits = gitRepo.getCommitsBetween(nextSemVer.getPreviousVersion(), gitCommitToTag)
+        } else if (gitTagToTag) {
+            commits = gitRepo.getCommitsBetween(nextSemVer.getPreviousVersion(), gitTagToTag)
+        }
+    }
+
+    def performPromotions() {
         if (versionChange) {
             prePromoteMessages(promoteVersionString)
             waitForUserConfirmation(promoteVersionString)
 
-            promoteImages(tagType, promoteVersionString, nextSemVer)
+            promoteImages(getTagType(), promoteVersionString, nextSemVer)
             saveBuildVersions()
             tagGitRepo(gitCommitToTag, gitTagToTag, promoteVersionString)
         }
+    }
+
+    def promote() {
+        preparePromotions()
+        addPromotionMetadata()
+        performPromotions()
     }
 
     def summary() {

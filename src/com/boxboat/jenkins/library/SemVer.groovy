@@ -20,9 +20,12 @@ class SemVer implements Comparable<SemVer>, Serializable {
 
     String buildInfo
 
-    SemVer(String version) {
+    String previousVersion
+
+    SemVer(String version, String previousVersion = "") {
         this.isPreRelease = false
         this.hasBuildInfo = false
+        this.previousVersion = previousVersion
 
         // regex from https://github.com/semver/semver/issues/232
         def regex = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-(0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(\.(0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*)?(\+[0-9a-zA-Z-]+(\.[0-9a-zA-Z-]+)*)?$/
@@ -78,7 +81,7 @@ class SemVer implements Comparable<SemVer>, Serializable {
     }
 
     SemVer copy() {
-        return new SemVer(this.toString())
+        return new SemVer(this.toString(), this.getPreviousVersion())
     }
 
     SemVer copyNoPrerelease() {
