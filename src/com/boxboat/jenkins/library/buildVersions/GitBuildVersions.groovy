@@ -136,6 +136,9 @@ class GitBuildVersions implements Serializable {
             data.put("metadata", metadata)
         }
         def yamlStr = YamlUtils.dump(data)
+        Config.pipeline.sh """
+            mkdir -p "${dir}"
+        """
         Config.pipeline.writeFile(file: yamlFile, text: yamlStr, encoding: "Utf8")
     }
 
