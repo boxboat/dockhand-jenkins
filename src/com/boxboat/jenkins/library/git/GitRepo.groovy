@@ -137,20 +137,39 @@ class GitRepo implements Serializable {
     }
 
     List<GitCommit> getCommitsBetween(String first, String second) {
-        String commits = "[${Config.pipeline.sh(returnStdout: true, script:"""
-            git log --pretty=format:"{\\"author\\":\\"%ce\\",\\"hash\\":\\"%H\\",\\"date\\":\\"%ct\\",\\"subject\\":\\"%s\\",\\"body\\":\\"%B\\"}," ${first}...${second}
-        """)?.trim()?.replaceAll(",\$","")?.replaceAll("\\R"," ")}]"
+        String commitMetaJson = "[${Config.pipeline.sh(returnStdout: true, script:"""
+            git log --pretty=format:"{\\"author\\":\\"%ce\\",\\"hash\\":\\"%H\\",\\"date\\":\\"%ct\\"}," ${first}...${second}
+        """)?.trim()?.replaceAll(",\$","")}]"
+
+        String delimiter = "<_&=~dockhand-bb-delim=~&_>"
+
+        String subjectData = "${Config.pipeline.sh(returnStdout: true, script:"""
+            git log --pretty=format:"%s${delimiter}" ${first}...${second}
+        """)?.trim()?.replaceAll("\\R"," ")}"
+        String[] subjects = subjectData.split(delimiter)
+
+        String bodyData = "${Config.pipeline.sh(returnStdout: true, script:"""
+            git log --pretty=format:"%b${delimiter}" ${first}...${second}
+        """)?.trim()?.replaceAll("\\R"," ")}"
+        String[] bodies = bodyData.split(delimiter)
+
         JsonSlurper slurper = new JsonSlurper()
-        def result = slurper.parseText(commits)
+        def result = slurper.parseText(commitMetaJson)
         List<GitCommit> commitList = new ArrayList<>()
+        def idx = 0
         result.each {
             def c = new GitCommit()
             c.author = it?.author
             c.hash = it?.hash
             c.date = it?.date
-            c.subject = it?.subject
-            c.body = it?.body
+            if (idx < subjects.size()) {
+                c.subject = subjects[idx].trim()
+            }
+            if (idx < bodies.size()) {
+                c.body = bodies[idx].trim()
+            }
             commitList.add(c)
+            idx++
         }
         return commitList
     }
