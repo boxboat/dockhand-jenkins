@@ -30,7 +30,7 @@ class GitRepo implements Serializable {
     String _branch
     String _prBranch
 
-    String getPrBranch(){
+    String getPrBranch() {
         return _prBranch
     }
 
@@ -48,7 +48,7 @@ class GitRepo implements Serializable {
         }
     }
 
-    String setPrBranch(String value){
+    String setPrBranch(String value) {
         _prBranch = value
         if (_prBranch?.startsWith("origin/")) {
             _prBranch = _prBranch.substring("origin/".length())
@@ -81,6 +81,13 @@ class GitRepo implements Serializable {
             git show-ref --hash=${shortHashLength} -s ${tag}  || :
         """)?.trim()
         return Utils.resultOrTest(result, "0123456789abcdef0123456789abcdef".substring(shortHashLength))
+    }
+
+    String firstCommit() {
+        String result = Config.pipeline.sh(returnStdout: true, script: """
+            git rev-list --max-parents=0 HEAD
+        """)?.trim()
+        return result
     }
 
     boolean isBranchTip() {
@@ -137,20 +144,23 @@ class GitRepo implements Serializable {
     }
 
     List<GitCommit> getCommitsBetween(String first, String second) {
-        String commitMetaJson = "[${Config.pipeline.sh(returnStdout: true, script:"""
+        if (first.isEmpty()) {
+            first = firstCommit()
+        }
+        String commitMetaJson = "[${Config.pipeline.sh(returnStdout: true, script: """
             git log --pretty=format:"{\\"author\\":\\"%ce\\",\\"hash\\":\\"%H\\",\\"date\\":\\"%ct\\"}," ${first}...${second}
-        """)?.trim()?.replaceAll(",\$","")}]"
+        """)?.trim()?.replaceAll(",\$", "")}]"
 
         String delimiter = "<_&=~dockhand-bb-delim=~&_>"
 
-        String subjectData = "${Config.pipeline.sh(returnStdout: true, script:"""
+        String subjectData = "${Config.pipeline.sh(returnStdout: true, script: """
             git log --pretty=format:"%s${delimiter}" ${first}...${second}
-        """)?.trim()?.replaceAll("\\R"," ")}"
+        """)?.trim()?.replaceAll("\\R", " ")}"
         String[] subjects = subjectData.split(delimiter)
 
-        String bodyData = "${Config.pipeline.sh(returnStdout: true, script:"""
+        String bodyData = "${Config.pipeline.sh(returnStdout: true, script: """
             git log --pretty=format:"%b${delimiter}" ${first}...${second}
-        """)?.trim()?.replaceAll("\\R"," ")}"
+        """)?.trim()?.replaceAll("\\R", " ")}"
         String[] bodies = bodyData.split(delimiter)
 
         JsonSlurper slurper = new JsonSlurper()
