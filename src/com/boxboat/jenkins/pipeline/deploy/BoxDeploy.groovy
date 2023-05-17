@@ -215,7 +215,7 @@ class BoxDeploy extends BoxBase<DeployConfig> implements Serializable {
         }
     }
 
-    Map<Object, Object> getImageTagsMetadata() {
+    Map<Object, Object> readImageTagsMetadata() {
         def buildVersions = Config.getBuildVersions()
         Map<Object, Object> imageTagsMetadata = new LinkedHashMap<>()
         config.images.each { Image image ->
