@@ -173,7 +173,11 @@ class BoxPromote extends BoxBase<PromoteConfig> implements Serializable {
         // If nextSemVer doesn't exist or its version without prerelease is smaller than baseSemVer, use baseSemVer
         if (nextSemVer == null || !nextSemVer.isValid || (baseSemVer.compareTo(nextSemVer.copyNoPrerelease()) > 0)) {
             nextSemVer = baseSemVer.copy()
-            nextSemVer.setPreviousVersion(currSemVer.toString())
+            if (currSemVer == null || !currSemVer.isValid) {
+                nextSemVer.setPreviousVersion("")
+            } else {
+                nextSemVer.setPreviousVersion(currSemVer.toString())
+            }
         } else if (tagType == "release") {
             nextSemVer.patch++
             nextSemVer.setPreviousVersion(currSemVer.toString())
