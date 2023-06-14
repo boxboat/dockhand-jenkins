@@ -159,8 +159,9 @@ class GitRepo implements Serializable {
         String[] subjects = subjectData.split(delimiter)
 
         String bodyData = "${Config.pipeline.sh(returnStdout: true, script: """
-            git log --pretty=format:"%b${delimiter}" ${first}...${second}
+            git log --pretty=format:"%b;${delimiter}" ${first}...${second}
         """)?.trim()?.replaceAll("\\R", " ")}"
+
         String[] bodies = bodyData.split(delimiter)
 
         JsonSlurper slurper = new JsonSlurper()
@@ -176,7 +177,11 @@ class GitRepo implements Serializable {
                 c.subject = subjects[idx].trim()
             }
             if (idx < bodies.size()) {
-                c.body = bodies[idx].trim()
+                if (bodies[idx].trim() == ";") {
+                    c.body = ""
+                } else {
+                    c.body = bodies[idx].trim()
+                }
             }
             commitList.add(c)
             idx++
