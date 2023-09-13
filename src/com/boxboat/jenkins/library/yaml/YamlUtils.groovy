@@ -1,6 +1,6 @@
 package com.boxboat.jenkins.library.yaml
 
-@Grab('org.yaml:snakeyaml:1.23')
+import org.yaml.snakeyaml.LoaderOptions
 import org.yaml.snakeyaml.Yaml
 import org.yaml.snakeyaml.constructor.CustomClassLoaderConstructor
 import org.yaml.snakeyaml.nodes.Tag
@@ -9,7 +9,13 @@ class YamlUtils implements Serializable {
 
     protected static Yaml yaml = new Yaml(new GroovyRepresenter())
 
-    protected static Yaml yamlClassLoader = new Yaml(new CustomClassLoaderConstructor(YamlUtils.classLoader))
+    protected static LoaderOptions loaderOptions = new LoaderOptions()
+
+    static {
+        loaderOptions.setTagInspector { return true }
+    }
+
+    protected static Yaml yamlClassLoader = new Yaml(new CustomClassLoaderConstructor(YamlUtils.classLoader, loaderOptions))
 
     static String dump(Object obj) {
         return yaml.dump(obj)
