@@ -12,6 +12,7 @@ class YamlUtils implements Serializable {
     protected static LoaderOptions loaderOptions = new LoaderOptions()
 
     static {
+        // keep snakeyaml 1.x behavior by allowing all tags
         loaderOptions.setTagInspector { return true }
     }
 
