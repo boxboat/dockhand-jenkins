@@ -9,18 +9,20 @@ repositories {
 
 dependencies {
     // main dependencies
-    implementation group: 'org.codehaus.groovy', name: 'groovy-all', version: '2.4.12'
-    implementation group: 'com.cloudbees', name: 'groovy-cps', version: '1.32'
-    implementation group: 'org.jenkins-ci.main', name: 'jenkins-core', version: '2.277'
+    implementation group: 'com.cloudbees', name: 'groovy-cps', version: '3785.vee73da_b_9544e'
+    implementation group: 'org.jenkins-ci.main', name: 'jenkins-core', version: '2.414.1'
+    // jenkins-core has a transitive dependency on guava 32.1.1-jre, but that version won't load for gradle
+    // when jenkins-core is upgraded past 2.414.1 this dependency should be re-evaluated and hopefully removed
+    implementation group: 'com.google.guava', name: 'guava', version: '32.1.2-jre'
+    implementation group: 'io.jenkins.plugins', name: 'snakeyaml-api', version: '2.2-111.vc6598e30cc65'
     compileOnly group: 'javax.servlet', name: 'javax.servlet-api', version: '4.0.1'
 
     // @grab dependencies
     implementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.9'
-    implementation group: 'org.yaml', name: 'snakeyaml', version: '1.23'
 
     // test dependencies
-    testImplementation group: 'junit', name: 'junit', version: '4.12'
-    testImplementation group: 'com.lesfurets', name: 'jenkins-pipeline-unit', version: '1.1'
+    testImplementation group: 'junit', name: 'junit', version: '4.13.2'
+    testImplementation group: 'com.lesfurets', name: 'jenkins-pipeline-unit', version: '1.19'
 }
 
 task cleanDist(type: Delete) {

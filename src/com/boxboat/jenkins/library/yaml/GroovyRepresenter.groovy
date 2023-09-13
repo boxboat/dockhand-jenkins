@@ -1,7 +1,7 @@
 package com.boxboat.jenkins.library.yaml
 
 import com.cloudbees.groovy.cps.NonCPS
-@Grab('org.yaml:snakeyaml:1.23')
+import org.yaml.snakeyaml.DumperOptions
 import org.yaml.snakeyaml.representer.Representer
 import org.yaml.snakeyaml.nodes.NodeTuple
 import org.yaml.snakeyaml.introspector.Property
@@ -11,6 +11,7 @@ import org.yaml.snakeyaml.nodes.Tag
 class GroovyRepresenter extends Representer implements Serializable {
 
     GroovyRepresenter() {
+        super(new DumperOptions())
         this.multiRepresenters.put(GString.class, this.representers.get(String))
     }
 
