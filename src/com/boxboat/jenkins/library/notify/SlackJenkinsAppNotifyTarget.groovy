@@ -18,10 +18,14 @@ class SlackJenkinsAppNotifyTarget extends BaseConfig<SlackJenkinsAppNotifyTarget
                 color = "#36a64f"
                 break
         }
-        message = "*${URLDecoder.decode(Config.pipeline.env.JOB_NAME, "UTF-8")}* (<${Config.pipeline.env.BUILD_URL}|build #${Config.pipeline.env.BUILD_NUMBER}>)\n" + message
         def slackSendOptions = [
-                color  : color,
-                message: message,
+            message: "*${URLDecoder.decode(Config.pipeline.env.JOB_NAME, "UTF-8")}* (<${Config.pipeline.env.BUILD_URL}|build #${Config.pipeline.env.BUILD_NUMBER}>)",
+            attachments: [
+                [
+                    color: color,
+                    text : message,
+                ]
+            ]
         ]
         if (channel) {
             slackSendOptions["channel"] = channel
