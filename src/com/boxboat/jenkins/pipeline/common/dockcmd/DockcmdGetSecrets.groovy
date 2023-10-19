@@ -1,5 +1,6 @@
 package com.boxboat.jenkins.pipeline.common.dockcmd
 
+import com.boxboat.jenkins.library.azure.AzureProfile
 import com.boxboat.jenkins.library.config.Config
 import com.boxboat.jenkins.library.aws.AwsProfile
 import com.boxboat.jenkins.library.vault.Vault
@@ -9,6 +10,8 @@ class DockcmdGetSecrets implements Serializable {
     public String awsProfileKey
 
     public String vaultKey
+
+    public String azureProfileKey
 
     public String directory = "."
 
@@ -33,6 +36,27 @@ class DockcmdGetSecrets implements Serializable {
             dockcmd_current_dir=\$(pwd)
             cd "${directory}"
             dockcmd aws get-secrets --region "${region}" ${optionsString(combinedOptions)} ${filesStr}
+            cd "\$dockcmd_current_dir"
+        """
+
+    }
+
+    public parseAzureSecrets(Map<String, Object> additionalOptions = [:]) {
+        if (!azureProfileKey) {
+            Config.pipeline.error "'azureProfileKey' is required"
+        }
+        AzureProfile azure = Config.global.getAzureProfile(azureProfileKey)
+        azure.withCredentials {
+            Config.pipeline.sh parseAzureSecretsScript(azure.keyVaultName, additionalOptions)
+        }
+    }
+
+    public parseAzureSecretsScript(String keyVaultName, Map<String, Object> additionalOptions = [:]) {
+        def combinedOptions = combineOptions(options, additionalOptions)
+        return """
+            dockcmd_current_dir=\$(pwd)
+            cd "${directory}"
+            dockcmd azure get-secrets --key-vault "${keyVaultName}" ${optionsString(combinedOptions)} ${files.join('" "')}
             cd "\$dockcmd_current_dir"
         """
 
