@@ -1,5 +1,6 @@
 package com.boxboat.jenkins.pipeline
 
+import com.boxboat.jenkins.library.SemVer
 import com.boxboat.jenkins.library.Utils
 import com.boxboat.jenkins.library.config.CommonConfigBase
 import com.boxboat.jenkins.library.config.Config
@@ -337,6 +338,50 @@ abstract class BoxBase<T extends CommonConfigBase> implements Serializable {
 
     def cleanup() {
         gitRepo?.resetAndClean()
+    }
+
+    /**
+     * getCurrSemVer
+     * retrieve the current semantic version for the provided gitTagPrefix and event
+     **/
+    SemVer getCurrSemVer(String gitTagPrefix, String event) {
+        // getBuildVersions returns singleton - If buildVersions already checked out, will initialized object
+        def buildVersions = Config.getBuildVersions()
+        return buildVersions.getRepoEventVersion(gitRepo.getRemotePath(), gitTagPrefix, event)
+    }
+
+    /**
+     * getNextSemVer
+     * retrieve the next semantic version
+     **/
+    SemVer getNextSemVer(SemVer startingSemVer, SemVer baseSemVer, String tagPrefix, String tagType) {
+        def nextSemVer = startingSemVer?.copy()
+
+        def buildVersions = Config.getBuildVersions()
+        // If nextSemVer doesn't exist or its version without prerelease is smaller than baseSemVer, use baseSemVer
+        if (nextSemVer == null || !nextSemVer.isValid || (baseSemVer.compareTo(nextSemVer.copyNoPrerelease()) > 0)) {
+            nextSemVer = baseSemVer.copy()
+            if (startingSemVer == null || !startingSemVer.isValid) {
+                nextSemVer.setPreviousVersion("")
+            } else {
+                nextSemVer.setPreviousVersion(startingSemVer.toString())
+            }
+        } else if (tagType == "release") {
+            nextSemVer.patch++
+            nextSemVer.setPreviousVersion(startingSemVer.toString())
+        }
+
+        if (tagType != "release") {
+            def releaseSemVer = buildVersions.getRepoEventVersion(gitRepo.getRemotePath(), tagPrefix, "tag/release")
+            if (releaseSemVer != null && releaseSemVer.isValid && releaseSemVer >= nextSemVer) {
+                nextSemVer = releaseSemVer.copy()
+                nextSemVer.setPreviousVersion(releaseSemVer.toString())
+                nextSemVer.patch++
+            }
+            nextSemVer.incrementPreRelease(tagType)
+        }
+
+        return nextSemVer
     }
 
 }

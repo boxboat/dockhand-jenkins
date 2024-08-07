@@ -11,5 +11,5 @@ docker run --rm -i \
     -v "$(pwd):/home/gradle/project" \
     -w "/home/gradle/project" \
     --entrypoint gradle \
-    gradle:8.3.0-jdk17 \
+    gradle:8.9.0-jdk17 \
         "$@"

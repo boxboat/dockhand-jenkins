@@ -137,16 +137,14 @@ class BoxPromote extends BoxBase<PromoteConfig> implements Serializable {
      * Get the current semVer for promotion
      **/
     SemVer getCurrSemVer() {
-        // getBuildVersions returns singleton - If buildVersions already checked out, will initialized object
-        def buildVersions = Config.getBuildVersions()
-        return buildVersions.getRepoEventVersion(gitRepo.getRemotePath(), config.gitTagPrefix, promotion.promoteToEvent)
+        return this.getCurrSemVer(config.gitTagPrefix, promotion.promoteToEvent)
     }
 
     /**
      * Get the next semVer to promote to
      **/
     SemVer getNextSemVer(String tagType) {
-        def nextSemVer = currSemVer?.copy()
+        nextSemVer = currSemVer?.copy()
         // Return the user defined version if it is set, else get nextSemVer like usual
         if (promoteToVersion) {
             SemVer promoteToSemVer = new SemVer(promoteToVersion)
@@ -169,29 +167,7 @@ class BoxPromote extends BoxBase<PromoteConfig> implements Serializable {
             return promoteToSemVer
         }
 
-        def buildVersions = Config.getBuildVersions()
-        // If nextSemVer doesn't exist or its version without prerelease is smaller than baseSemVer, use baseSemVer
-        if (nextSemVer == null || !nextSemVer.isValid || (baseSemVer.compareTo(nextSemVer.copyNoPrerelease()) > 0)) {
-            nextSemVer = baseSemVer.copy()
-            if (currSemVer == null || !currSemVer.isValid) {
-                nextSemVer.setPreviousVersion("")
-            } else {
-                nextSemVer.setPreviousVersion(currSemVer.toString())
-            }
-        } else if (tagType == "release") {
-            nextSemVer.patch++
-            nextSemVer.setPreviousVersion(currSemVer.toString())
-        }
-
-        if (tagType != "release") {
-            def releaseSemVer = buildVersions.getRepoEventVersion(gitRepo.getRemotePath(), config.gitTagPrefix, "tag/release")
-            if (releaseSemVer != null && releaseSemVer.isValid && releaseSemVer >= nextSemVer) {
-                nextSemVer = releaseSemVer.copy()
-                nextSemVer.setPreviousVersion(releaseSemVer.toString())
-                nextSemVer.patch++
-            }
-            nextSemVer.incrementPreRelease(tagType)
-        }
+        nextSemVer = this.getNextSemVer(currSemVer, baseSemVer, config.gitTagPrefix, tagType)
 
         return nextSemVer
     }
