@@ -18,4 +18,11 @@ class PromoteTest extends PipelineBase {
         script.execute()
         printCallStack()
     }
+
+    @Test
+    void promoteRegctlTest() throws Exception {
+        def script = loadScript("${this.scriptBase}promoteRegctl.jenkins")
+        script.execute()
+        printCallStack()
+    }
 }

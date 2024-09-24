@@ -14,6 +14,7 @@ class BoxPromote extends BoxBase<PromoteConfig> implements Serializable {
     public String overrideEvent
     public String promoteToVersion
     public String registryKey
+    public boolean useRegctlPromote = false
 
     protected String imageSummary
     protected SemVer baseSemVer
@@ -236,7 +237,8 @@ class BoxPromote extends BoxBase<PromoteConfig> implements Serializable {
         }
 
         String result = Config.pipeline.sh(returnStdout: true, script: """regctl version || echo 'No regctl - using docker' """)?.trim()
-        if (result.contains("No regctl - using docker")) {
+        System.println(result)
+        if (result.contains("No regctl - using docker") || !this.useRegctlPromote) {
             config.images.each { image ->
                 promoteFromRegistry.withCredentials {
                     image.pull()
