@@ -14,6 +14,7 @@ class BoxPromote extends BoxBase<PromoteConfig> implements Serializable {
     public String overrideEvent
     public String promoteToVersion
     public String registryKey
+    public boolean useRegctlPromote = false
 
     protected String imageSummary
     protected SemVer baseSemVer
@@ -235,46 +236,91 @@ class BoxPromote extends BoxBase<PromoteConfig> implements Serializable {
             refTag = "latest"
         }
 
-        config.images.each { image ->
-            promoteFromRegistry.withCredentials {
-                image.pull()
-            }
-
-            imageSummary += "\n${image.path} promoted"
-            imageSummary += "\n\tfrom ${formatImageSummary(image, promotion.event, promoteFromRegistry)}"
-
-            pushRegistries.each { pushRegistry ->
-                def newImageSemVer = image.copy()
-                newImageSemVer.host = pushRegistry.host
-                newImageSemVer.namespace = pushRegistry.namespace
-                newImageSemVer.tag = promoteVersionString
-
-                def newImageRef
-
-                // Don't push a reftag if we are not writing back
-                if (writebackBuildVersions) {
-                    newImageRef = image.copy()
-                    newImageRef.tag = refTag
-                    image.reTag(newImageRef)
+        String result = Config.pipeline.sh(returnStdout: true, script: """regctl version || echo 'No regctl - using docker' """)?.trim()
+        System.println(result)
+        if (result.contains("No regctl - using docker") || !this.useRegctlPromote) {
+            config.images.each { image ->
+                promoteFromRegistry.withCredentials {
+                    image.pull()
                 }
 
-                image.reTag(newImageSemVer)
+                imageSummary += "\n${image.path} promoted"
+                imageSummary += "\n\tfrom ${formatImageSummary(image, promotion.event, promoteFromRegistry)}"
 
-                pushRegistry.withCredentials {
-                    newImageSemVer.push()
+                pushRegistries.each { pushRegistry ->
+                    def newImageSemVer = image.copy()
+                    newImageSemVer.host = pushRegistry.host
+                    newImageSemVer.namespace = pushRegistry.namespace
+                    newImageSemVer.tag = promoteVersionString
+
+                    def newImageRef
+
+                    // Don't push a reftag if we are not writing back
+                    if (writebackBuildVersions) {
+                        newImageRef = image.copy()
+                        newImageRef.tag = refTag
+                        image.reTag(newImageRef)
+                    }
+
+                    image.reTag(newImageSemVer)
+
+                    pushRegistry.withCredentials {
+                        newImageSemVer.push()
+                        if (newImageRef) {
+                            newImageRef.push()
+                        }
+                    }
+
+                    imageSummary += "\n\tto   ${formatImageSummary(newImageSemVer, promotion.promoteToEvent, pushRegistry)}"
+
                     if (newImageRef) {
-                        newImageRef.push()
+                        imageSummary += "\n\t     ${formatImageSummary(newImageRef, promotion.promoteToEvent, pushRegistry)}"
                     }
                 }
-
-                imageSummary += "\n\tto   ${formatImageSummary(newImageSemVer, promotion.promoteToEvent, pushRegistry)}"
-
-                if (newImageRef) {
-                    imageSummary += "\n\t     ${formatImageSummary(newImageRef, promotion.promoteToEvent, pushRegistry)}"
+                if (writebackBuildVersions) {
+                    buildVersions.setEventImageVersion(pushEvent, image, promoteVersionString, metadata)
                 }
             }
-            if (writebackBuildVersions) {
-                buildVersions.setEventImageVersion(pushEvent, image, promoteVersionString, metadata)
+        } else {
+            config.images.each { image ->
+                imageSummary += "\n${image.path} promoted"
+                imageSummary += "\n\tfrom ${formatImageSummary(image, promotion.event, promoteFromRegistry)}"
+
+                pushRegistries.each { pushRegistry ->
+                    def newImageSemVer = image.copy()
+                    newImageSemVer.host = pushRegistry.host
+                    newImageSemVer.namespace = pushRegistry.namespace
+                    newImageSemVer.tag = promoteVersionString
+
+                    def newImageRef
+
+                    // Don't push a reftag if we are not writing back
+                    if (writebackBuildVersions) {
+                        newImageRef = image.copy()
+                        newImageRef.tag = refTag
+
+                        pushRegistry.withCredentials {
+                            Config.pipeline.sh """
+                                regctl image copy ${image.getUrl()}  ${newImageRef.getUrl()}
+                            """
+                        }
+                    }
+
+                    pushRegistry.withCredentials {
+                        Config.pipeline.sh """
+                            regctl image copy ${image.getUrl()} ${newImageSemVer.getUrl()}
+                        """
+                    }
+
+                    imageSummary += "\n\tto   ${formatImageSummary(newImageSemVer, promotion.promoteToEvent, pushRegistry)}"
+
+                    if (newImageRef) {
+                        imageSummary += "\n\t     ${formatImageSummary(newImageRef, promotion.promoteToEvent, pushRegistry)}"
+                    }
+                }
+                if (writebackBuildVersions) {
+                    buildVersions.setEventImageVersion(pushEvent, image, promoteVersionString, metadata)
+                }
             }
         }
         if (writebackBuildVersions) {
