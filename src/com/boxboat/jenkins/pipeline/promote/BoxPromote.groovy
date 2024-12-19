@@ -258,6 +258,8 @@ class BoxPromote extends BoxBase<PromoteConfig> implements Serializable {
                     // Don't push a reftag if we are not writing back
                     if (writebackBuildVersions) {
                         newImageRef = image.copy()
+                        newImageRef.host = pushRegistry.host
+                        newImageRef.namespace = pushRegistry.namespace
                         newImageRef.tag = refTag
                         image.reTag(newImageRef)
                     }
@@ -297,6 +299,8 @@ class BoxPromote extends BoxBase<PromoteConfig> implements Serializable {
                     // Don't push a reftag if we are not writing back
                     if (writebackBuildVersions) {
                         newImageRef = image.copy()
+                        newImageRef.host = pushRegistry.host
+                        newImageRef.namespace = pushRegistry.namespace
                         newImageRef.tag = refTag
 
                         pushRegistry.withCredentials {
