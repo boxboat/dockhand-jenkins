@@ -395,17 +395,20 @@ class BoxPromote extends BoxBase<PromoteConfig> implements Serializable {
         promoteVersionString = nextSemVer.toString()
         setVersionChange(gitCommitToTag, gitTagToTag)
 
+        String previousVersion = nextSemVer.getPreviousVersion()
+        if (!previousVersion) {
+            previousVersion = gitRepo.firstCommit()
+        } else if (config.gitTagPrefix) {
+            previousVersion = "${config.gitTagPrefix}${nextSemVer.getPreviousVersion()}"
+        }
+
         if (gitCommitToTag) {
-            if (config.gitTagPrefix) {
-                commits = gitRepo.getCommitsBetween("${config.gitTagPrefix}${nextSemVer.getPreviousVersion()}", gitCommitToTag)
-            } else {
-                commits = gitRepo.getCommitsBetween(nextSemVer.getPreviousVersion(), gitCommitToTag)
-            }
+            commits = gitRepo.getCommitsBetween(previousVersion, gitCommitToTag)
         } else if (gitTagToTag) {
             if (config.gitTagPrefix) {
-                commits = gitRepo.getCommitsBetween("${config.gitTagPrefix}${nextSemVer.getPreviousVersion()}", "${config.gitTagPrefix}${gitTagToTag}")
+                commits = gitRepo.getCommitsBetween(previousVersion, "${config.gitTagPrefix}${gitTagToTag}")
             } else {
-                commits = gitRepo.getCommitsBetween(nextSemVer.getPreviousVersion(), gitTagToTag)
+                commits = gitRepo.getCommitsBetween(previousVersion, gitTagToTag)
             }
         }
     }
