@@ -61,6 +61,23 @@ def execute() {
 
                 dockcmdAws.parseAwsSecrets()
 
+                def dockcmdAzure = new DockcmdGetSecrets(
+                    azureProfileKey: "default",
+                    files: [
+                        "secret-values-*.yaml",
+                    ],
+                    options: [
+                        "edit-in-place": true,
+                        "set": [
+                            "Deployment=dev",
+                            "Foo=bar",
+                        ]
+                    ],
+                )
+
+                dockcmdAzure.parseAzureSecrets()
+
+
                 deploy.withCredentials() {
                     sh "helm upgrade --install test ."
                 }
